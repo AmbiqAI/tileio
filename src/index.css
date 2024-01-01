@@ -1,0 +1,106 @@
+@property --a{
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 90deg;
+}
+
+@property --l{
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 10%;
+}
+@property --c{
+  syntax: '<color>';
+  inherits: false;
+  initial-value: red;
+}
+
+@keyframes backgroundColorize{
+  from {
+  --a:45deg;
+  --l:40%;
+  }
+
+  to {
+  --a:225deg;
+  --l:60%;
+  }
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  background-image: linear-gradient(135deg, #20bff6, #20bff6, #e834dc);
+  background-repeat: no-repeat;
+  overflow: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  /* background:linear-gradient(var(--a), #20bff6, var(--l), #e834dc); */
+  animation:backgroundColorize 10s linear infinite alternate;
+}
+
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+.swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-slide {
+  text-align: center;
+  font-size: 18px;
+  /* background: #471313; */
+
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.autoplay-progress {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: var(--swiper-theme-color);
+}
+
+.autoplay-progress svg {
+  --progress: 0;
+  position: absolute;
+  left: 0;
+  top: 0px;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  stroke-width: 4px;
+  stroke: var(--swiper-theme-color);
+  fill: none;
+  stroke-dashoffset: calc(125.6 * (1 - var(--progress)));
+  stroke-dasharray: 125.6;
+  transform: rotate(-90deg);
+}

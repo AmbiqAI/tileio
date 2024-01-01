@@ -1,0 +1,7 @@
+{
+	"appId": "ai.ambiq.physiokit",
+	"appName": "PhysioKit",
+	"webDir": "build",
+	"bundledWebRuntime": false,
+	"loggingBehavior": "none"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "PhysioKit",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
