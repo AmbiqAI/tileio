@@ -1,6 +1,6 @@
 {
   "name": "physiokit",
-  "description": "PhysioKit demo",
+  "description": "PhysioKit App",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
