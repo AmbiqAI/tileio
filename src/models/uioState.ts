@@ -1,4 +1,122 @@
-import { types } from 'mobx-state-tree';
+import { RJSFSchema, UiSchema } from '@rjsf/utils';
+import { Instance, SnapshotIn, types } from 'mobx-state-tree';
+
+export const ButtonSchema: RJSFSchema = {
+  type: "object",
+  required: ["name", "enabled", "off", "on"],
+  properties: {
+    name: {
+      type: "string",
+      default: "Button",
+      description: "Button Name",
+    },
+    enabled: {
+      type: "boolean",
+      default: false,
+      description: "Enable Button",
+    },
+    off: {
+      type: "string",
+      default: "Off",
+      description: "Off Label",
+    },
+    on: {
+      type: "string",
+      default: "On",
+      description: "On Label",
+    },
+  }
+};
+
+export const LedSchema: RJSFSchema = {
+  type: "object",
+  required: ["name", "enabled", "off", "on"],
+  properties: {
+    name: {
+      type: "string",
+      default: "Button",
+      description: "Button Name",
+    },
+    enabled: {
+      type: "boolean",
+      default: false,
+      description: "Enable Button",
+    },
+    off: {
+      type: "string",
+      default: "Off",
+      description: "Off Label",
+    },
+    on: {
+      type: "string",
+      default: "On",
+      description: "On Label",
+    },
+  }
+};
+
+export const BtnConfig = types
+.model('BtnConfig', {
+  name: types.optional(types.string, 'Button'),
+  enabled: types.optional(types.boolean, false),
+  off: types.optional(types.string, 'Off'),
+  on: types.optional(types.string, 'On'),
+});
+
+export interface IBtnConfig extends Instance<typeof BtnConfig> {}
+export interface IBtnConfigSnapshot extends SnapshotIn<typeof BtnConfig> {}
+
+export const LedConfig = types
+.model('LedConfig', {
+  name: types.optional(types.string, 'Button'),
+  enabled: types.optional(types.boolean, false),
+  off: types.optional(types.string, 'Off'),
+  on: types.optional(types.string, 'On'),
+})
+
+export interface ILedConfig extends Instance<typeof LedConfig> {}
+export interface ILedConfigSnapshot extends SnapshotIn<typeof LedConfig> {}
+
+
+export const UioConfigSchema: {schema: RJSFSchema, uischema: UiSchema} = {
+  schema: {
+    type: "object",
+    title: 'User IO',
+    required: ["btn0", "btn1", "btn2", "btn3", "led0", "led1", "led2", "led3"],
+    properties: {
+      btn0: ButtonSchema,
+      btn1: ButtonSchema,
+      btn2: ButtonSchema,
+      btn3: ButtonSchema,
+      led0: LedSchema,
+      led1: LedSchema,
+      led2: LedSchema,
+      led3: LedSchema,
+    }
+  },
+  uischema: {}
+};
+
+export const UioConfig = types
+.model('UioConfig', {
+  btn0: types.optional(BtnConfig, {name: 'BTN0'}),
+  btn1: types.optional(BtnConfig, {name: 'BTN1'}),
+  btn2: types.optional(BtnConfig, {name: 'BTN2'}),
+  btn3: types.optional(BtnConfig, {name: 'BTN3'}),
+  led0: types.optional(LedConfig, {name: 'LED0'}),
+  led1: types.optional(LedConfig, {name: 'LED1'}),
+  led2: types.optional(LedConfig, {name: 'LED2'}),
+  led3: types.optional(LedConfig, {name: 'LED3'}),
+})
+.views(self => ({
+
+}))
+.actions(self => ({
+
+}));
+
+export interface IUioConfig extends Instance<typeof UioConfig> {}
+export interface IUioConfigSnapshot extends SnapshotIn<typeof UioConfig> {}
 
 
 export const UioState = types
@@ -77,3 +195,6 @@ export const UioState = types
         return false;
     }
 }));
+
+export interface IUioState extends Instance<typeof UioState> {}
+export interface IUioStateSnapshot extends SnapshotIn<typeof UioState> {}

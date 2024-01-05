@@ -17,6 +17,7 @@ const EventTile = observer(({ record }: TileProps) => {
   const addEventTh = useDebounce(async () => {
     await record?.addEvent();
   }, 500);
+
   return (
     <GridContainer>
       <GridZStack level={0}>

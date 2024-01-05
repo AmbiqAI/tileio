@@ -83,7 +83,7 @@ const ShareRecordDialog = ({ open, record, close }: Props) => {
               if (!selectedFormat) { return; }
               const uri = await record.generateRecordUri(selectedFormat);
               const canShare = (await Share.canShare()).value;
-              if (canShare && false) {
+              if (canShare) {
                 setBusy(false);
                 await Share.share({
                   title: 'Share Record',

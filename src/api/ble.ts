@@ -31,26 +31,30 @@ function dataViewToSignalData(data: DataView, numChs: number, fs: number): {sign
   let offset = 2;
   let refDate = Date.now() - ts*signalLen;
   for (let i = 0; i < signalLen; i++) {
-    mask.push([refDate, data.getUint16(offset)]);
+    mask.push([refDate, data.getUint16(offset, true)]);
     offset += 2;
     let row = [refDate];
     for (let ch = 0; ch < numChs; ch++) {
       row.push(data.getInt16(offset, true));
       offset += 2;
     }
+    signals.push(row);
     refDate += ts;
   };
+  console.log(`Received signalLen: ${signalLen} ${fs}`);
   return {signals, mask};
 }
 
 function dataViewToMetrics(data: DataView): number[] {
+  const ts = Date.now();
   const metricLen = data.getUint16(0, true);
-  const metrics: number[] = [];
+  const metrics: number[] = [ts];
   let offset = 2;
   for (let i = 0; i < metricLen; i++) {
     metrics.push(data.getFloat32(offset, true));
     offset += 4;
   };
+  console.log(`Received metricLen: ${metricLen}`);
   return metrics;
 }
 
@@ -158,12 +162,9 @@ class BleManager {
     }
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Metrics Routes
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  async enableSignalNotifications(deviceId: string, slot: number, cb: (signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
+  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => void): Promise<void> {
     try {
+      console.log(`enableSlotNotifications ${deviceId} ${slot}`);
       const deviceInfo = this.deviceInfo[deviceId];
       if (deviceInfo === undefined || slot >= deviceInfo.slots.length) {
         throw new Error('Device info not found');
@@ -173,7 +174,7 @@ class BleManager {
           const numChs = deviceInfo.slots[slot].chs.length;
           const fs = deviceInfo.slots[slot].fs;
           const rst = dataViewToSignalData(data, numChs, fs);
-          await cb(rst.signals, rst.mask);
+          await cb(slot, rst.signals, rst.mask);
         } catch (error) {
           console.error(`Failed with notifications ${error}`);
         }
@@ -183,7 +184,7 @@ class BleManager {
     }
   }
 
-  async disableSignalNotifications(deviceId: string, slot: number): Promise<void> {
+  async disableSlotNotifications(deviceId: string, slot: number): Promise<void> {
     try {
       await BleClient.stopNotifications(deviceId, PK_SVC_UUID,  PK_SLOTS_SIG_CHAR_UUIDS[slot]);
     } catch (error) {
@@ -191,8 +192,13 @@ class BleManager {
     }
   }
 
-  async enableMetricsNotifications(deviceId: string, slot: number, cb: (metrics: number[]) => Promise<void>): Promise<void> {
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Metrics Routes
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  async enableSlotMetricsNotifications(deviceId: string, slot: number, cb: (slot: number, metrics: number[]) => void): Promise<void> {
     try {
+      console.log(`enableSlotMetricsNotifications ${deviceId} ${slot}`);
       const deviceInfo = this.deviceInfo[deviceId];
       if (deviceInfo === undefined || slot >= deviceInfo.slots.length) {
         throw new Error('Device info not found');
@@ -200,7 +206,7 @@ class BleManager {
       await BleClient.startNotifications(deviceId, PK_SVC_UUID,  PK_SLOTS_MET_CHAR_UUIDS[slot], async (data: DataView) => {
         try {
           const metrics = dataViewToMetrics(data);
-          await cb(metrics);
+          await cb(slot, metrics);
         } catch (error) {
           console.error('Failed with notifications');
         }
@@ -210,7 +216,7 @@ class BleManager {
     }
   }
 
-  async disableMetricsNotifications(deviceId: string, slot: number): Promise<void> {
+  async disableSlotMetricsNotifications(deviceId: string, slot: number): Promise<void> {
     try {
       await BleClient.stopNotifications(deviceId, PK_SVC_UUID,  PK_SLOTS_MET_CHAR_UUIDS[slot]);
     } catch (error) {
@@ -255,6 +261,7 @@ class BleManager {
     for (let i = 0; i < state.length; i++) {
       data.setUint8(i, state[i]);
     }
+    console.log(`setUioState ${state}`, data);
     await this.bleWrite(deviceId, PK_SVC_UUID, PK_UIO_CHAR_UUID, data);
   }
 

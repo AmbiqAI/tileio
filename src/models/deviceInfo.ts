@@ -2,6 +2,7 @@ import { Instance, SnapshotIn, cast, types } from 'mobx-state-tree';
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { JsonStringDate } from '../utils';
 import { ISlotConfigSnapshot, SlotConfig, SlotConfigSchema } from './slot';
+import { UioConfigSchema, UioConfig } from './uioState';
 
 export const DeviceInfoSchema: {schema: RJSFSchema, uischema: UiSchema} = {
   schema: {
@@ -22,13 +23,15 @@ export const DeviceInfoSchema: {schema: RJSFSchema, uischema: UiSchema} = {
         maxItems: 4,
         items: SlotConfigSchema.schema,
         description: 'Slots',
-      }
+      },
+      uio: UioConfigSchema.schema
     }
   },
   uischema: {
-    "slots": {
-      "items": SlotConfigSchema.uischema
-    }
+    slots: {
+      items: SlotConfigSchema.uischema
+    },
+    uio: UioConfigSchema.uischema
   }
 };
 
@@ -37,7 +40,8 @@ const DeviceInfo = types
   id: types.string,
   name: types.string,
   location: types.string,
-  slots: types.optional(types.array(SlotConfig), []),
+  slots: types.optional(types.array(SlotConfig), [{name: 's0'}, {name: 's1'}, {name: 's2'}, {name: 's3'}]),
+  uio: types.optional(UioConfig, {}),
   lastSeenDate: types.optional(JsonStringDate, new Date()),
 })
 .views(self => ({

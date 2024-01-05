@@ -101,12 +101,10 @@ export const ThemeColors = {
     green: '#20BFF6',
     grey: '#7F7F7F',
     greyAlpha: '#7F7F7F',
-    ecg: '#20BFF6', // Blue
-    ppg1: '#ce6cff', // Purple
-    ppg2: '#ea3424', // Red
     primaryColor: '#11acd5', // Blue
     secondaryColor: '#ce6cff', // Purple
     tertiaryColor: '#ea3424', // Red
     quaternaryColor: '#220f58', // Navy
+    slots: ['#11acd5', '#ce6cff', '#ea3424', '#220f58']
   }
 }

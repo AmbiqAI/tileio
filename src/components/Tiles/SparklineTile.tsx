@@ -3,6 +3,7 @@ import { observer } from "mobx-react-lite";
 import { TileProps, TileSpec } from "./BaseTile";
 import MetricPlotTile from "./MetricPlotTile";
 import { ThemeColors } from "../../theme/theme";
+import { useMemo } from "react";
 
 export const SparklineTileSpec: TileSpec = {
   type: "SPARKLINE_TILE",
@@ -12,7 +13,7 @@ export const SparklineTileSpec: TileSpec = {
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
-    required: ['name', 'slot', 'metric', 'color'],
+    required: ['name', 'slot', 'metric', 'units', 'color'],
     properties: {
       name: {
         type: 'string',
@@ -20,7 +21,7 @@ export const SparklineTileSpec: TileSpec = {
       },
       slot: {
         type: 'integer',
-        "enum": [0, 1, 2, 3],
+        enum: [0, 1, 2, 3],
         default: 0,
         description: 'Slot',
       },
@@ -30,6 +31,11 @@ export const SparklineTileSpec: TileSpec = {
         maximum: 60,
         default: 0,
         description: 'Metric',
+      },
+      units: {
+        type: 'string',
+        default: '',
+        description: 'Units',
       },
       primaryColor: {
         type: 'string',
@@ -58,6 +64,8 @@ export const SparklineTileSpec: TileSpec = {
     },
     "metric": {
     },
+    "units": {
+    },
     "primaryColor": {
       "ui:widget": "color"
     },
@@ -71,24 +79,40 @@ export interface SparklineTileConfig {
   name: string;
   slot: number;
   metric: number;
+  units: string;
   primaryColor: string;
   secondaryColor: string;
   min: number;
   max: number;
 }
 
+export function parseConfig(config: { [key: string]: any }): SparklineTileConfig {
+  const configs = {
+    name: 'Sparkline',
+    slot: 0,
+    metric: 0,
+    units: '',
+    ...config
+  } as SparklineTileConfig;
+  return configs;
+}
+
 const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
-  const configs = config as SparklineTileConfig;
+  const configs = useMemo(() => parseConfig(config || {}), [config]);
+  console.log('iddqd', configs.name, configs.slot, slots.length);
   const name = configs.name;
-  const slotIdx = configs.slot;
   const metric = configs.metric;
-  const slot = slots[slotIdx];
-  const data = slot.metrics.data.map((d) => ({ ts: d[0], y: d[metric+1] }));
+  const units = configs.units;
+  const metrics = configs.slot < slots.length ? slots[configs.slot].metrics : undefined;
+  const latestTs = metrics ? metrics.latestTs : 0;
+  const data = metrics ? metrics.data.map((d) => ({ ts: d[0], y: d[metric+1] })) : [];
+
   return (
     <MetricPlotTile
       name={name}
-      latestTs={slot.metrics.latestTs}
+      latestTs={latestTs}
       data={data}
+      units={units}
       primaryColor={alpha(configs.primaryColor, 0.6)}
       secondaryColor={configs.secondaryColor}
       min={configs.min}

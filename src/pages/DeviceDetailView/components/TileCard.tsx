@@ -18,9 +18,18 @@ const TileCard = ({ name, type, size, device, config }: Params) => {
   const mh = size === "sm" ? 200 : size === "md" ? 200 : 200;  // 312;
   const xs = size === "sm" ? 6 : size === "md" ? 12 : 12;
   const sm = size === "sm" ? 3 : size === "md" ? 6 : 12;
-  const md = size === "sm" ? 3 : size === "md" ? 6 : 12;
-  const lg = size === "sm" ? 3 : size === "md" ? 6 : 12;
-  const xl = size === "sm" ? 3 : size === "md" ? 6 : 12;
+  const md = size === "sm" ? 2 : size === "md" ? 4 : 6;
+  const lg = size === "sm" ? 2 : size === "md" ? 4 : 6;
+  const xl = size === "sm" ? 2 : size === "md" ? 4 : 6;
+
+  // const mw = size === "sm" ? 256 : size === "md" ? 512 : 1024;
+  // const mh = size === "sm" ? 200 : size === "md" ? 200 : 200;  // 312;
+  // const xs = size === "sm" ? 6 : size === "md" ? 12 : 12;
+  // const sm = size === "sm" ? 3 : size === "md" ? 6 : 12;
+  // const md = size === "sm" ? 3 : size === "md" ? 6 : 12;
+  // const lg = size === "sm" ? 3 : size === "md" ? 6 : 12;
+  // const xl = size === "sm" ? 3 : size === "md" ? 6 : 12;
+
   return (
     <Grid
       xs={xs}
@@ -28,7 +37,7 @@ const TileCard = ({ name, type, size, device, config }: Params) => {
       md={md}
       lg={lg}
       xl={xl}
-      sx={{ maxWidth: mw, minWidth: 124 }}
+      // sx={{ maxWidth: mw, minWidth: 124 }}
       flexGrow={0}
     >
       <Card
@@ -38,8 +47,8 @@ const TileCard = ({ name, type, size, device, config }: Params) => {
           p: 0,
           borderRadius: 2,
           height: mh,
-          maxWidth: mw,
-          minWidth: 144,
+          // maxWidth: mw,
+          // minWidth: 144,
         }}
       >
         {CreateTile({
@@ -50,7 +59,9 @@ const TileCard = ({ name, type, size, device, config }: Params) => {
           pause: !device.state.connected,
           duration: device.settings.duration,
           record: device.record,
-          config: config
+          config: config,
+          device: device.info,
+          uioState: device.uioState
         })}
       </Card>
     </Grid>

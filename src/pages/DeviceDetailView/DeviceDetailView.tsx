@@ -68,7 +68,7 @@ const DeviceDetailView = () => {
         pt: 'calc(1.5em + env(safe-area-inset-top))',
         height: "100%",
         width: "100%",
-        maxWidth: "1056px",
+        maxWidth: "1600px",
         margin: "auto",
       }}
     >

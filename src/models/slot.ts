@@ -70,9 +70,9 @@ export const SlotConfigSchema: {schema: RJSFSchema, uischema: UiSchema} = {
 export const SlotConfig = types
 .model('SlotConfig', {
   name: types.string,
-  type: types.string,
-  unit: types.string,
-  fs: types.number,
+  type: types.optional(types.string, 'ecg'),
+  unit: types.optional(types.string, 'mV'),
+  fs: types.optional(types.number, 100),
   chs: types.optional(types.array(types.string), ['ch0']),
   metrics: types.optional(types.array(types.string), ['met0']),
 })
@@ -133,6 +133,13 @@ export const SlotSignals = types
   }
 }));
 
+const SIG_SEG_OFFSET = 0;
+const SIG_SEG_MASK = 0x03F;
+const SIG_QOS_OFFSET = 6;
+const SIG_QOS_MASK = 0x03;
+const SIG_FID_OFFSET = 8;
+const SIG_FID_MASK = 0xFF;
+
 export const SlotMask = types
 .model('SlotMask', {
   latestTs: types.optional(types.number, 0),
@@ -140,13 +147,16 @@ export const SlotMask = types
   // [ts, mask][]
   data: [] as number[][],
 })).views(self => ({
+  // [5-0] : 6-bit segmentation
+  // [7-6] : 2-bit QoS (0:bad, 1:poor, 2:fair, 3:good)
+  // [15-8] : 8-bit Fiducial
   get segmentBounds(): SegmentType[] {
     const bounds = [];
     const latestTs = self.latestTs;
     let startIdx = 0;
     for(let i = 1; i < self.data.length; i++) {
-      let prev = self.data[i-1][1] & 0x03;
-      let curr = self.data[i][1] & 0x03;
+      let prev = (self.data[i-1][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
+      let curr = (self.data[i][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
       if (!prev && curr) {
         startIdx = i;
       } else if (prev && !curr) {
@@ -158,10 +168,34 @@ export const SlotMask = types
     }
     return bounds;
   },
+  get segmentAmounts(): {[key: number]: number} {
+    const amounts = {} as {[key: number]: number};
+    const latestTs = self.latestTs;
+    let duration = 0;
+    let startIdx = 0;
+    for(let i = 1; i < self.data.length; i++) {
+      let prev = (self.data[i-1][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
+      let curr = (self.data[i][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
+      if (!prev && curr) {
+        startIdx = i;
+      } else if (prev && !curr) {
+        if (startIdx >= 0 && self.data[i][0] <= latestTs) {
+          duration = i - startIdx;
+          if (amounts[prev]) {
+            amounts[prev] += duration;
+          } else {
+            amounts[prev] = duration;
+          }
+        }
+        startIdx = -1;
+      }
+    }
+    return amounts;
+  },
   get fiducials() {
     const fiducials = [];
     for(let i = 0; i < self.data.length; i++) {
-      let curr = (self.data[i][1] >> 2) & 0x03;
+      let curr = (self.data[i][1] >> SIG_FID_OFFSET) & SIG_FID_MASK;
       if (curr) {
         fiducials.push({ts: self.data[i][0], value: curr, label: ""});
       }
@@ -169,7 +203,7 @@ export const SlotMask = types
     return fiducials;
   },
   get qos(): number[] {
-    return self.data.map(d => (d[1] >> 4) & 0x03);
+    return self.data.map(d => (d[1] >> SIG_QOS_OFFSET) & SIG_QOS_MASK);
   }
 })).views(self => ({
   get qosState(): number {

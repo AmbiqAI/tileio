@@ -3,20 +3,20 @@ import { Chart, ChartData, ChartOptions } from "chart.js";
 import { useEffect, useMemo, useRef } from "react";
 import { TileProps, TileSpec } from "./BaseTile";
 import { binarySearch, GridContainer, GridZStack } from "./utils";
-import { alpha, useTheme } from "@mui/material";
-import { getPlotDurationMs } from "../constants";
-import { observer } from "mobx-react-lite";
 import { ThemeColors } from "../../theme/theme";
+import { getPlotDurationMs } from "../constants";
+import { alpha, useTheme } from "@mui/material";
+import { observer } from "mobx-react-lite";
 
-export const StreamPlotTileSpec: TileSpec =   {
-  type: "STREAM_PLOT_TILE",
-  name: "Stream Plot",
-  description: "Stream signal data",
+export const MetricsStreamTileSpec: TileSpec =   {
+  type: "METRICS_STREAM_TILE",
+  name: "Metrics Stream Tile",
+  description: "Stream metrics data",
   streamingRequired: true,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
-    required: ['name', 'slot', 'chs', 'fiducial', 'primaryColor', 'secondaryColor', 'streamDelay', 'fps'],
+    required: ['name', 'slot', 'metrics', 'fiducial', 'primaryColor', 'secondaryColor', 'streamDelay', 'fps'],
     properties: {
       name: {
         type: 'string',
@@ -28,13 +28,15 @@ export const StreamPlotTileSpec: TileSpec =   {
         default: 0,
         description: 'Slot',
       },
-      chs: {
+      metrics: {
         type: 'array',
-        "title": "Channels",
-        "items": {
-          "type": "integer",
-          "enum": [ 0, 1, 2, 3 ]
+        title: "Metrics",
+        items: {
+          type: 'integer',
+          minimum: 0,
+          maximum: 60,
         },
+        default: [0],
         "uniqueItems": true
       },
       fiducial: {
@@ -49,14 +51,6 @@ export const StreamPlotTileSpec: TileSpec =   {
       secondaryColor: {
         type: 'string',
         default: ThemeColors.colors.secondaryColor
-      },
-      tertiaryColor: {
-        type: 'string',
-        default: ThemeColors.colors.tertiaryColor
-      },
-      quaternaryColor: {
-        type: 'string',
-        default: ThemeColors.colors.quaternaryColor
       },
       streamDelay: {
         type: 'number',
@@ -83,76 +77,60 @@ export const StreamPlotTileSpec: TileSpec =   {
         "inline": true
       }
     },
-    "chs": {
-      "ui:widget": "checkboxes",
-      "ui:options": {
-        "inline": true
-      }
+    "metrics": {
     },
     "primaryColor": {
       "ui:widget": "color"
     },
     "secondaryColor": {
       "ui:widget": "color"
-    },
-    "tertiaryColor": {
-      "ui:widget": "color"
-    },
-    "quaternaryColor": {
-      "ui:widget": "color"
     }
   }
 };
 
 function parseConfig(config: { [key: string]: any}) {
-  console.log('Parsing config');
   const configs = {
     name: 'Stream',
     slot: 0,
-    chs: [0],
+    metrics: [0],
     fiducial: 0,
     primaryColor: ThemeColors.colors.primaryColor,
     secondaryColor: ThemeColors.colors.secondaryColor,
-    tertiaryColor: ThemeColors.colors.tertiaryColor,
-    quaternaryColor: ThemeColors.colors.quaternaryColor,
     streamDelay: 500,
     fps: 15,
     ...config
-  } as StreamPlotTileConfig;
+  } as MetricsStreamTileConfig;
   return configs;
 }
 
-export interface StreamPlotTileConfig {
+export interface MetricsStreamTileConfig {
   name: string;
   slot: number;
-  chs: number[];
+  metrics: number[];
   fiducial: number;
   primaryColor: string;
   secondaryColor: string;
-  tertiaryColor: string;
-  quaternaryColor: string;
   streamDelay: number;
   fps: number;
 }
 
-const StreamPlotTile = observer(({ size, slots, pause, duration, config, device }: TileProps) => {
+const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: TileProps) => {
   const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
-  const signals = configs.slot < slots.length ? slots[configs.slot].signals : undefined;
+  const metrics = configs.slot < slots.length ? slots[configs.slot].metrics : undefined;
   const mask = configs.slot < slots.length ? slots[configs.slot].mask : undefined;
-  const latestTs = signals ? signals.latestTs : 0;
-  const colors = [configs.primaryColor, configs.secondaryColor, configs.tertiaryColor, configs.quaternaryColor];
+  const latestTs = metrics ? metrics.latestTs : 0;
+  const colors = ThemeColors.colors.slots;
   const showAxis = size === "lg";
   const durationMs = getPlotDurationMs(duration, size);
   const chartEl = useRef<Chart<"line">>(null);
-  const chNames = configs.chs.map(ch => device.slots[configs.slot].chs[ch] || `CH${ch}`);
 
   const options = useMemo<ChartOptions<"line">>(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
       cubicInterpolationMode: "monotone",
-      spanGaps: 2*configs.streamDelay,
+      spanGaps: 4*configs.streamDelay,
       elements: {
         point: { radius: 1 },
       },
@@ -161,18 +139,19 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
         show: { animation: { duration: 0 } },
         hide: { animation: { duration: 0 } },
       },
+      interaction: {
+        mode: "x",
+      },
       plugins: {
         annotation: {
           annotations: []
         },
         tooltip: { enabled: false },
         legend: {
-          display: configs.chs.length > 1,
           fullSize: true,
           position: "top",
-          align: "start",
+          align: "center",
           labels: {
-            color: theme.palette.text.primary,
             font: { size: 14, weight: "bold" },
           },
         },
@@ -217,37 +196,36 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
         },
       },
     }),
-    [showAxis, durationMs, pause]
+    [durationMs, pause, showAxis]
   );
 
   const data = useMemo<ChartData<"line">>(
     () => ({
-      datasets: chNames.map((ch, i) => ({
-          label: ch,
-          // backgroundColor: colors[ch%colors.length],
-          backgroundColor: alpha(colors[i%colors.length], 0.3),
-          borderColor: colors[i%colors.length],
+      datasets: configs.metrics.map((met) => ({
+          label: `MET${met}`,
+          backgroundColor: alpha(colors[met%colors.length], 0.3),
+          borderColor: colors[met%colors.length],
           yAxisID: "y",
           data: [],
       })),
     }),
-    [colors, configs, configs.chs, chNames]
+    [colors, configs, configs.metrics]
   );
 
   useEffect(() => {
     const chart = chartEl.current;
-    if (pause || !chart || !signals || !mask || !signals.data || !signals.data.length) {
+    if (pause || !chart || !metrics || !mask || !metrics.data || !metrics.data.length) {
       return;
     }
-    for (let ch = 0; ch < configs.chs.length; ch++) {
+    for (let ch = 0; ch < configs.metrics.length; ch++) {
       const dataset = chart.data.datasets[ch];
-      if (!dataset || signals.data[0].length < ch) { continue; }
+      if (!dataset || metrics.data[0].length < ch) { continue; }
       const sigData = dataset.data as { x: number; y: number }[];
       const refTs = sigData.length ? sigData[sigData.length - 1].x : 0;
-      const newIdx = binarySearch(signals.data, refTs, (a, b) => a - b[0]);
-      if (newIdx >= signals.data.length) { return; }
-      for (let i = newIdx; i < signals.data.length; i++) {
-        sigData.push({ x: signals.data[i][0], y: signals.data[i][ch+1] });
+      const newIdx = binarySearch(metrics.data, refTs, (a, b) => a - b[0]);
+      if (newIdx >= metrics.data.length) { return; }
+      for (let i = newIdx; i < metrics.data.length; i++) {
+        sigData.push({ x: metrics.data[i][0], y: metrics.data[i][ch+1] });
       }
     }
     const annotation = chart.options.plugins?.annotation;
@@ -265,7 +243,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
     }));
 
     chart.update("none");
-  }, [signals, latestTs, mask, configs, pause]);
+  }, [metrics, latestTs, mask, configs, pause]);
 
   return (
     <GridContainer>
@@ -276,4 +254,4 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
   );
 });
 
-export default StreamPlotTile;
+export default MetricsStreamTile;

@@ -4,6 +4,7 @@ import { GridContainer, GridZStack } from "./utils";
 import { Box, Stack } from "@mui/material";
 import Markdown from 'react-markdown';
 import { TileSpec } from "./BaseTile";
+import { useMemo } from "react";
 
 export const MarkdownTileSpec: TileSpec = {
   type: "MARKDOWN_TILE",
@@ -34,15 +35,34 @@ export const MarkdownTileSpec: TileSpec = {
   }
 };
 
+export interface MarkdownTileConfig {
+  name: string;
+  markdown: string;
+}
+
+export function parseConfig(config: { [key: string]: any }): MarkdownTileConfig {
+  const configs = {
+    name: 'Markdown',
+    markdown: '',
+    ...config
+  } as MarkdownTileConfig;
+  return configs;
+}
+
+
 const MarkdownTile = ({ config }: TileProps) => {
-  const configs = config as { name: string; markdown: string; };
+  const configs = useMemo(() => parseConfig(config || {}), [config]);
+
   return (
     <GridContainer>
       <GridZStack level={0}>
         <Stack height="100%" width="100%" justifyContent="center" alignItems="center">
           <Box
-            mx={2}
-            my={1}
+            px={1}
+            pt={-2}
+            m={0}
+            height="100%"
+            width="100%"
             sx={{
               overflowY: "scroll"
             }}

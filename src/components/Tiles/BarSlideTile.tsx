@@ -9,6 +9,70 @@ import { Chart, ChartData, ChartOptions } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { useTheme } from '@mui/system';
 import { ThemeColors } from "../../theme/theme";
+import { RJSFSchema, UiSchema } from "@rjsf/utils";
+import Grid from "@mui/material/Unstable_Grid2/Grid2";
+
+export const ChartSlideSchema: RJSFSchema = {
+  type: 'object',
+  required: ['name', 'type', 'values'],
+  properties: {
+    name: {
+      type: 'string',
+      title: 'Slide Name',
+      default: 'Slide'
+    },
+    type: {
+      type: 'string',
+      enum: ['bar', 'number'],
+      default: 'bar',
+      description: 'Chart Type'
+    },
+    values: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 3,
+      items: {
+        type: 'object',
+        required: ['name', 'value', 'color', 'location'],
+        properties: {
+          name: {
+            type: 'string',
+            default: 'Bar'
+          },
+          value: {
+            type: 'number',
+            default: 0
+          },
+          color: {
+            type: 'string',
+            default: ThemeColors.colors.primaryColor
+          },
+          label: {
+            type: 'string',
+            description: 'Label (e.g. 80 ms)'
+          },
+          location: {
+            type: 'string',
+            enum: ['inside', 'outside'],
+            default: 'inside',
+            description: 'Label location'
+          }
+        }
+      }
+    }
+  }
+};
+
+export const BarSlideUiSchema: UiSchema = {
+  "values": {
+    "items": {
+      "color": {
+        "ui:widget": "color"
+      }
+    }
+  }
+};
+
 
 export const BarSlideTileSpec: TileSpec = {
   type: "BAR_SLIDE_TILE",
@@ -22,7 +86,7 @@ export const BarSlideTileSpec: TileSpec = {
     properties: {
       name: {
         type: 'string',
-        default: 'Bar Slide'
+        default: 'Slides'
       },
       duration: {
         type: 'number',
@@ -35,43 +99,7 @@ export const BarSlideTileSpec: TileSpec = {
         type: 'array',
         minItems: 1,
         maxItems: 5,
-        items: {
-          type: 'object',
-          required: ['name', 'bars'],
-          properties: {
-            name: {
-              type: 'string',
-              default: 'Slide'
-            },
-            bars: {
-              type: 'array',
-              minItems: 1,
-              maxItems: 3,
-              items: {
-                type: 'object',
-                required: ['name', 'value', 'color'],
-                properties: {
-                  name: {
-                    type: 'string',
-                    default: 'Bar'
-                  },
-                  value: {
-                    type: 'number',
-                    default: 0
-                  },
-                  color: {
-                    type: 'string',
-                    default: ThemeColors.colors.primaryColor
-                  },
-                  label: {
-                    type: 'string',
-                    description: 'Label (e.g. 80 ms)'
-                  }
-                }
-              }
-            }
-          }
-        }
+        items: ChartSlideSchema
       }
     }
   },
@@ -80,119 +108,222 @@ export const BarSlideTileSpec: TileSpec = {
       "ui:autocomplete": "off"
     },
     "slides": {
-      "items": {
-        "bars": {
-          "items": {
-            "color": {
-              "ui:widget": "color"
-            }
-          }
-        }
-      }
+      "items": BarSlideUiSchema
     },
   }
 };
 
-export interface BarSlideConfig {
+export interface ChartSlideConfig {
   name: string;
-  bars: {name: string, value: number, color: string, label?: string}[];
+  type: 'bar' | 'number';
+  size: 'sm' | 'md' | 'lg';
+  values: {name: string, value: number, color: string, label?: string, location?: string}[];
 }
 
-export interface BarSlideTileConfig {
+export interface ChartSlideTileConfig {
   name: string;
   duration: number,
-  slides: BarSlideConfig[];
+  slides: ChartSlideConfig[];
 }
 
-const BarSlide = ({ name, bars }: BarSlideConfig) => {
+export function parseConfig(config: { [key: string]: any }): ChartSlideTileConfig {
+  const configs = {
+    name: 'Slides',
+    duration: 5,
+    slides: [],
+    ...config
+  } as ChartSlideTileConfig;
+  return configs;
+}
+
+const BarSlide = ({ name, values: bars, size }: ChartSlideConfig) => {
   const theme = useTheme();
   const chartEl = useRef<Chart<"bar">>(null);
   const data = useMemo<ChartData<"bar">>(() => ({
-    labels: bars.map((bar) => bar.name),
+    labels: bars.map((bar, i) => bar.name),
     datasets: [{
-      data: bars.map((bar) => bar.value),
-      backgroundColor: bars.map((bar) => bar.color),
-      borderColor: bars.map((bar) => bar.color),
-      borderWidth: 1,
-    }],
+        data: bars.map((bar) => bar.value),
+        backgroundColor: bars.map((bar) => bar.color),
+        borderColor: 'rgba(0,0,0,0)',
+        borderWidth: 2,
+        minBarLength: 16,
+    }]
   }), []);
 
-  const options = useMemo<ChartOptions<"bar">>(() => ({
-    indexAxis: 'y',
-    responsive: true,
-    maintainAspectRatio: false,
-    elements: {
-      bar: {
-        borderWidth: 2,
+  const options = useMemo<ChartOptions<"bar">>(() => {
+    const annotations = bars.map((bar) => ({
+      type: 'label',
+      content: [bar.label || `${bar.value}`],
+      xValue: bar.value,
+      yValue: bar.name,
+      position: {
+        x: bar.location === 'outside' ? 'start' : 'end',
+        y: 'center'
       },
-    },
-    plugins: {
-      legend: {
-        display: false,
+      color: theme.palette.text.primary,
+      font: {
+        size: 16,
+        weight: 'bold',
       },
-      title: {
-        text: name,
-        display: true,
-        color: theme.palette.text.primary,
-        font: {
-          size: 18,
-          weight: 'bold',
-        },
-        padding: {
-          bottom: 0
-        }
+    }));
+    // annotations.push(...bars.map((bar, i) => ({
+    //   type: 'label',
+    //   content: [bar.name],
+    //   xValue: 0,
+    //   yValue: bar.name,
+    //   padding: {
+    //     top: 16,
+    //   },
+    //   rotation: 270,
+    //   position: {
+    //     x: 'center',
+    //     y: 'center'
+    //   },
+    //   color: theme.palette.text.primary,
+    //   font: {
+    //     size: 12,
+    //     weight: 'bold',
+    //   },
+    // })))
+
+    const o: ChartOptions<"bar"> = {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      elements: {
       },
-      annotation: {
-        annotations: bars.map((bar) => ({
-          type: 'label',
-          content: [bar.label || `${bar.value}`],
-          xValue: bar.value,
-          yValue: bar.name,
-          position: {
-            x: 'end',
-            y: 'center'
-          },
-          font: {
-            size: 12,
-            weight: 'bold',
-          },
-        })),
-      }
-    },
-    scales: {
-      x: {
-        display: false,
-      },
-      y: {
-        display: true,
-        grid: {
+      plugins: {
+        legend: {
           display: false,
         },
-        ticks: {
-          padding: 1,
+        tooltip: { enabled: false },
+        title: {
+          text: name,
+          display: true,
           color: theme.palette.text.primary,
-          align: 'start',
-          crossAlign: 'center',
-          minRotation: 90,
-          maxRotation: 90,
           font: {
-            size: 12,
+            size: 16,
             weight: 'bold',
           },
         },
-
+        annotation: {
+          // @ts-ignore
+          annotations: annotations
+        }
+      },
+      scales: {
+        x: {
+          display: false,
+        },
+        y: {
+          display: true,
+          grid: {
+            display: true,
+            borderColor: theme.palette.text.primary,
+            color: 'rgba(0, 0, 0, 0)',
+            // color: theme.palette.divider
+            borderWidth: 4,
+            z: 2,
+          },
+          ticks: {
+            display: true,
+            align: 'center',
+            padding: 8,
+            labelOffset: -16,
+            crossAlign: 'near',
+            color: theme.palette.text.primary,
+            minRotation: 90,
+            maxRotation: 90,
+            font: {
+              weight: 'bold',
+            },
+          },
+        }
       }
     }
-  }), []);
+    return o;
+  }, [bars]);
 
   return <Bar ref={chartEl} data={data} options={options} />;
 }
 
-const BarSlideTile = observer(({ config }: TileProps) => {
-  const configs = config as BarSlideTileConfig;
+
+const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
+
+  const labelVariant = size === 'sm' ? 'h5' : 'h4';
+  const nameVariant = size === 'sm' ? 'body1' : 'h6';
+
+  return (
+    <>
+    <GridZStack level={1}>
+    <Stack
+      width="100%"
+      height="100%"
+      alignItems="center"
+      justifyContent="flex-start"
+      padding={0}
+      sx={{
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        textAlign: "end",
+        pt: 1.2,
+      }}
+    >
+      <Typography fontWeight={700} variant="subtitle1" sx={{ lineHeight: 1 }}>
+        {name}
+      </Typography>
+    </Stack>
+  </GridZStack>
+  <GridZStack level={1}>
+    <Stack
+      width="100%"
+      height="100%"
+      justifyContent="center"
+      alignItems="center"
+      p={1}
+      >
+      <Grid container justifyContent="center" spacing={1} width="100%" height="100%" pb={4}>
+        {values.map((value, idx) => (
+        <Grid xs={4} key={`state-${idx}`}>
+          <Stack
+            direction="row"
+            height="100%"
+            justifyContent="center"
+            alignItems="center"
+            spacing={0}
+          >
+            <div
+              style={{
+                borderBottomStyle: "solid",
+                borderBottomWidth: "4px",
+                borderBottomColor: value.color,
+              }}
+            >
+              <Typography variant={labelVariant} fontWeight={800} pr="4px">
+                {value.label || `${value.value}`}
+              </Typography>
+              <Typography color={ThemeColors.colors.secondaryColor} variant={nameVariant} fontWeight={600} pr="4px">
+                {value.name}
+              </Typography>
+            </div>
+          </Stack>
+        </Grid>
+        ))}
+      </Grid>
+    </Stack>
+  </GridZStack>
+  </>
+  )
+}
+
+
+const BarSlideTile = observer(({ size, config }: TileProps) => {
+  const configs = useMemo(() => parseConfig(config || {}), [config]);
+  // return (<> </>);
   return (
     <GridContainer>
-      <GridZStack level={2} style={{ margin: "4px 12px 12px 12px" }}>
+
+      <GridZStack level={2}>
       <Swiper
         spaceBetween={30}
         centeredSlides={true}
@@ -210,7 +341,12 @@ const BarSlideTile = observer(({ config }: TileProps) => {
       >
       {configs.slides.map((slide, index) => (
         <SwiperSlide key={`slide-${slide.name}-${index}`}>
-          <BarSlide name={slide.name} bars={slide.bars} />
+          {slide.type === 'number' && (
+            <NumbersSlide name={slide.name} type={slide.type} values={slide.values} size={size} />
+          )}
+          {slide.type === 'bar' && (
+            <BarSlide name={slide.name} type={slide.type} values={slide.values} size={size} />
+          )}
         </SwiperSlide>
       ))}
 
@@ -233,7 +369,10 @@ const BarSlideTile = observer(({ config }: TileProps) => {
           pb: 0.5,
         }}
       >
-        <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
+        <Typography
+        fontWeight={700}
+        color={ThemeColors.colors.secondaryColor}
+        variant="h6" sx={{ lineHeight: 1 }}>
           {configs.name}
         </Typography>
       </Stack>

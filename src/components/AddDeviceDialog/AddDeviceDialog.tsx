@@ -15,9 +15,15 @@ import {
   Stack,
   Autocomplete,
   TextField,
+  CardActions,
+  Avatar,
+  CardHeader,
+  IconButton,
 } from "@mui/material";
 import validator from '@rjsf/validator-ajv8';
-import { ScanIcon } from "../../assets/icons";
+import { DeviceIcon, ScanIcon } from "../../assets/icons";
+import UploadIcon from '@mui/icons-material/UploadRounded';
+
 import { useStore } from "../../models/store";
 import { ScanButton } from "../ScanButton";
 import { Notifier } from "../../api";
@@ -26,6 +32,7 @@ import { lightTheme } from "@uiw/react-json-view/light";
 import { Form } from "@rjsf/mui";
 import { IDeviceInfo, DeviceInfoSchema } from "../../models/deviceInfo";
 import JsonView from "@uiw/react-json-view";
+import { VisuallyHiddenInput } from "../VisuallyHiddenInput";
 
 interface Props {
   open: boolean;
@@ -56,8 +63,56 @@ const AddDeviceDialog = ({ open, close }: Props) => {
       onClose={() => { // close();
       }}
     >
-      <DialogTitle>
-        Add Device
+      <DialogTitle sx={{ p: 0 }}>
+
+      <CardHeader
+          titleTypographyProps={{ variant: "h6" }}
+          avatar={
+            <Avatar
+              variant="rounded"
+              aria-label="settings"
+              sx={{ bgcolor: "rgba(0,0,0,0)" }}
+            >
+              <DeviceIcon color="action" fontSize="large" />
+            </Avatar>
+          }
+          action={
+            <CardActions>
+              {activeStep === DEVICE_CONFIG_STEP && (
+                <IconButton
+                  component="label"
+                  size="small"
+                >
+                  <UploadIcon />
+                  <VisuallyHiddenInput
+                    onClick={(e) => {
+                      e.currentTarget.value = "";
+                    }}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                          const text = e.target?.result;
+                          console.log(text, typeof text);
+                          if (typeof text === 'string') {
+                            const json = JSON.parse(text);
+                            setFormData(json);
+                          }
+                        };
+                        reader.readAsText(file);
+                      }
+                    }}
+                    type="file"
+                    accept="application/json"
+                    />
+                </IconButton>
+              )}
+            </CardActions>
+          }
+          title="Device Settings"
+        />
+
       </DialogTitle>
 
       <Divider />
@@ -117,7 +172,7 @@ const AddDeviceDialog = ({ open, close }: Props) => {
       )}
 
       {activeStep === DEVICE_CONFIG_STEP && selectedId && (
-        <Form
+      <Form
         schema={DeviceInfoSchema.schema}
         uiSchema={DeviceInfoSchema.uischema}
         formData={formData}

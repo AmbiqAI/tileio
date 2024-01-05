@@ -396,7 +396,7 @@ export class SqlRecordData implements RecordData {
 
     // Device: name, location
     await this.tableToCsv(async () => [await this.getDeviceInfo.bind(this)()], ['name', 'location'], 1, fileOptions);
-
+    await this.tableToCsv(async () => [device.name, device.location], ['name', 'location'], 1, fileOptions);
     // Events
     await this.tableToCsv(this.getEventsRows.bind(this), ['ts', 'name'], await this.getEventsLength(), fileOptions);
 

@@ -39,7 +39,7 @@ export const UioTileSpec: TileSpec = {
   name: "UIO Tile",
   description: "Control user I/O",
   streamingRequired: false,
-  sizes: ["sm", "md"],
+  sizes: ["sm"],
   schema: {
     type: "object",
     required: ["name"],
@@ -66,9 +66,34 @@ export interface UioTileConfig {
   btn3: {name: string, enabled: boolean, off: string, on: string};
 }
 
-const UioTile = observer(({ size, config }: TileProps) => {
+const UioTile = observer(({ size, config, device, uioState }: TileProps) => {
   const configs = config as UioTileConfig;
-  const btnItems = [configs.btn0, configs.btn1, configs.btn2, configs.btn3];
+
+  const btnItems = [{
+    info: configs.btn0,
+    state: uioState ? uioState.btn0 : false,
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+      uioState?.setButtonState(0, event.target.checked);
+    }
+  }, {
+    info: configs.btn1,
+    state: uioState ? uioState.btn1 : false,
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+      uioState?.setButtonState(1, event.target.checked);
+    }
+  }, {
+    info: configs.btn2,
+    state: uioState ? uioState.btn2 : false,
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+      uioState?.setButtonState(2, event.target.checked);
+    }
+  }, {
+    info: configs.btn3,
+    state: uioState ? uioState.btn3 : false,
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+      uioState?.setButtonState(3, event.target.checked);
+    }
+  }];
 
   return (
     <GridContainer>
@@ -78,30 +103,31 @@ const UioTile = observer(({ size, config }: TileProps) => {
           height="100%"
           justifyContent="center"
           alignItems="center"
-          sx={{
-            p: 1.5,
-            pt: 2
-          }}
+          p={1}
         >
-    <FormGroup>
-    <Grid container rowSpacing={1} columnSpacing={1}>
-      {btnItems.map((btn, idx) => (
-        <Grid xs={6} key={btn.name}>
-          <Stack direction="column" alignItems="center">
-          <Stack direction="row" alignItems="center">
-            <Switch size="small" disabled={!btn.enabled} />
-            <Typography variant="button" fontWeight={800} >
-              {btn.on}
-            </Typography>
-          </Stack>
-          <Typography variant="button">
-            {btn.name}
-          </Typography>
-          </Stack>
-        </Grid>
-      ))}
-    </Grid>
-    </FormGroup>
+          <FormGroup>
+          <Grid container spacing={1} width="100%" height="100%" pb={4}>
+            {btnItems.map((btn, idx) => (
+              <Grid xs={6} key={`btn-${btn.info.name}-${idx}`}>
+                <Stack direction="column" alignItems="center">
+                <Stack direction="row" alignItems="center">
+                  <Switch
+                    checked={btn.state}
+                    onChange={btn.onChange}
+                    size="small"
+                    disabled={!btn.info.enabled || !uioState} />
+                  <Typography variant="button" fontWeight={800} >
+                    {btn.state ? btn.info.on: btn.info.off}
+                  </Typography>
+                </Stack>
+                <Typography variant="button">
+                  {btn.info.name}
+                </Typography>
+                </Stack>
+              </Grid>
+            ))}
+          </Grid>
+          </FormGroup>
         </Stack>
       </GridZStack>
 

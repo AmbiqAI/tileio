@@ -5,11 +5,13 @@ import { alpha } from "@mui/system";
 import { Stack, Typography } from "@mui/material";
 import { GridContainer, GridZStack } from "./utils";
 import { observer } from "mobx-react-lite";
+import { ThemeColors } from "../../theme/theme";
 
 type Props = {
   name: string;
   latestTs: number;
   data: { ts: number; [key: string]: number; }[];
+  units: string;
   primaryColor: string;
   secondaryColor: string;
   min?: number;
@@ -34,6 +36,7 @@ const MetricPlotTile = observer(({
   name,
   latestTs,
   data,
+  units,
   primaryColor,
   min,
   max,
@@ -136,6 +139,25 @@ const MetricPlotTile = observer(({
 
   return (
     <GridContainer>
+      <GridZStack level={1}>
+        <Stack
+          width="100%"
+          height="100%"
+          alignItems="center"
+          justifyContent="flex-start"
+          padding={0}
+          sx={{
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            textAlign: "end",
+            pt: 1.2,
+          }}
+        >
+          <Typography fontWeight={700} variant="subtitle1" sx={{ lineHeight: 1 }}>
+            {name}
+          </Typography>
+        </Stack>
+      </GridZStack>
       <GridZStack level={0}>
         <Line
           style={{ margin: "0px -2px -8px -2px" }}
@@ -159,11 +181,11 @@ const MetricPlotTile = observer(({
             pb: 0.5,
           }}
         >
-          <Typography fontWeight={900} variant="h2" sx={{ lineHeight: 1 }}>
+          <Typography fontWeight={900} variant="h3" sx={{ lineHeight: 1 }}>
             {value}
           </Typography>
-          <Typography fontWeight={700} variant="h4" sx={{ lineHeight: 1 }}>
-            {name}
+          <Typography color={ThemeColors.colors.secondaryColor} fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
+            {units}
           </Typography>
         </Stack>
       </GridZStack>

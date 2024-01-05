@@ -2,11 +2,13 @@ import { Scatter } from "react-chartjs-2";
 import { useEffect, useMemo, useRef } from "react";
 import { Chart, ChartData, ChartOptions, ScriptableContext } from "chart.js";
 import { alpha, useTheme } from "@mui/system";
-import { TileProps, TileSpec } from "./BaseTile";
+import { TileProps } from "../BaseTile";
 import { Stack, Typography } from "@mui/material";
-import { GridContainer, GridZStack } from "./utils";
-import { ThemeColors } from "../../theme/theme";
+import { GridContainer, GridZStack } from "../utils";
+import { ThemeColors } from "../../../theme/theme";
 import { observer } from "mobx-react-lite";
+
+import { parseConfig } from "./types";
 
 function getFillColor(color: string): ((context: ScriptableContext<"line">) => string) {
   const fn = (context: ScriptableContext<"line">) => {
@@ -16,74 +18,11 @@ function getFillColor(color: string): ((context: ScriptableContext<"line">) => s
   return fn;
 }
 
-export const PoincarePlotSpec: TileSpec = {
-  type: "POINCARE_PLOT",
-  name: "Poincare Tile",
-  description: "Poincare of fiducials",
-  streamingRequired: false,
-  sizes: ["sm", "md", "lg"],
-  schema: {
-    type: 'object',
-    required: ['name', 'slot', 'primaryColor', 'fiducial'],
-    properties: {
-      name: {
-        type: 'string',
-        default: 'Poincare'
-      },
-      slot: {
-        type: 'number',
-        minimum: 0,
-        maximum: 3,
-        default: 0,
-        description: 'Slot',
-      },
-      fiducial: {
-        type: 'integer',
-        description: 'Fiducial mask',
-        minimum: 0,
-        maximum: 15,
-        default: 0
-      },
-      primaryColor: {
-        type: 'string',
-        description: "Primary color",
-        default: ThemeColors.colors.primaryColor,
-      },
-      min: {
-        type: 'number',
-        description: 'Minimum value',
-      },
-      max: {
-        type: 'number',
-        description: 'Maximum value',
-      }
-    }
-  },
-  uischema: {
-    "primaryColor": {
-      "ui:widget": "color"
-    },
-  }
-};
-
-export interface PoincarePlotConfig {
-  name: string;
-  slot: number;
-  fiducial: number;
-  primaryColor: string;
-  min?: number;
-  max?: number;
-}
-
 const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
   const theme = useTheme();
-  const configs = config as PoincarePlotConfig;
-  const slotIdx = configs.slot && configs.slot < slots.length ? configs.slot : 0;
-  const fiducialMask = configs.fiducial;
-  const slot = slots[slotIdx];
-  const mask = slot.mask;
-
-  const gridColor = useMemo(() => alpha(ThemeColors.colors.primaryColor, 0.7), []);
+  const configs = useMemo(() => parseConfig(config || {}), [config]);
+  const mask = configs.slot < slots.length ? slots[configs.slot].mask : undefined;
+  const latestTs = mask ? mask.latestTs : 0;
 
   const chartEl = useRef<Chart<"scatter">>(null);
 
@@ -101,11 +40,13 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
         },
       ],
     }),
-    []
+    [configs.primaryColor]
   );
 
   const options = useMemo<ChartOptions<"scatter">>(
-    () => ({
+    () => {
+      const gridColor = alpha(ThemeColors.colors.primaryColor, 0.7);
+      return {
       responsive: true,
       maintainAspectRatio: false,
       spanGaps: false,
@@ -116,6 +57,15 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
         hide: { animation: { duration: 0 } },
       },
       plugins: {
+        title: {
+          text: configs.name,
+          display: true,
+          color: theme.palette.text.primary,
+          font: {
+            size: 16,
+            weight: 'bold',
+          },
+        },
         annotation: {
           annotations: [{
             type: 'line',
@@ -143,7 +93,7 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
           title: {
             display: true,
             text: configs.name || undefined,
-            color: theme.palette.text.disabled,
+            color: theme.palette.text.primary,
           },
           position: "top",
           ticks: { display: false, mirror: true },
@@ -161,8 +111,9 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
           ticks: { display: false, mirror: true },
         },
       },
-    }),
-    [gridColor]
+    }
+      },
+    [configs.min, configs.max, configs.name, configs.primaryColor]
   );
 
   useEffect(() => {
@@ -170,19 +121,19 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
     if (!chart || !mask) {
       return;
     }
-    const dataset = chart.data.datasets[0];
-    dataset.data = [];
-    const peaks = mask.fiducials.filter(f => f.value & fiducialMask);
+    const peaks = mask.fiducials.filter(f => f.value & configs.fiducial);
 
+    const dataset = chart.data.datasets[0];
+    dataset.data.splice(0, dataset.data.length);
     for (let i = 1; i < peaks.length - 1; i++) {
       dataset.data.push({ x: peaks[i].ts - peaks[i - 1].ts, y: peaks[i + 1].ts - peaks[i].ts });
     }
     chart.update("quiet");
-  }, [mask.latestTs, mask, pause]);
+  }, [latestTs, mask, configs.fiducial, pause]);
 
   return (
     <GridContainer>
-      <GridZStack level={0} style={{ padding: "8px" }}>
+      <GridZStack level={0} style={{ padding: "8px", paddingTop: "0px" }}>
         <Scatter
           style={{ maxHeight: "400px" }}
           ref={chartEl}

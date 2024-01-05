@@ -36,7 +36,7 @@ const DashboardSettings = types
 .model('DashboardSettings', {
   streaming: types.optional(types.boolean, true),
   duration: types.optional(types.number, 30),
-  tiles: types.array(Tile)
+  tiles: types.optional(types.array(Tile), [])
 })
 .views(self => ({
 }))
@@ -67,7 +67,7 @@ const DashboardSettings = types
     }
   },
   setDuration: function(duration: number) {
-    self.duration = duration;
+    self.duration = Math.max(Math.min(duration, 120), 5);
   },
   setStreaming: function(enable: boolean) {
     self.streaming = enable;

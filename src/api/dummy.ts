@@ -45,7 +45,13 @@ function generateDummySlotSignals(slot: number, numSignals: number, numChs: numb
 
   let ts = Date.now() - numSignals*1000/fs;
   for (let i = 0; i < numSignals; i++) {
-    const maskVal = Math.random() > 0.999 ? 0xF : 0;
+  // [5-0] : 6-bit segmentation
+  // [7-6] : 2-bit QoS (0:bad, 1:poor, 2:fair, 3:good)
+  // [15-8] : 8-bit Fiducial
+    const segVal = Math.random() > 0.99 ? randomInt(0, 0xF) : 0;
+    const qosVal = Math.random() > 0.99 ? randomInt(0, 0x3) : 3;
+    const fidVal = Math.random() > 0.99 ? randomInt(0, 0xF) : 0;
+    const maskVal = (fidVal << 8) | (qosVal << 6) | segVal;
     mask.push([ts, maskVal]);
     const signal = [ts];
     for (let ch = 0; ch < numChs; ch++) {

@@ -15,7 +15,6 @@ import {
   Switch,
   Tooltip,
   Typography,
-  styled,
 } from "@mui/material";
 import {
   IDashboardSettings,
@@ -26,23 +25,17 @@ import AddTileDialog from "../AddTileDialog";
 import { useState } from "react";
 import TilePlaceholder from "./TilePlaceholder";
 import { getSnapshot } from "mobx-state-tree";
+import { Share } from "@capacitor/share";
+import { isPlatform } from "@ionic/react";
+import { Device } from "@capacitor/device";
+import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
+import { VisuallyHiddenInput } from "../VisuallyHiddenInput";
 
 const durationOptions = [
   { label: "5 sec", value: 5 },
   { label: "60 sec", value: 60 },
 ];
 
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
-});
 
 const DashboardSettingsForm = ({ settings }: { settings: IDashboardSettings }) => {
   const toggleStreaming = () => settings.setStreaming(!settings.streaming);
@@ -141,11 +134,29 @@ const DashboardSettingsForm = ({ settings }: { settings: IDashboardSettings }) =
               size="small"
               onClick={async () => {
                 const json = getSnapshot(settings);
-                const blob = new Blob(
-                  [JSON.stringify(json)],
-                  { type: "text/plain;charset=utf-8" }
-                );
-                saveAs(blob, 'settings.json');
+                const info = await Device.getInfo();
+                const isMobile = isPlatform("ios") || isPlatform("android") || info.platform === 'ios';
+                const canShare = (await Share.canShare()).value;
+                if (canShare && isMobile) {
+                  const rst = await Filesystem.writeFile({
+                    data: JSON.stringify(json),
+                    recursive: false,
+                    encoding: Encoding.UTF8,
+                    path: 'pk-dashboard-config.json',
+                    directory: Directory.Cache
+                  });
+                  await Share.share({
+                    title: 'Dashboard Configuration',
+                    dialogTitle: 'Dashboard Configuration',
+                    url: rst.uri,
+                  });
+                } else {
+                  const blob = new Blob(
+                    [JSON.stringify(json)],
+                    { type: "text/plain;charset=utf-8" }
+                  );
+                  saveAs(blob, 'settings.json');
+                }
               }}
             >
               <SaveIcon />
@@ -169,9 +180,10 @@ const DashboardSettingsForm = ({ settings }: { settings: IDashboardSettings }) =
                     const reader = new FileReader();
                     reader.onload = async (e) => {
                       const text = e.target?.result;
+                      console.log(text, typeof text);
                       if (typeof text === 'string') {
                         const json = JSON.parse(text);
-                        settings.setTiles(json.layouts);
+                        settings.setTiles(json.tiles);
                       }
                     };
                     reader.readAsText(file);

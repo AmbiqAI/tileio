@@ -5,13 +5,15 @@ import ConnectIcon from '@mui/icons-material/SensorsRounded';
 import { observer } from "mobx-react-lite";
 import { ThemeColors } from "../../theme/theme";
 import { GridContainer, GridZStack } from "./utils";
+import Grid from "@mui/material/Unstable_Grid2/Grid2";
+
 
 export const SignalStateSpec: TileSpec = {
   type: "SIGNALS_STATE_TILE",
   name: "Signals State Tile",
   description: "Provides connection state of signals",
   streamingRequired: false,
-  sizes: ["sm", "md"],
+  sizes: ["sm"],
   schema: {
     type: 'object',
     required: ['slot'],
@@ -62,12 +64,15 @@ export const SignalConnectionIcon = ({ connected, state, fontSize }: { connected
 
 const SignalStateTile = observer(({ pause, slots }: TileProps) => {
   const connected = !pause;
-  const ecgState = 0; // metrics.length > 1 ? metrics[metrics.length - 1].ecgState : 0;
-  const ppgState = 0; //metrics.length > 1 ? metrics[metrics.length - 1].ppg1State : 0;
-  const ppgStateName = getStateName(connected, ppgState);
-  const ecgStateName = getStateName(connected, ecgState);
-  const ecgColor = getStateColor(connected, ecgState);
-  const ppgColor = getStateColor(connected, ppgState);
+
+  const colors = ThemeColors.colors.slots;
+
+  const slotStates = slots.map((slot, idx) => ({
+    state: slot.mask.qosState,
+    color: colors[idx],
+    name: `S${idx}`,
+  }));
+
   return (
     <GridContainer>
     <GridZStack level={1}>
@@ -85,74 +90,48 @@ const SignalStateTile = observer(({ pause, slots }: TileProps) => {
           pb: 0.5,
         }}
       >
-        <Typography fontWeight={700} variant="h4" sx={{ lineHeight: 1 }}>
+        <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
           QOS
         </Typography>
       </Stack>
     </GridZStack>
 
     <GridZStack level={1}>
-    <Stack
-      direction="column"
-      justifyContent="flex-start"
-      height="100%"
-      pt={1}
-      pb={4}
-      px={1}
-      spacing={1}
-    >
       <Stack
-        direction="row"
-        height="50%"
-        justifyContent="space-between"
+        width="100%"
+        height="100%"
+        justifyContent="center"
         alignItems="center"
-      >
-        <div
-          style={{
-            borderLeftStyle: "solid",
-            borderLeftWidth: "8px",
-            borderLeftColor: ThemeColors.colors.ecg,
-            paddingLeft: "10px",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-          }}
+        p={1}
         >
-          <Typography fontWeight={900} variant="h4" sx={{ lineHeight: 1 }} color={ecgColor}>
-            {ecgStateName}
-          </Typography>
-          <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-            ECG
-          </Typography>
-        </div>
-        <SignalConnectionIcon connected={connected} state={ecgState} fontSize="large" />
+        <Grid container spacing={1} width="100%" height="100%" pb={4}>
+          {slotStates.map((state, idx) => (
+          <Grid xs={6} key={`state-${idx}`}>
+            <Stack
+              direction="row"
+              height="100%"
+              justifyContent="center"
+              alignItems="center"
+              spacing={0}
+            >
+              <div
+                style={{
+                  borderLeftStyle: "solid",
+                  borderLeftWidth: "4px",
+                  borderLeftColor: state.color,
+                  paddingLeft: "6px",
+                }}
+              >
+                <Typography variant="h6" fontWeight={800} pr="4px">
+                  {state.name}
+                </Typography>
+              </div>
+              <SignalConnectionIcon connected={connected} state={state.state} fontSize="small" />
+            </Stack>
+          </Grid>
+          ))}
+        </Grid>
       </Stack>
-
-      <Stack
-        direction="row"
-        height="50%"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <div
-          style={{
-            borderLeftStyle: "solid",
-            borderLeftWidth: "8px",
-            borderLeftColor: ThemeColors.colors.ppg1,
-            paddingLeft: "10px",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-          }}
-        >
-          <Typography fontWeight={900} variant="h4" sx={{ lineHeight: 1 }} color={ppgColor}>
-            {ppgStateName}
-          </Typography>
-          <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-            PPG
-          </Typography>
-        </div>
-        <SignalConnectionIcon connected={connected} state={ppgState} fontSize="large" />
-      </Stack>
-    </Stack>
     </GridZStack>
     </GridContainer>
   );

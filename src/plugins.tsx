@@ -20,6 +20,7 @@ import ZoomPlugin from "chartjs-plugin-zoom";
 import { registerTile } from "./components/Tiles/BaseTile";
 import SignalStateTile, { SignalStateSpec } from "./components/Tiles/SignalStateTile";
 import MarkdownTile, { MarkdownTileSpec } from "./components/Tiles/MarkdownTile";
+import MetricsStreamTile, { MetricsStreamTileSpec } from "./components/Tiles/MetricsStreamTile";
 // import MetricsPlot, { MetricsPlotSpec } from "./components/Tiles/MetricsPlot";
 import EventTile, { EventTileSpec } from "./components/Tiles/EventTile";
 import PoincarePlot, { PoincarePlotSpec } from "./components/Tiles/PoincarePlot";
@@ -37,6 +38,7 @@ registerTile(PoincarePlotSpec.type, PoincarePlotSpec, PoincarePlot);
 registerTile(SparklineTileSpec.type, SparklineTileSpec, SparklineTile);
 registerTile(BarSlideTileSpec.type, BarSlideTileSpec, BarSlideTile);
 registerTile(StreamPlotTileSpec.type, StreamPlotTileSpec, StreamPlotTile);
+registerTile(MetricsStreamTileSpec.type, MetricsStreamTileSpec, MetricsStreamTile);
 registerTile(SegPieTileSpec.type, SegPieTileSpec, SegPieTile);
 registerTile(UioTileSpec.type, UioTileSpec, UioTile);
 

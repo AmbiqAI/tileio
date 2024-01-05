@@ -1,9 +1,12 @@
 import React from "react";
+import { saveAs } from 'file-saver';
 import { observer } from "mobx-react-lite";
 import EditIcon from "@mui/icons-material/Edit";
 import CancelIcon from "@mui/icons-material/CancelPresentationOutlined";
 import DeviceInfoForm from "./DeviceInfoForm";
-import { clone } from "mobx-state-tree";
+import SaveIcon from '@mui/icons-material/SaveAltRounded';
+import UploadIcon from '@mui/icons-material/UploadRounded';
+import { clone, getSnapshot } from "mobx-state-tree";
 import {
   Avatar,
   CardActions,
@@ -26,6 +29,11 @@ import SignalIcon from "../SignalIcon";
 import JsonView from "@uiw/react-json-view";
 import { darkTheme } from "@uiw/react-json-view/dark";
 import { lightTheme } from "@uiw/react-json-view/light";
+import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { isPlatform } from "@ionic/react";
+import { Device } from "@capacitor/device";
+import { VisuallyHiddenInput } from "../VisuallyHiddenInput";
 
 interface Props {
   open: boolean;
@@ -98,6 +106,68 @@ const DeviceInfoDialog = ({
                   <EditIcon fontSize="medium" />
                 )}
               </IconButton>
+
+              <IconButton
+              size="small"
+              onClick={async () => {
+                const json = getSnapshot(info);
+                const devinfo = await Device.getInfo();
+                const isMobile = isPlatform("ios") || isPlatform("android") || devinfo.platform === 'ios';
+                const canShare = (await Share.canShare()).value;
+                if (canShare && isMobile) {
+                  const rst = await Filesystem.writeFile({
+                    data: JSON.stringify(json),
+                    recursive: false,
+                    encoding: Encoding.UTF8,
+                    path: 'pk-dashboard-config.json',
+                    directory: Directory.Cache
+                  });
+                  await Share.share({
+                    title: 'Device Configuration',
+                    dialogTitle: 'Device Configuration',
+                    url: rst.uri,
+                  });
+                } else {
+                  const blob = new Blob(
+                    [JSON.stringify(json)],
+                    { type: "text/plain;charset=utf-8" }
+                  );
+                  saveAs(blob, 'device.json');
+                }
+              }}
+            >
+              <SaveIcon />
+            </IconButton>
+
+            <IconButton
+              component="label"
+              size="small"
+            >
+              <UploadIcon />
+              <VisuallyHiddenInput
+                onClick={(e) => {
+                  e.currentTarget.value = "";
+                }}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                      const text = e.target?.result;
+                      console.log(text, typeof text);
+                      if (typeof text === 'string') {
+                        const json = JSON.parse(text);
+                        setDraftInfo(json);
+                        await onSubmit(json);
+                      }
+                    };
+                    reader.readAsText(file);
+                  }
+                }}
+                type="file"
+                accept="application/json"
+                />
+            </IconButton>
             </CardActions>
           }
           title={info.name}
@@ -157,6 +227,13 @@ const DeviceInfoDialog = ({
               </Typography>
               <JsonView value={info.slots} style={{marginTop: "8px", width: "100%", ...jsonTheme}}/>
             </Stack>
+            <Stack direction="row" alignItems="flex-start">
+              <Typography sx={{ mr: 2, color: "primary.main" }} variant="h6">
+                UIO
+              </Typography>
+              <JsonView value={info.uio} style={{marginTop: "8px", width: "100%", ...jsonTheme}}/>
+            </Stack>
+
           </>
         )}
       </DialogContent>

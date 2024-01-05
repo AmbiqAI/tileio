@@ -3,6 +3,8 @@ import { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { IRecord } from "../../models/record";
 import { IEventMarkerSnapshot } from "../../models/event";
 import { ISlot } from "../../models/slot";
+import { IDeviceInfo } from "../../models/deviceInfo";
+import { IUioState } from "../../models/uioState";
 
 export type TileSize = "sm" | "md" | "lg";
 
@@ -10,12 +12,14 @@ export type TileProps = {
   name: string;
   type: string;
   size: TileSize;
+  device: IDeviceInfo;
   slots: ISlot[];
   events?: IEventMarkerSnapshot[];
   pause?: boolean;
   duration?: number;
   record?: IRecord;
   config?: { [key: string]: any};
+  uioState?: IUioState;
 };
 
 export type TileSpec = {
