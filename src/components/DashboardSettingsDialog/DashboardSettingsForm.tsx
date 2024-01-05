@@ -180,7 +180,6 @@ const DashboardSettingsForm = ({ settings }: { settings: IDashboardSettings }) =
                     const reader = new FileReader();
                     reader.onload = async (e) => {
                       const text = e.target?.result;
-                      console.log(text, typeof text);
                       if (typeof text === 'string') {
                         const json = JSON.parse(text);
                         settings.setTiles(json.tiles);

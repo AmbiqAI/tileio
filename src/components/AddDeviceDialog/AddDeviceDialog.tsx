@@ -94,7 +94,6 @@ const AddDeviceDialog = ({ open, close }: Props) => {
                         const reader = new FileReader();
                         reader.onload = async (e) => {
                           const text = e.target?.result;
-                          console.log(text, typeof text);
                           if (typeof text === 'string') {
                             const json = JSON.parse(text);
                             setFormData(json);

@@ -99,7 +99,6 @@ export function parseConfig(config: { [key: string]: any }): SparklineTileConfig
 
 const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
   const configs = useMemo(() => parseConfig(config || {}), [config]);
-  console.log('iddqd', configs.name, configs.slot, slots.length);
   const name = configs.name;
   const metric = configs.metric;
   const units = configs.units;

@@ -105,7 +105,6 @@ export const StreamPlotTileSpec: TileSpec =   {
 };
 
 function parseConfig(config: { [key: string]: any}) {
-  console.log('Parsing config');
   const configs = {
     name: 'Stream',
     slot: 0,

@@ -272,7 +272,6 @@ const Device = types
 .actions(self => ({
   afterCreate: flow(function*() {
     self.state.reset();
-    // console.log('Device created', self.id);
     self.slots = cast(self.info.slots.map((slot, idx) => Slot.create({
     })));
   })

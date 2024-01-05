@@ -41,7 +41,6 @@ function dataViewToSignalData(data: DataView, numChs: number, fs: number): {sign
     signals.push(row);
     refDate += ts;
   };
-  console.log(`Received signalLen: ${signalLen} ${fs}`);
   return {signals, mask};
 }
 
@@ -261,7 +260,6 @@ class BleManager {
     for (let i = 0; i < state.length; i++) {
       data.setUint8(i, state[i]);
     }
-    console.log(`setUioState ${state}`, data);
     await this.bleWrite(deviceId, PK_SVC_UUID, PK_UIO_CHAR_UUID, data);
   }
 

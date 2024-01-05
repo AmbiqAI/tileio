@@ -24,7 +24,6 @@ export const Tile = types
     self.size = size;
   },
   setConfig: function(config: { [key: string]: any}) {
-    console.log('setConfig', config);
     self.config = config;
   }
 }))

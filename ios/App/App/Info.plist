@@ -49,5 +49,7 @@
 	<string>Connect to PhysioKit devices</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
