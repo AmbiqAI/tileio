@@ -55,7 +55,13 @@ export const getStateColor = (connected: boolean, state: number) => {
   return "#f16757";
 }
 
-export const SignalConnectionIcon = ({ connected, state, fontSize }: { connected: boolean, state: number, fontSize: "small" | "inherit" | "medium" | "large" }) => {
+export type SignalConnectionIconProps = {
+  connected: boolean,
+  state: number,
+  fontSize: "small" | "inherit" | "medium" | "large"
+};
+
+export const SignalConnectionIcon = ({ connected, state, fontSize }: SignalConnectionIconProps) => {
   let color = getStateColor(connected, state);
   let SignalIcon = connected || state ? ConnectIcon : DisconnectedIcon;
   return <SignalIcon fontSize={fontSize} htmlColor={color} />;

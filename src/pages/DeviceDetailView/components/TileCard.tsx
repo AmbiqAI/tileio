@@ -14,7 +14,7 @@ type Params = {
 };
 
 const TileCard = ({ name, type, size, device, config }: Params) => {
-  const mw = size === "sm" ? 256 : size === "md" ? 512 : 1024;
+  // const mw = size === "sm" ? 256 : size === "md" ? 512 : 1024;
   const mh = size === "sm" ? 200 : size === "md" ? 200 : 200;  // 312;
   const xs = size === "sm" ? 6 : size === "md" ? 12 : 12;
   const sm = size === "sm" ? 3 : size === "md" ? 6 : 12;

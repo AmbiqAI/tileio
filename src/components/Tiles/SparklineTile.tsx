@@ -99,19 +99,15 @@ export function parseConfig(config: { [key: string]: any }): SparklineTileConfig
 
 const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
   const configs = useMemo(() => parseConfig(config || {}), [config]);
-  const name = configs.name;
-  const metric = configs.metric;
-  const units = configs.units;
   const metrics = configs.slot < slots.length ? slots[configs.slot].metrics : undefined;
   const latestTs = metrics ? metrics.latestTs : 0;
-  const data = metrics ? metrics.data.map((d) => ({ ts: d[0], y: d[metric+1] })) : [];
-
+  const data = metrics ? metrics.data.map((d) => ({ ts: d[0], y: d[configs.metric+1] })) : [];
   return (
     <MetricPlotTile
-      name={name}
+      name={configs.name}
       latestTs={latestTs}
       data={data}
-      units={units}
+      units={configs.units}
       primaryColor={alpha(configs.primaryColor, 0.6)}
       secondaryColor={configs.secondaryColor}
       min={configs.min}

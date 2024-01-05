@@ -137,17 +137,14 @@ export interface StreamPlotTileConfig {
 const StreamPlotTile = observer(({ size, slots, pause, duration, config, device }: TileProps) => {
   const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
-  const signals = configs.slot < slots.length ? slots[configs.slot].signals : undefined;
-  const mask = configs.slot < slots.length ? slots[configs.slot].mask : undefined;
-  const latestTs = signals ? signals.latestTs : 0;
-  const colors = [configs.primaryColor, configs.secondaryColor, configs.tertiaryColor, configs.quaternaryColor];
-  const showAxis = size === "lg";
-  const durationMs = getPlotDurationMs(duration, size);
+  const latestTs = configs.slot < slots.length ? slots[configs.slot].signals.latestTs : 0;
   const chartEl = useRef<Chart<"line">>(null);
-  const chNames = configs.chs.map(ch => device.slots[configs.slot].chs[ch] || `CH${ch}`);
 
-  const options = useMemo<ChartOptions<"line">>(
-    () => ({
+  const options = useMemo<ChartOptions<"line">>(() => {
+    const showAxis = size === "lg";
+    const durationMs = getPlotDurationMs(duration, size);
+
+    return {
       responsive: true,
       maintainAspectRatio: false,
       cubicInterpolationMode: "monotone",
@@ -215,12 +212,13 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
           },
         },
       },
-    }),
-    [showAxis, durationMs, pause]
-  );
+    }
+  }, [pause, configs, theme, duration, size]);
 
-  const data = useMemo<ChartData<"line">>(
-    () => ({
+  const data = useMemo<ChartData<"line">>(() => {
+    const chNames = configs.chs.map(ch => device.slots[configs.slot].chs[ch] || `CH${ch}`);
+    const colors = [configs.primaryColor, configs.secondaryColor, configs.tertiaryColor, configs.quaternaryColor];
+    return {
       datasets: chNames.map((ch, i) => ({
           label: ch,
           // backgroundColor: colors[ch%colors.length],
@@ -229,12 +227,13 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
           yAxisID: "y",
           data: [],
       })),
-    }),
-    [colors, configs, configs.chs, chNames]
-  );
+    };
+  }, [configs, device.slots]);
 
   useEffect(() => {
     const chart = chartEl.current;
+    const signals = configs.slot < slots.length ? slots[configs.slot].signals : undefined;
+    const mask = configs.slot < slots.length ? slots[configs.slot].mask : undefined;
     if (pause || !chart || !signals || !mask || !signals.data || !signals.data.length) {
       return;
     }
@@ -264,7 +263,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
     }));
 
     chart.update("none");
-  }, [signals, latestTs, mask, configs, pause]);
+  }, [latestTs, configs, pause, data, slots]);
 
   return (
     <GridContainer>

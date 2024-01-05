@@ -10,7 +10,7 @@ import { PhysioKitIcon, ScanIcon } from "../../../assets/icons";
 import { ScanButton } from "../../../components/ScanButton";
 
 const DevicesHeader = () => {
-  const { root: { fetching, fetchDevices, refreshDevices } } = useStore();
+  const { root: { fetching, refreshDevices } } = useStore();
   const [isAddDeviceDialogOpen, showAddDeviceDialog] = useState(false);
   const performScan = async () => {
     await refreshDevices();

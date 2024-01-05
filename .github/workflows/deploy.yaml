@@ -36,6 +36,7 @@ jobs:
         uses: actions/configure-pages@v4
       - name: Install and Build 🔧
         env:
+          CI: ""
           PUBLIC_URL: "${{ steps.pages.outputs.base_url }}/"
         run: |
           npm install

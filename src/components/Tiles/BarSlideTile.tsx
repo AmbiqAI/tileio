@@ -11,6 +11,7 @@ import { useTheme } from '@mui/system';
 import { ThemeColors } from "../../theme/theme";
 import { RJSFSchema, UiSchema } from "@rjsf/utils";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
+import { AnnotationOptions } from "chartjs-plugin-annotation";
 
 export const ChartSlideSchema: RJSFSchema = {
   type: 'object',
@@ -136,9 +137,10 @@ export function parseConfig(config: { [key: string]: any }): ChartSlideTileConfi
   return configs;
 }
 
-const BarSlide = ({ name, values: bars, size }: ChartSlideConfig) => {
+const BarSlide = ({ name, values: bars }: ChartSlideConfig) => {
   const theme = useTheme();
   const chartEl = useRef<Chart<"bar">>(null);
+
   const data = useMemo<ChartData<"bar">>(() => ({
     labels: bars.map((bar, i) => bar.name),
     datasets: [{
@@ -148,10 +150,11 @@ const BarSlide = ({ name, values: bars, size }: ChartSlideConfig) => {
         borderWidth: 2,
         minBarLength: 16,
     }]
-  }), []);
+  }), [bars]);
 
   const options = useMemo<ChartOptions<"bar">>(() => {
-    const annotations = bars.map((bar) => ({
+    // @ts-ignore - chartjs-plugin-annotation types doesnt recognize font key
+    const annotations: AnnotationOptions<"label">[] = bars.map((bar) => ({
       type: 'label',
       content: [bar.label || `${bar.value}`],
       xValue: bar.value,
@@ -166,25 +169,6 @@ const BarSlide = ({ name, values: bars, size }: ChartSlideConfig) => {
         weight: 'bold',
       },
     }));
-    // annotations.push(...bars.map((bar, i) => ({
-    //   type: 'label',
-    //   content: [bar.name],
-    //   xValue: 0,
-    //   yValue: bar.name,
-    //   padding: {
-    //     top: 16,
-    //   },
-    //   rotation: 270,
-    //   position: {
-    //     x: 'center',
-    //     y: 'center'
-    //   },
-    //   color: theme.palette.text.primary,
-    //   font: {
-    //     size: 12,
-    //     weight: 'bold',
-    //   },
-    // })))
 
     const o: ChartOptions<"bar"> = {
       indexAxis: 'y',
@@ -207,7 +191,6 @@ const BarSlide = ({ name, values: bars, size }: ChartSlideConfig) => {
           },
         },
         annotation: {
-          // @ts-ignore
           annotations: annotations
         }
       },
@@ -221,7 +204,6 @@ const BarSlide = ({ name, values: bars, size }: ChartSlideConfig) => {
             display: true,
             borderColor: theme.palette.text.primary,
             color: 'rgba(0, 0, 0, 0)',
-            // color: theme.palette.divider
             borderWidth: 4,
             z: 2,
           },
@@ -242,7 +224,7 @@ const BarSlide = ({ name, values: bars, size }: ChartSlideConfig) => {
       }
     }
     return o;
-  }, [bars]);
+  }, [bars, name, theme]);
 
   return <Bar ref={chartEl} data={data} options={options} />;
 }

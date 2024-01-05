@@ -66,7 +66,7 @@ export interface UioTileConfig {
   btn3: {name: string, enabled: boolean, off: string, on: string};
 }
 
-const UioTile = observer(({ size, config, device, uioState }: TileProps) => {
+const UioTile = observer(({ config, uioState }: TileProps) => {
   const configs = config as UioTileConfig;
 
   const btnItems = [{

@@ -117,16 +117,14 @@ export interface MetricsStreamTileConfig {
 const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: TileProps) => {
   const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
-  const metrics = configs.slot < slots.length ? slots[configs.slot].metrics : undefined;
-  const mask = configs.slot < slots.length ? slots[configs.slot].mask : undefined;
-  const latestTs = metrics ? metrics.latestTs : 0;
-  const colors = ThemeColors.colors.slots;
-  const showAxis = size === "lg";
-  const durationMs = getPlotDurationMs(duration, size);
+  const latestTs = configs.slot < slots.length ? slots[configs.slot].signals.latestTs : 0;
+
   const chartEl = useRef<Chart<"line">>(null);
 
-  const options = useMemo<ChartOptions<"line">>(
-    () => ({
+  const options = useMemo<ChartOptions<"line">>(() => {
+    const showAxis = size === "lg";
+    const durationMs = getPlotDurationMs(duration, size);
+    return {
       responsive: true,
       maintainAspectRatio: false,
       cubicInterpolationMode: "monotone",
@@ -195,12 +193,12 @@ const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: Ti
           },
         },
       },
-    }),
-    [durationMs, pause, showAxis]
-  );
+    };
+  }, [pause, size, duration, theme, configs]);
 
-  const data = useMemo<ChartData<"line">>(
-    () => ({
+  const data = useMemo<ChartData<"line">>(() => {
+    const colors = ThemeColors.colors.slots;
+    return {
       datasets: configs.metrics.map((met) => ({
           label: `MET${met}`,
           backgroundColor: alpha(colors[met%colors.length], 0.3),
@@ -208,13 +206,16 @@ const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: Ti
           yAxisID: "y",
           data: [],
       })),
-    }),
-    [colors, configs, configs.metrics]
+      };
+    }, [configs.metrics]
   );
 
   useEffect(() => {
     const chart = chartEl.current;
-    if (pause || !chart || !metrics || !mask || !metrics.data || !metrics.data.length) {
+    const metrics = configs.slot < slots.length ? slots[configs.slot].metrics : undefined;
+    const mask = configs.slot < slots.length ? slots[configs.slot].mask : undefined;
+
+    if (pause || !chart || !metrics || !mask || !metrics.data || !latestTs) {
       return;
     }
     for (let ch = 0; ch < configs.metrics.length; ch++) {
@@ -243,7 +244,7 @@ const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: Ti
     }));
 
     chart.update("none");
-  }, [metrics, latestTs, mask, configs, pause]);
+  }, [latestTs, configs, pause, data, slots]);
 
   return (
     <GridContainer>

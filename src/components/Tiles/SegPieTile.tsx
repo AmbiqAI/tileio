@@ -1,6 +1,6 @@
 import { Doughnut } from "react-chartjs-2";
-import { useMemo, useRef } from "react";
-import { Chart, ChartData, ChartOptions, LegendItem } from "chart.js";
+import { useEffect, useMemo, useRef } from "react";
+import { Chart, ChartData, ChartOptions } from "chart.js";
 import { Stack, Typography, useTheme } from "@mui/material";
 import { GridContainer, GridZStack } from "./utils";
 import { observer } from "mobx-react-lite";
@@ -94,36 +94,30 @@ export function parseConfig(config: { [key: string]: any }): SegPieTileConfig {
 
 const SegPieTile = observer(({ slots, config }: TileProps) => {
 
-  const configs = useMemo(() => parseConfig(config || {}), [config]);
   const theme = useTheme();
-  const segmentAmounts = configs.slot < slots.length ? slots[configs.slot].mask.segmentAmounts : {};
-  const names = configs.segments.map((segment) => segment.name);
-  const colors = configs.segments.map((segment) => segment.color || ThemeColors.colors.primaryColor);
-  const data = configs.segments.map((segment) => segmentAmounts[segment.value] || 1e-9);
-  const total = Object.values(data).reduce((a, b) => a + b, 0) || 1;
-
-  const labels: LegendItem[] = configs.segments.map((segment, i) => ({
-    text: `${segment.name}: ${(100*data[i]/total).toFixed(0)}%`,
-    fillStyle: segment.color || ThemeColors.colors.primaryColor,
-  }));
-  const latestTs = configs.slot < slots.length ? slots[configs.slot].mask.latestTs : 0;
+  const configs = useMemo(() => parseConfig(config || {}), [config]);
 
   const chartEl = useRef<Chart<"doughnut">>(null);
-  const chartData = useMemo<ChartData<"doughnut">>(
-    () => ({
+
+  const latestTs = configs.slot < slots.length ? slots[configs.slot].mask.latestTs : 0;
+
+  const chartData = useMemo<ChartData<"doughnut">>(() => {
+    const names = configs.segments.map((segment) => segment.name);
+    const colors = configs.segments.map((segment) => segment.color || ThemeColors.colors.primaryColor);
+    return {
       labels: names,
       datasets: [
         {
           label: "DS1",
-          data: data,
+          data: [],
           backgroundColor: colors,
         },
-      ],
-    }),
-    [latestTs]
-  );
+      ]
+    };
+  }, [configs]);
 
-  const options = useMemo<ChartOptions<"doughnut">>(() => ({
+  const options = useMemo<ChartOptions<"doughnut">>(() => {
+    return {
       responsive: true,
       maintainAspectRatio: false,
       spanGaps: false,
@@ -138,52 +132,38 @@ const SegPieTile = observer(({ slots, config }: TileProps) => {
               size: 14,
               weight: "bold",
             },
-            generateLabels: (chart: Chart): LegendItem[] => {
-              return labels;
-            },
             color: theme.palette.text.primary
           }
         },
-      },
-    }),
-  [latestTs]);
+      }
+    };
+    },
+  [theme]);
 
-  // useEffect(() => {
-  //   const chart = chartEl.current;
-  //   if (!chart) {
-  //     return;
-  //   }
-  //   chart.data.datasets = [
-  //     {
-  //       label: name,
-  //       backgroundColor: createGradient(
-  //         chart.ctx,
-  //         chart.chartArea,
-  //         primaryColor
-  //       ),
-  //       borderColor: alpha(primaryColor, 0.6),
-  //       fill: "start",
-  //       tension: 0.4,
-  //       data: [],
-  //     },
-  //   ];
-  //   chart.update("none");
-  //   return;
-  // }, [name, primaryColor]);
+  useEffect(() => {
+    const chart = chartEl.current;
+    if (!chart || !latestTs) {
+      return;
+    }
+    const segmentAmounts = configs.slot < slots.length ? slots[configs.slot].mask.segmentAmounts : {};
+    const data = configs.segments.map((segment) => segmentAmounts[segment.value] || 1e-9);
 
-  // useEffect(() => {
-  //   const chart = chartEl.current;
-  //   if (!chart || !data.length) {
-  //     return;
-  //   }
-  //   // @ts-ignore
-  //   chart.data.datasets[0].data = data;
-  //   if (duration) {
-  //     chart.options.scales!.x!.max = Date.now();
-  //     chart.options.scales!.x!.min = Date.now() - duration*1000;
-  //   }
-  //   chart.update("none");
-  // }, [data, latestTs]);
+    if (chart.legend) {
+      const total = Object.values(data).reduce((a, b) => a + b, 0) || 1;
+      chart.legend.legendItems = configs.segments.map((segment, i) => ({
+        text: `${segment.name}: ${(100*data[i]/total).toFixed(0)}%`,
+        fillStyle: segment.color || ThemeColors.colors.primaryColor,
+      }));
+    }
+
+    const chartData = chart.data.datasets[0];
+    chartData.data = data;
+
+    chart.update("none");
+    return;
+  }, [latestTs, configs, slots]);
+
+
 
   return (
     <GridContainer>
@@ -221,7 +201,6 @@ const SegPieTile = observer(({ slots, config }: TileProps) => {
           }}
         >
           <Doughnut
-            // style={{ margin: "0px -2px -8px -2px" }}
             ref={chartEl}
             data={chartData}
             options={options}

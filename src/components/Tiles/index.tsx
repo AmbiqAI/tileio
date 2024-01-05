@@ -1,6 +1,6 @@
 import { ErrorBoundary } from "react-error-boundary"
 import { TileProps, BaseTile, RegisteredTiles } from "./BaseTile";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 
 function ErrorTile({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {

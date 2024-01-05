@@ -2,7 +2,6 @@ import { useParams } from "react-router-dom";
 import Grid from "@mui/material/Unstable_Grid2";
 import {
   Box,
-  Card,
   CircularProgress,
   Fade,
   Stack,

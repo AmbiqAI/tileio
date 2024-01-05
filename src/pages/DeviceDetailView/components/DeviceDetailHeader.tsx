@@ -209,7 +209,7 @@ const DeviceDetailHeader = ({ device }: { device: IDevice }) => {
         signalStrength={deviceState.signalStrength}
         lastSeenDate={device.seenDate}
         onSubmit={async (info: IDeviceInfo) => {
-          await device.setInfo(info)
+          device.setInfo(info)
         }}
         onClose={() => { showDeviceInfoDialog(false); }}
         disabled={false}

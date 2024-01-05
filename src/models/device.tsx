@@ -104,14 +104,14 @@ const Device = types
   fetchInfo: flow(function*() {
     yield delay(1);
   }),
-  setInfo: flow(function*(info: IDeviceInfo) {
+  setInfo: function(info: IDeviceInfo) {
     try {
       applySnapshot(self.info, info);
       self.info.id = self.id;
     } catch(error) {
       console.error(`Failed updating device ${self.id} info}`, error);
     }
-  }),
+  },
   setSettings: function(settings: IDashboardSettings) {
     applySnapshot(self.settings, getSnapshot(clone(settings)));
   }
@@ -270,11 +270,11 @@ const Device = types
   }
 }))
 .actions(self => ({
-  afterCreate: flow(function*() {
+  afterCreate: function() {
     self.state.reset();
     self.slots = cast(self.info.slots.map((slot, idx) => Slot.create({
     })));
-  })
+  }
 }));
 
 export const NotFoundDevice = (id: string) => Device.create({

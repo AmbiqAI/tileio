@@ -44,9 +44,11 @@ const MetricPlotTile = observer(({
   precision,
   yAxisId
 }: Props) => {
+
   const ts = data.length ? data[data.length - 1].ts : undefined;
   const value = data.length ? (data[data.length - 1][yAxisId ?? "y"] || 0).toFixed(precision ?? 0) : "--";
   const chartEl = useRef<Chart<"line">>(null);
+
   const chartData = useMemo<ChartData<"line">>(
     () => ({
       datasets: [
@@ -97,7 +99,7 @@ const MetricPlotTile = observer(({
         yAxisKey: yAxisId ?? "y",
       }
     }),
-    [min, max]
+    [min, max, yAxisId]
   );
 
   useEffect(() => {
@@ -125,7 +127,7 @@ const MetricPlotTile = observer(({
 
   useEffect(() => {
     const chart = chartEl.current;
-    if (!chart || !data.length) {
+    if (!chart || !data.length || !latestTs) {
       return;
     }
     // @ts-ignore
@@ -135,7 +137,7 @@ const MetricPlotTile = observer(({
       chart.options.scales!.x!.min = ts - duration*1000;
     }
     chart.update("none");
-  }, [data, latestTs]);
+  }, [data, latestTs, duration, ts]);
 
   return (
     <GridContainer>

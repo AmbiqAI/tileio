@@ -112,8 +112,9 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
         },
       },
     }
-      },
-    [configs.min, configs.max, configs.name, configs.primaryColor]
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [configs.min, configs.max, configs.name, theme.palette.divider, theme.palette.text.primary]
   );
 
   useEffect(() => {
