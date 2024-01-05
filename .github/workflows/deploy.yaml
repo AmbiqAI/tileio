@@ -38,7 +38,7 @@ jobs:
         env:
           PUBLIC_URL: "${{ steps.pages.outputs.base_url }}/"
         run: |
-          npm ci
+          npm install
           npm run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
