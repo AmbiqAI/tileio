@@ -1,8 +1,16 @@
 name: Build and Deploy
+# on:
+#   release:
+#     types:
+#       - created
+#       - edited
 on:
-  release:
-    types:
-      - created
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 permissions:
   contents: write
 jobs:
