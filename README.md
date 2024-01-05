@@ -1,1 +1,1 @@
-# PhysioKit App
+# PhysioKit Pro
