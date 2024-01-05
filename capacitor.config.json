@@ -1,6 +1,6 @@
 {
 	"appId": "ai.ambiq.physiokit",
-	"appName": "PhysioKit",
+	"appName": "PhysioKit Pro",
 	"webDir": "build",
 	"bundledWebRuntime": false,
 	"loggingBehavior": "none"
