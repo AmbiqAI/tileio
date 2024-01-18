@@ -6,7 +6,7 @@ import SpeedDialAction from "@mui/material/SpeedDialAction";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CloseIcon from "@mui/icons-material/CloseRounded";
-import { PhysioKitIcon } from "../assets/icons";
+import { TileioIcon } from "../assets/icons";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import { IconButton, Theme } from "@mui/material";
 
@@ -24,7 +24,7 @@ function SpeedDialNav() {
             history.push("/devices");
           }}
         >
-          <PhysioKitIcon color="primary" sx={{ fontSize: "28px" }} />
+          <TileioIcon color="primary" sx={{ fontSize: "28px" }} />
         </IconButton>
       ),
     },
@@ -75,7 +75,7 @@ function SpeedDialNav() {
           right: 24,
           zIndex: 1101,
         }}
-        icon={<SpeedDialIcon icon={<PhysioKitIcon/>} openIcon={<CloseIcon/>} />}
+        icon={<SpeedDialIcon icon={<TileioIcon />} openIcon={<CloseIcon/>} />}
       >
         {/* First action flickers on safari due to transition time of 0ms. Add dummy */}
         <SpeedDialAction

@@ -1,18 +1,19 @@
 import { flow } from 'mobx';
 import { matchPath } from 'react-router';
-import { applySnapshot, cast, clone, destroy, getParentOfType, getSnapshot, Instance, SnapshotIn, types } from 'mobx-state-tree';
+import { applySnapshot, cast, clone, destroy, getParentOfType, Instance, SnapshotIn, typecheck, types } from 'mobx-state-tree';
 import { Link as RouterLink } from 'react-router-dom';
 import { IconButton } from '@mui/material';
 import ViewRecordIcon from '@mui/icons-material/LaunchRounded';
-import DeviceInfo, { DefaultDeviceInfo, IDeviceInfo } from './deviceInfo';
-import bleManager, { Notifier } from '../api';
+import DeviceInfo, { DefaultDeviceInfo, IDeviceInfo, IDeviceInfoSnapshot } from './deviceInfo';
+import { Notifier, getApi } from '../api';
 import Record, { IRecord } from './record';
 import { delay } from '../utils';
 import { IRoot, Root } from './root';
 import DeviceState, { DeviceConnectionType } from './deviceState';
-import DashboardSettings, { IDashboardSettings } from './dashboardSettings';
+import DashboardSettings, { IDashboardSettings, IDashboardSettingsSnapshot } from './dashboardSettings';
 import { Slot } from './slot';
 import { UioState } from './uioState';
+import { cloneDeep } from 'lodash';
 
 const Device = types
 .model('Device', {
@@ -26,7 +27,7 @@ const Device = types
 .volatile(self => ({
   record: undefined as (undefined | IRecord),
   notifications: false,
-  polling: undefined as (undefined | NodeJS.Timeout)
+  polling: undefined as (undefined | NodeJS.Timeout),
 }))
 .views(self => ({
   get path() {
@@ -75,7 +76,7 @@ const Device = types
   fetchSignalStrength: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.state.setSignalStrength(yield bleManager.getDeviceStrength(self.id));
+      self.state.setSignalStrength(yield getApi().getDeviceStrength(self.id));
     } catch(error) {
       console.error(`Failed fetching RSSI: ${error}`);
     }
@@ -83,7 +84,7 @@ const Device = types
   fetchBatterylevel: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.state.setBatteryLevel(yield bleManager.getDeviceBatteryLevel(self.id));
+      self.state.setBatteryLevel(yield getApi().getDeviceBatteryLevel(self.id));
     } catch(error) {
       console.error(`Failed reading battery level: ${error}`);
     }
@@ -91,7 +92,7 @@ const Device = types
   fetchUioState: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.uioState.setState(yield bleManager.getUioState(self.id));
+      self.uioState.setState(yield getApi().getUioState(self.id));
     } catch(error) {
       console.error(`Failed reading UIO state: ${error}`);
     }
@@ -99,21 +100,35 @@ const Device = types
   setUioButton: flow(function*(button: number, state: boolean) {
     if (self.state.disconnected) { return; }
     self.uioState.setButtonState(button, state);
-    yield bleManager.setUioState(self.id, self.uioState.state);
+    yield getApi().setUioState(self.id, self.uioState.state);
   }),
   fetchInfo: flow(function*() {
     yield delay(1);
   }),
   setInfo: function(info: IDeviceInfo) {
     try {
-      applySnapshot(self.info, info);
+      typecheck(DeviceInfo, info);
+      applySnapshot(self.info, cloneDeep(info));
       self.info.id = self.id;
     } catch(error) {
-      console.error(`Failed updating device ${self.id} info}`, error);
+      console.error(error);
+      Notifier.add({
+        message: `Failed applying device info. (${error})`,
+        options: { variant: 'error' },
+      });
     }
   },
-  setSettings: function(settings: IDashboardSettings) {
-    applySnapshot(self.settings, getSnapshot(clone(settings)));
+  setSettings: function(settings: IDashboardSettings|IDashboardSettingsSnapshot) {
+    try {
+      typecheck(DashboardSettings, settings);
+      applySnapshot(self.settings, cloneDeep(settings));
+    } catch(error) {
+      console.error(error);
+      Notifier.add({
+        message: `Failed applying settings. (${error})`,
+        options: { variant: 'error' },
+      });
+    }
   }
 }))
 .actions(self => ({
@@ -130,7 +145,7 @@ const Device = types
       self.polling = undefined;
     }
     for (let slot = 0; slot < self.info.slots.length; slot++) {
-      yield bleManager.enableSlotMetricsNotifications(self.id, slot, self.receivedSlotMetrics);
+      yield getApi().enableSlotMetricsNotifications(self.id, slot, self.receivedSlotMetrics);
     }
     self.polling = setInterval(self.fetchUpdates, 2500);
   }),
@@ -140,7 +155,7 @@ const Device = types
       self.polling = undefined;
     }
     for (let slot = 0; slot < self.info.slots.length; slot++) {
-      yield bleManager.disableSlotMetricsNotifications(self.id, slot);
+      yield getApi().disableSlotMetricsNotifications(self.id, slot);
     }
   }),
 }))
@@ -152,9 +167,9 @@ const Device = types
     if (self.state.disconnected || self.notifications === enable) { return; }
     for (let slot = 0; slot < self.info.slots.length; slot++) {
       if (enable) {
-        yield bleManager.enableSlotNotifications(self.id, slot, self.receivedSlotData);
+        yield getApi().enableSlotNotifications(self.id, slot, self.receivedSlotData);
       } else {
-        yield bleManager.disableSlotNotifications(self.id, slot);
+        yield getApi().disableSlotNotifications(self.id, slot);
       }
     }
     self.notifications = enable;
@@ -209,7 +224,7 @@ const Device = types
     try {
       self.slots.forEach(slot => slot.clear());
       self.state.setConnectionState(DeviceConnectionType.CONNECTING);
-      yield bleManager.deviceConnect(self.id, self.info, self.onDisconnected);
+      yield getApi().deviceConnect(self.id, self.info, self.onDisconnected);
       self.state.setConnectionState(DeviceConnectionType.CONNECTED);
       yield delay(500);
       yield self.fetchUioState();
@@ -229,7 +244,7 @@ const Device = types
     try {
       // If not connected, refresh online state
       if (self.state.disconnected && !self.state.online) {
-        const available = yield bleManager.refreshPreviousDevice(self.id);
+        const available = yield getApi().refreshPreviousDevice(self.id);
         self.setOnline(available);
       // If connected, refresh device info
       } else if (self.state.connected) {
@@ -244,7 +259,7 @@ const Device = types
       yield self.setNotifications(false);
       yield self.stopPolling();
       yield self.stopRecording();
-      yield bleManager.deviceDisconnect(self.id);
+      yield getApi().deviceDisconnect(self.id);
       self.state.setConnectionState(DeviceConnectionType.DISCONNECTED);
     }
   }),
@@ -271,7 +286,6 @@ const Device = types
 }))
 .actions(self => ({
   afterCreate: function() {
-    self.state.reset();
     self.slots = cast(self.info.slots.map((slot, idx) => Slot.create({
     })));
   }
@@ -282,14 +296,12 @@ export const NotFoundDevice = (id: string) => Device.create({
   info: DefaultDeviceInfo(id),
 });
 
-export const NewDevice = (id: string, name: string) => Device.create({
+export const NewDevice = (id: string, info?: IDeviceInfoSnapshot) => Device.create({
   id: id,
   info: {
+    ...(info ? info : {}),
     id: id,
-    name: name,
-    location: 'loc',
   },
-  slots: [],
 });
 
 export default Device;

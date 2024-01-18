@@ -13,7 +13,8 @@ export const PoincarePlotSpec: TileSpec = {
     properties: {
       name: {
         type: 'string',
-        default: 'Poincare'
+        default: 'Poincare',
+        title: 'Name'
       },
       slot: {
         type: 'integer',

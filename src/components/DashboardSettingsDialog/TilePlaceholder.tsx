@@ -21,7 +21,7 @@ import {
   IDashboardSettings,
 } from "../../models/dashboardSettings";
 import TileSettingDialog from "../TileSettingDialog";
-import { RegisteredTiles } from "../Tiles/BaseTile";
+import { InvalidTileSpec, RegisteredTiles } from "../Tiles/BaseTile";
 import { useState } from "react";
 import { LayoutSizeType } from "../../models/types";
 
@@ -32,7 +32,12 @@ type TilePlaceholderParams = {
 };
 
 const TilePlaceholder = ({ index, settings, layout }: TilePlaceholderParams) => {
-  const tileSpec = RegisteredTiles[layout.type]?.spec || null;
+  let tileSpec = RegisteredTiles[layout.type]?.spec || null;
+  const validSpec = tileSpec !== null;
+  if (!validSpec) {
+    tileSpec = InvalidTileSpec(layout.type);
+  }
+
   const handleSizeChange = (
     layout: ITile,
     newSize: string | null
@@ -45,16 +50,14 @@ const TilePlaceholder = ({ index, settings, layout }: TilePlaceholderParams) => 
 
   const size = layout.size;
   const mw = size === "sm" ? 256 : size === "md" ? 512 : 1024;
-  const mh = size === "sm" ? 190 : size === "md" ? 190 : 190;  // 312;
+  const mh = size === "sm" ? 200 : size === "md" ? 200 : 200;  // 312;
   const xs = size === "sm" ? 6 : size === "md" ? 12 : 12;
   const sm = size === "sm" ? 3 : size === "md" ? 6 : 12;
   const md = size === "sm" ? 2 : size === "md" ? 4 : 6;
   const lg = size === "sm" ? 2 : size === "md" ? 4 : 6;
-  const xl = size === "sm" ? 3 : size === "md" ? 6 : 12;
+  const xl = size === "sm" ? 2 : size === "md" ? 4 : 6;
 
-  if (!tileSpec) {
-    return null;
-  }
+
 
   const disabled = !settings.streaming && (tileSpec.streamingRequired || false);
 
@@ -88,6 +91,7 @@ const TilePlaceholder = ({ index, settings, layout }: TilePlaceholderParams) => 
               <>
               <IconButton
                 size="small"
+                disabled={!validSpec}
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -107,7 +111,7 @@ const TilePlaceholder = ({ index, settings, layout }: TilePlaceholderParams) => 
               justifyContent="space-between"
               alignItems="flex-start"
             >
-              <Typography variant="body2" lineHeight="normal" color="primary">
+              <Typography variant="body2" lineHeight="normal" color={validSpec ? "primary" : "error"}>
                 {tileSpec.name}
               </Typography>
 

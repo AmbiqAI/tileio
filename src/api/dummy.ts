@@ -1,24 +1,21 @@
 import { IDeviceInfo } from '../models/deviceInfo';
 import { delay } from '../utils';
+import { ApiManager } from './api';
 
 const devices: {id: string, name: string}[] = [
   {
     id: '00001111',
-    name: 'AP EVB',
+    name: 'Device01',
   }, {
     id: '00002222',
-    name: 'CES Demo',
+    name: 'Device02',
   }, {
     id: '000003333',
-    name: 'PhysioKit Demo',
+    name: 'Device03',
   },
   {
     id: '000004444',
-    name: 'SleepKit',
-  },
-  {
-    id: '000005555',
-    name: 'HeartKit',
+    name: 'Device04',
   },
 ];
 
@@ -30,9 +27,9 @@ function getRandomFloat(min: number, max: number) {
   return Math.random()*(max - min) + min;
 }
 
-function roundf(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
-}
+// function roundf(value: number): number {
+//   return Math.round((value + Number.EPSILON) * 100) / 100;
+// }
 
 function generateDummySlotSignals(slot: number, numSignals: number, numChs: number, fs: number): {signals: number[][], mask: number[][]} {
   const signals: number[][] = [];
@@ -45,10 +42,10 @@ function generateDummySlotSignals(slot: number, numSignals: number, numChs: numb
 
   let ts = Date.now() - numSignals*1000/fs;
   for (let i = 0; i < numSignals; i++) {
-  // [5-0] : 6-bit segmentation
-  // [7-6] : 2-bit QoS (0:bad, 1:poor, 2:fair, 3:good)
-  // [15-8] : 8-bit Fiducial
-    const segVal = Math.random() > 0.99 ? randomInt(0, 0xF) : 0;
+    // [5-0] : 6-bit segmentation
+    // [7-6] : 2-bit QoS (0:bad, 1:poor, 2:fair, 3:good)
+    // [15-8] : 8-bit Fiducial
+    const segVal = Math.random() > 0.99 ? randomInt(1, 4) : i > 0 ? mask[i-1][1] & 0x3F : 0;
     const qosVal = Math.random() > 0.99 ? randomInt(0, 0x3) : 3;
     const fidVal = Math.random() > 0.99 ? randomInt(0, 0xF) : 0;
     const maskVal = (fidVal << 8) | (qosVal << 6) | segVal;
@@ -73,7 +70,7 @@ function generateDummySlotMetrics(slot: number, numMetrics: number): number[] {
   return metrics;
 }
 
-class PrBleManager {
+class EmulatorManager implements ApiManager {
 
   initialized: boolean;
   deviceInfo: Record<string, IDeviceInfo|undefined>;
@@ -111,9 +108,10 @@ class PrBleManager {
   }
 
   async refreshPreviousDevices(deviceIds: string[], cb: (deviceId: string, name: string) => void): Promise<void> {
-    for (const device of devices) {
+    const ids = [...deviceIds, ...devices.map(d => d.id)];
+    for (const id of ids) {
       await delay(100);
-      cb(device.id, device.name);
+      cb(id, id);
     }
   }
 
@@ -143,7 +141,7 @@ class PrBleManager {
     this.callbacks[`${deviceId}.disconnect`] = undefined;
   }
 
-  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => void): Promise<void> {
+  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
     console.log(`enableSlotNotifications ${deviceId} ${slot}`);
     await this.disableSlotNotifications(deviceId, slot);
     const deviceInfo = this.deviceInfo[deviceId];
@@ -220,4 +218,4 @@ class PrBleManager {
 
 }
 
-export default new PrBleManager();
+export default new EmulatorManager();

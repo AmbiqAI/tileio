@@ -1,4 +1,3 @@
-import { IonApp } from '@ionic/react';
 import { createHashHistory } from 'history';
 import { Router, Route, Redirect, Switch } from 'react-router-dom';
 import DevicesView from './pages/DevicesView';
@@ -14,7 +13,7 @@ export const history = createHashHistory();
 
 export default function App() {
   return (
-    <IonApp>
+    <>
       <Router history={history}>
         <Snackbar maxSnack={5}
             anchorOrigin={{
@@ -34,6 +33,6 @@ export default function App() {
         </Snackbar>
         <SpeedDialNav />
       </Router>
-    </IonApp>
+    </>
   );
 }

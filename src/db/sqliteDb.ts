@@ -340,11 +340,11 @@ export class SqlRecordData implements RecordData {
     await db.run("DELETE from events WHERE ts = ?", [ts])
   }
 
-  async tableToCsv(getRows: (i: number, len: number) => Promise<{}[]>, columns: string[], num_rows: number, fileOptions: ReadFileOptions) {
+  async tableToCsv(getRows: (i: number, len: number) => Promise<{}[]>, columns: string[], numRows: number, fileOptions: ReadFileOptions) {
     const BLOCK_SIZE = 1024;
-    for (let r = 0; r < num_rows; r += BLOCK_SIZE) {
-      const len = Math.min(BLOCK_SIZE, num_rows - r);
-      const lastBlock = (r + BLOCK_SIZE > num_rows);
+    for (let r = 0; r < numRows; r += BLOCK_SIZE) {
+      const len = Math.min(BLOCK_SIZE, numRows - r);
+      const lastBlock = (r + BLOCK_SIZE > numRows);
       await Filesystem.appendFile({
         data: unparse(
           await getRows(r, len),
@@ -375,7 +375,10 @@ export class SqlRecordData implements RecordData {
       } else {
         const db = await this.db();
         const uri = (await db.getUrl()).url;
-        if (uri) { return uri;  }
+        if (!uri) {
+          throw Error('Failed to generate url');
+        }
+        return uri;
       }
     }
 
@@ -392,20 +395,26 @@ export class SqlRecordData implements RecordData {
 
     // Record: name, date, duration
     const recordRow = {record: this.name, startDate: date.toLocaleDateString(), startTime: date.toLocaleTimeString(), duration: duration};
-    await this.tableToCsv(async () => [recordRow], ['record', 'startDate', 'startTime', 'duration'], 1, fileOptions);
+    await this.tableToCsv(async () => [recordRow], Object.keys(recordRow), 1, fileOptions);
 
     // Device: name, location
-    await this.tableToCsv(async () => [await this.getDeviceInfo.bind(this)()], ['name', 'location'], 1, fileOptions);
-    await this.tableToCsv(async () => [device.name, device.location], ['name', 'location'], 1, fileOptions);
-    // Events
-    await this.tableToCsv(this.getEventsRows.bind(this), ['ts', 'name'], await this.getEventsLength(), fileOptions);
+    // await this.tableToCsv(async () => [await this.getDeviceInfo.bind(this)()], ['name', 'location'], 1, fileOptions);
+    await this.tableToCsv(async () => [{name: device.name, location: device.location}], ['name', 'location'], 1, fileOptions);
+    // // Events
+    // await this.tableToCsv(this.getEventsRows.bind(this), ['ts', 'name'], await this.getEventsLength(), fileOptions);
 
     // Slots
     for (let i = 0; i < this.deviceInfo.slots.length; i++) {
       const slot = this.deviceInfo.slots[i];
-      await this.tableToCsv(this.getSlotSignalsRows.bind(this, i), ['ts'].concat(slot.chs), await this.getSlotSignalsLength(i), fileOptions);
-      await this.tableToCsv(this.getSlotMaskRows.bind(this, i), ['ts', 'mask'], await this.getSlotMaskLength(i), fileOptions);
-      await this.tableToCsv(this.getSlotMetricsRows.bind(this, i), ['ts'].concat(slot.metrics), await this.getSlotMetricsLength(i), fileOptions);
+      const signalsHeader = ['ts'].concat(slot.chs);
+      const maskheader = ['ts', 'mask'];
+      const metricsheader = ['ts'].concat(slot.metrics);
+      const signalLen = await this.getSlotSignalsLength(i);
+      const maskLen = await this.getSlotMaskLength(i);
+      const metricsLen = await this.getSlotMetricsLength(i);
+      await this.tableToCsv(this.getSlotSignalsRows.bind(this, i), signalsHeader, signalLen, fileOptions);
+      await this.tableToCsv(this.getSlotMaskRows.bind(this, i), maskheader, maskLen, fileOptions);
+      await this.tableToCsv(this.getSlotMetricsRows.bind(this, i), metricsheader, metricsLen, fileOptions);
     }
 
     return (await Filesystem.getUri({

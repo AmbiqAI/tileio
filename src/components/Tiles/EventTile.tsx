@@ -67,8 +67,8 @@ const EventTile = observer(({ record }: TileProps) => {
             pb: 0.5,
           }}
         >
-          <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-            ADD<br></br>EVENT
+          <Typography fontWeight={800} variant="h6" sx={{ lineHeight: 1 }}>
+            ADD<br></br>Marker
           </Typography>
         </Stack>
       </GridZStack>

@@ -12,12 +12,12 @@ export const DeviceConnectionState = types.enumeration<DeviceConnectionType>(
 
 const DeviceState = types
 .model('DeviceState', {
-  online: types.optional(types.boolean, false),
-  connectionState: types.optional(DeviceConnectionState, DeviceConnectionType.DISCONNECTED),
-  batteryLevel: types.optional(types.number, 0),
-  signalStrength: types.optional(types.number, 0)
 })
 .volatile(self => ({
+  online: false,
+  connectionState: DeviceConnectionType.DISCONNECTED,
+  batteryLevel: 0,
+  signalStrength: 0,
 }))
 .views(self => ({
   get connecting() {
@@ -57,3 +57,6 @@ const DeviceState = types
 export default DeviceState;
 export interface IDeviceState extends Instance<typeof DeviceState> {}
 export interface IDeviceStateSnapshot extends SnapshotIn<typeof DeviceState> {}
+
+export const DefaultDeviceState = (id: string) => DeviceState.create({
+});

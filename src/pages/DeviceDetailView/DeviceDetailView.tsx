@@ -3,11 +3,12 @@ import Box from '@mui/material/Box';
 import { Fade, Stack, Typography } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { observer } from 'mobx-react-lite';
-import { NotFoundDevice } from '../../models/device';
+import { IDevice, NotFoundDevice } from '../../models/device';
 import { useStore } from '../../models/store';
 import DeviceDetailHeader from './components/DeviceDetailHeader';
 import DeviceDetailFooter from './components/DeviceDetailFooter';
 import TileCard from './components/TileCard';
+
 
 type DeviceParams = {
   id: string;
@@ -30,7 +31,7 @@ const EmpyTileView = () => {
   );
 };
 
-const NoDeviceView = ({id }: {id: string}) => {
+const NoDeviceView = ({ id }: { id: string }) => {
   const d = NotFoundDevice(id);
   return (
     <Box
@@ -50,6 +51,37 @@ const NoDeviceView = ({id }: {id: string}) => {
   );
 }
 
+
+const DeviceDetailGrid = observer(({ device }: { device: IDevice }) => {
+  return (
+    <Fade in>
+      <Grid
+        container
+        px={1}
+        spacing={1.5}
+        justifyContent="flex-start"
+        alignContent="flex-start"
+        alignItems="flex-start"
+        width="100%"
+        margin="auto"
+      >
+        {device.settings.tiles.map((item, idx) => {
+          return (
+            <TileCard key={`${item.name}-${idx}`}
+              name={item.name}
+              size={item.size}
+              type={item.type}
+              device={device}
+              config={item.config}
+            />
+          )
+        })}
+      </Grid>
+    </Fade>
+  )
+});
+
+
 const DeviceDetailView = () => {
   const { id } = useParams<DeviceParams>();
   const { root: { deviceById } } = useStore();
@@ -57,7 +89,7 @@ const DeviceDetailView = () => {
 
   if (device === undefined) {
     return (
-    <NoDeviceView id={id} />
+      <NoDeviceView id={id} />
     );
   }
 
@@ -74,30 +106,7 @@ const DeviceDetailView = () => {
     >
       <DeviceDetailHeader device={device} />
       {device.settings.tiles.length === 0 && <EmpyTileView />}
-      <Fade in>
-        <Grid
-          container
-          px={1}
-          spacing={1.5}
-          justifyContent="flex-start"
-          alignContent="flex-start"
-          alignItems="flex-start"
-          width="100%"
-          margin="auto"
-        >
-          {device.settings.tiles.map((item, idx) => {
-            return (
-              <TileCard key={`${item.name}-${idx}`}
-                name={item.name}
-                size={item.size}
-                type={item.type}
-                device={device}
-                config={item.config}
-              />
-            )
-          })}
-        </Grid>
-      </Fade>
+      <DeviceDetailGrid device={device} />
       <DeviceDetailFooter device={device} />
     </Box>
   );

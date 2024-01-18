@@ -37,12 +37,16 @@ export const MetricsStreamTileSpec: TileSpec =   {
           maximum: 60,
         },
         default: [0],
+        minItems: 1,
+        maxItems: 4,
         "uniqueItems": true
       },
       fiducial: {
         type: 'integer',
         title: 'Fiducial Mask',
-        default: 0
+        default: 0xFF,
+        minimum: 0,
+        maximum: 0xFF,
       },
       primaryColor: {
         type: 'string',
@@ -150,6 +154,7 @@ const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: Ti
           position: "top",
           align: "center",
           labels: {
+            color: theme.palette.text.primary,
             font: { size: 14, weight: "bold" },
           },
         },
@@ -242,7 +247,6 @@ const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: Ti
       scaleID: 'x',
       value: fid.ts,
     }));
-
     chart.update("none");
   }, [latestTs, configs, pause, data, slots]);
 

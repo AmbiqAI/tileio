@@ -232,7 +232,7 @@ const BarSlide = ({ name, values: bars }: ChartSlideConfig) => {
 
 const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
 
-  const labelVariant = size === 'sm' ? 'h5' : 'h4';
+  const labelVariant = size === 'sm' ? 'h6' : 'h5';
   const nameVariant = size === 'sm' ? 'body1' : 'h6';
 
   return (
@@ -281,10 +281,10 @@ const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
                 borderBottomColor: value.color,
               }}
             >
-              <Typography variant={labelVariant} fontWeight={800} pr="4px">
+              <Typography variant={labelVariant} fontWeight={600}>
                 {value.label || `${value.value}`}
               </Typography>
-              <Typography color={ThemeColors.colors.secondaryColor} variant={nameVariant} fontWeight={600} pr="4px">
+              <Typography color={ThemeColors.colors.secondaryColor} variant={nameVariant} fontWeight={600}>
                 {value.name}
               </Typography>
             </div>
@@ -301,10 +301,9 @@ const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
 
 const BarSlideTile = observer(({ size, config }: TileProps) => {
   const configs = useMemo(() => parseConfig(config || {}), [config]);
-  // return (<> </>);
+
   return (
     <GridContainer>
-
       <GridZStack level={2}>
       <Swiper
         spaceBetween={30}

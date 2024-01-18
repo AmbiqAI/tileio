@@ -33,6 +33,7 @@ import { Form } from "@rjsf/mui";
 import { IDeviceInfo, DeviceInfoSchema } from "../../models/deviceInfo";
 import JsonView from "@uiw/react-json-view";
 import { VisuallyHiddenInput } from "../VisuallyHiddenInput";
+import { NewDevice } from "../../models/device";
 
 interface Props {
   open: boolean;
@@ -139,6 +140,7 @@ const AddDeviceDialog = ({ open, close }: Props) => {
           onInputChange={(event, newInputValue) => {
             setInputValue(newInputValue);
           }}
+          noOptionsText="No devices found"
           options={root.availableDevices.map(d => d.id)}
           getOptionLabel={(option) => root.availableDeviceById(option)?.info.name || option}
           sx={{ width: "100%" }}
@@ -212,20 +214,14 @@ const AddDeviceDialog = ({ open, close }: Props) => {
             disabled={(selectedId === null) || (activeStep === DEVICE_CONFIG_STEP && !formData)}
             onClick={() => {
               if (activeStep === DEVICE_REVIEW_STEP && selectedId && formData) {
-
-                const dev = {
-                  id: selectedId,
-                  info: {
-                    ...formData,
-                    id: selectedId,
-                  },
-                  slots: formData.slots.map(() => ({ }))
-                };
-                root.addDevice(dev);
+                const device = NewDevice(selectedId, formData);
+                device.setOnline(true);
+                root.addDevice(device);
                 Notifier.add({
                   message: `Devices added successfully`,
                   options: { variant: "success" },
                 });
+                setActiveStep(0);
                 setSelectedId(null);
                 close();
               } else {

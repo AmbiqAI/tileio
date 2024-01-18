@@ -1,43 +1,43 @@
 import { flow, Instance, types, } from 'mobx-state-tree';
 import Device, { IDevice, IDeviceSnapshot, NewDevice } from './device';
-import Record, { IRecordSnapshot } from './record';
-import bleManager, { Notifier } from '../api';
+import Record, { IRecord, IRecordSnapshot } from './record';
+import { Notifier, initApi, getApi } from '../api';
 import { delay } from '../utils';
 import Settings from './settings';
 import { closeDB, initDB } from '../db';
 
 export const Root = types
 .model('Root', {
+  settings: Settings,
   devices: types.array(Device),
   records: types.array(Record),
-  settings: Settings
 })
 .volatile(self => ({
   availableDevices: ([] as IDevice[]),
   fetching: false,
 }))
 .views(self => ({
-  recordById(targetId: string) {
+  recordById(targetId: string): IRecord|undefined {
     return self.records.find(({ id }) => id === targetId);
   },
-  deviceById(targetId: string) {
+  deviceById(targetId: string): IDevice|undefined {
     return self.devices.find(({ id }) => id === targetId);
   },
-  availableDeviceById(targetId: string) {
+  availableDeviceById(targetId: string): IDevice|undefined {
     return self.availableDevices.find(({ id }) => id === targetId);
   },
-  removeAvailableDevice: function(deviceId: string) {
-    const dIdx = self.availableDevices.findIndex(d => d.id === deviceId);
-    if (dIdx >= 0) { self.availableDevices.splice(dIdx, 1); }
-  }
 }))
 .actions(self => ({
   addAvailableDevice(deviceId: string, name: string) {
     if (!self.deviceById(deviceId)) {
-      const device = NewDevice(deviceId, name);
+      const device = NewDevice(deviceId, {id: deviceId, name: name});
       device.setOnline(true);
       self.availableDevices = [device, ...self.availableDevices];
     }
+  },
+  removeAvailableDevice: function(deviceId: string) {
+    const dIdx = self.availableDevices.findIndex(d => d.id === deviceId);
+    if (dIdx >= 0) { self.availableDevices.splice(dIdx, 1); }
   }
 }))
 .actions(self => ({
@@ -46,10 +46,11 @@ export const Root = types
     try {
       self.fetching = true;
       const deviceIds: string[] = [];
-      yield bleManager.refreshPreviousDevices(self.devices.map(d => d.id), (deviceId: string, name: string) => {
+      yield getApi().refreshPreviousDevices(self.devices.map(d => d.id), (deviceId: string, _name: string) => {
         deviceIds.push(deviceId);
         self.deviceById(deviceId)?.setOnline(true);
       });
+      // Mark offline those not connected or not discovered
       self.devices.forEach(device => {
         device.setOnline(device.state.connected || deviceIds.includes(device.id));
       });
@@ -64,12 +65,13 @@ export const Root = types
     try {
       self.fetching = true;
       self.availableDevices.splice(0, self.availableDevices.length);
-      yield bleManager.startScan((deviceId: string, name: string) => {
+      yield getApi().startScan((deviceId: string, name: string) => {
         self.addAvailableDevice(deviceId, name);
         return false;
       });
+      // Stop scan after 4 seconds
       yield delay(4000);
-      yield bleManager.stopScan();
+      yield getApi().stopScan();
     } catch (error) {
       Notifier.add({ message: `Failed fetching devices: (${error})`, options: { variant: 'error' }});
     } finally {
@@ -77,8 +79,7 @@ export const Root = types
     }
   }),
   addDevice(device: IDeviceSnapshot) {
-    const existingDevice = self.deviceById(device.id);
-    if (!existingDevice){
+    if (!self.deviceById(device.id)){
       self.devices.push(device);
       self.removeAvailableDevice(device.id);
     }
@@ -122,7 +123,10 @@ export const Root = types
   },
   beforeDestroy() {
     closeDB();
-  }
+  },
+  initialize: function() {
+    initApi(self.settings.apiMode);
+  },
 }));
 
 export interface IRoot extends Instance<typeof Root> {}

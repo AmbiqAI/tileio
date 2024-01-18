@@ -59,3 +59,17 @@ export const BaseTile = ({ type }: TileProps) => {
     </Box>
   );
 };
+
+export const InvalidTileSpec = (type: string): TileSpec => {
+  return {
+    type: type,
+    name: "Invalid Tile",
+    description: "Tile type doesnt exist",
+    streamingRequired: false,
+    sizes: ["sm", "md", "lg"],
+    schema: {
+      type: "object",
+      properties: {},
+    },
+  };
+}

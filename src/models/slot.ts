@@ -133,12 +133,42 @@ export const SlotSignals = types
   }
 }));
 
+  // [5-0] : 6-bit segmentation
+  // [7-6] : 2-bit QoS (0:bad, 1:poor, 2:fair, 3:good)
+  // [15-8] : 8-bit Fiducial
+
 const SIG_SEG_OFFSET = 0;
 const SIG_SEG_MASK = 0x03F;
 const SIG_QOS_OFFSET = 6;
 const SIG_QOS_MASK = 0x03;
 const SIG_FID_OFFSET = 8;
 const SIG_FID_MASK = 0xFF;
+
+export const getQoSName = (connected: boolean, state: number) => {
+  if (!connected) {
+    return "OFF";
+  } else if (state === 3) {
+    return "GOOD";
+  } else if (state === 2) {
+    return "FAIR";
+  } else if (state === 1) {
+    return "POOR";
+  }
+  return "BAD";
+}
+
+export const getQoSColor = (connected: boolean, state: number) => {
+  if (!connected) {
+    return "gray";
+  } else if (state === 3) {
+    return "#59f473"; // green
+  } else if (state === 2) {
+    return "#f1f459"; // yellow
+  } else if (state === 1) {
+    return "#f4a459"; // orange
+  }
+  return "#f16757"; // red
+}
 
 export const SlotMask = types
 .model('SlotMask', {
@@ -147,23 +177,22 @@ export const SlotMask = types
   // [ts, mask][]
   data: [] as number[][],
 })).views(self => ({
-  // [5-0] : 6-bit segmentation
-  // [7-6] : 2-bit QoS (0:bad, 1:poor, 2:fair, 3:good)
-  // [15-8] : 8-bit Fiducial
   get segmentBounds(): SegmentType[] {
     const bounds = [];
     const latestTs = self.latestTs;
-    let startIdx = 0;
+    let start = 0;
+    let end = 0;
     for(let i = 1; i < self.data.length; i++) {
       let prev = (self.data[i-1][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
       let curr = (self.data[i][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
       if (!prev && curr) {
-        startIdx = i;
+        start = self.data[i][0];
       } else if (prev && !curr) {
-        if (startIdx >= 0 && self.data[i][0] <= latestTs) {
-          bounds.push({start: startIdx, end: i, value: prev, label: ""});
+        end = self.data[i][0];
+        if (start >= 0 && end <= latestTs) {
+          bounds.push({start, end, value: prev, label: ""});
         }
-        startIdx = -1;
+        start = -1;
       }
     }
     return bounds;
@@ -194,18 +223,34 @@ export const SlotMask = types
   },
   get fiducials() {
     const fiducials = [];
+    const latestTs = self.latestTs;
     for(let i = 0; i < self.data.length; i++) {
-      let curr = (self.data[i][1] >> SIG_FID_OFFSET) & SIG_FID_MASK;
-      if (curr) {
-        fiducials.push({ts: self.data[i][0], value: curr, label: ""});
+      const ts = self.data[i][0];
+      const value = (self.data[i][1] >> SIG_FID_OFFSET) & SIG_FID_MASK;
+      if (value && ts <= latestTs) {
+        fiducials.push({ts, value, label: ""});
       }
     }
     return fiducials;
   },
   get qos(): number[] {
+    // eslint-disable-next-line
+    const latestTs = self.latestTs;
     return self.data.map(d => (d[1] >> SIG_QOS_OFFSET) & SIG_QOS_MASK);
   }
 })).views(self => ({
+  get fiducialAmounts(): {[key: number]: number} {
+    const fiducials = self.fiducials;
+    const amounts = {} as {[key: number]: number};
+    for (const f of fiducials) {
+      if (amounts[f.value]) {
+        amounts[f.value] += 1;
+      } else {
+        amounts[f.value] = 1;
+      }
+    }
+    return amounts;
+  },
   get qosState(): number {
     return Math.round(self.qos.reduce((a, b) => a + b, 0) / self.qos.length);
   }

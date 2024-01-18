@@ -20,6 +20,7 @@ import BluetoothOffIcon from "@mui/icons-material/BluetoothDisabledRounded";
 import RecordIcon from "@mui/icons-material/Adjust";
 import { IDevice } from "../../models/device";
 import { DeviceIcon } from "../../assets/icons";
+import { useMemo } from "react";
 
 interface Props {
   device: IDevice;
@@ -27,18 +28,14 @@ interface Props {
 
 const DeviceCard = ({ device }: Props) => {
   const history = useHistory();
-  let connDescription = "Offline";
-  let connColor: "error"|"primary"|"action" = "error";
-  let ConnectIcon = BluetoothOffIcon;
-  if (device.state.connected) {
-    connDescription = "Connected";
-    connColor = "primary";
-    ConnectIcon = BluetoothConnectedIcon;
-  } else if (device.state.online) {
-    connDescription = "Online";
-    connColor = "action";
-    ConnectIcon= BluetoothOnIcon;
-  }
+
+  const connState = useMemo(() => {
+    const description = device.state.connected ? "Connected" : device.state.online ? "Online" : "Offline";
+    const color: 'primary'|'action'|'error' = device.state.connected ? "primary" : device.state.online ? "action" : "error";
+    const Icon = device.state.connected ? BluetoothConnectedIcon : device.state.online ? BluetoothOnIcon : BluetoothOffIcon;
+    return { description, color, Icon };
+  }, [device.state.online, device.state.connected]);
+
   return (
     <Card
       elevation={3}
@@ -97,18 +94,18 @@ const DeviceCard = ({ device }: Props) => {
           sx={{ px: 2, py: 2 }}
         >
           <Stack direction="row" alignItems="center" justifyContent="start">
-            <Tooltip arrow title={connDescription}>
+            <Tooltip arrow title={connState.description}>
               <Avatar sx={{ bgcolor: "transparent", width: 24, height: 24 }}>
-                <ConnectIcon fontSize="small" color={connColor} />
+                <connState.Icon fontSize="small" color={connState.color} />
               </Avatar>
             </Tooltip>
             <Typography
               variant="overline"
-              color={connColor}
+              color={connState.color}
               sx={{ lineHeight: "inherit" }}
               fontWeight={900}
             >
-              {connDescription}
+              {connState.description}
             </Typography>
           </Stack>
 

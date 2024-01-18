@@ -22,14 +22,6 @@ const TileCard = ({ name, type, size, device, config }: Params) => {
   const lg = size === "sm" ? 2 : size === "md" ? 4 : 6;
   const xl = size === "sm" ? 2 : size === "md" ? 4 : 6;
 
-  // const mw = size === "sm" ? 256 : size === "md" ? 512 : 1024;
-  // const mh = size === "sm" ? 200 : size === "md" ? 200 : 200;  // 312;
-  // const xs = size === "sm" ? 6 : size === "md" ? 12 : 12;
-  // const sm = size === "sm" ? 3 : size === "md" ? 6 : 12;
-  // const md = size === "sm" ? 3 : size === "md" ? 6 : 12;
-  // const lg = size === "sm" ? 3 : size === "md" ? 6 : 12;
-  // const xl = size === "sm" ? 3 : size === "md" ? 6 : 12;
-
   return (
     <Grid
       xs={xs}
@@ -45,12 +37,16 @@ const TileCard = ({ name, type, size, device, config }: Params) => {
         sx={{
           m: 0,
           p: 0,
+          // background: 'red',
           borderRadius: 2,
+          width: "100%",
+          // height: "100%"
           height: mh,
           // maxWidth: mw,
           // minWidth: 144,
         }}
       >
+
         {CreateTile({
           name: name,
           type: type,

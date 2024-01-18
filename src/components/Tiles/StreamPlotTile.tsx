@@ -10,7 +10,7 @@ import { ThemeColors } from "../../theme/theme";
 
 export const StreamPlotTileSpec: TileSpec =   {
   type: "STREAM_PLOT_TILE",
-  name: "Stream Plot",
+  name: "Signal Stream Plot",
   description: "Stream signal data",
   streamingRequired: true,
   sizes: ["sm", "md", "lg"],
@@ -26,7 +26,7 @@ export const StreamPlotTileSpec: TileSpec =   {
         type: 'integer',
         enum: [0, 1, 2, 3],
         default: 0,
-        description: 'Slot',
+        title: 'Slot',
       },
       chs: {
         type: 'array',
@@ -44,18 +44,22 @@ export const StreamPlotTileSpec: TileSpec =   {
       },
       primaryColor: {
         type: 'string',
+        title: 'Primary Color',
         default: ThemeColors.colors.primaryColor
       },
       secondaryColor: {
         type: 'string',
+        title: 'Secondary Color',
         default: ThemeColors.colors.secondaryColor
       },
       tertiaryColor: {
         type: 'string',
+        title: 'Tertiary Color',
         default: ThemeColors.colors.tertiaryColor
       },
       quaternaryColor: {
         type: 'string',
+        title: 'Quaternary Color',
         default: ThemeColors.colors.quaternaryColor
       },
       streamDelay: {
@@ -134,6 +138,7 @@ export interface StreamPlotTileConfig {
   fps: number;
 }
 
+
 const StreamPlotTile = observer(({ size, slots, pause, duration, config, device }: TileProps) => {
   const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
@@ -159,6 +164,10 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
       },
       plugins: {
         annotation: {
+          common: {
+            drawTime: 'beforeDatasetsDraw',
+          },
+          animations: {duration: 0},
           annotations: []
         },
         tooltip: { enabled: false },
@@ -166,7 +175,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
           display: configs.chs.length > 1,
           fullSize: true,
           position: "top",
-          align: "start",
+          align: "center",
           labels: {
             color: theme.palette.text.primary,
             font: { size: 14, weight: "bold" },
@@ -216,12 +225,12 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
   }, [pause, configs, theme, duration, size]);
 
   const data = useMemo<ChartData<"line">>(() => {
-    const chNames = configs.chs.map(ch => device.slots[configs.slot].chs[ch] || `CH${ch}`);
+    const chNames = configs.chs.map(ch => configs.slot < device.slots.length && ch < device.slots[configs.slot].chs.length ? device.slots[configs.slot].chs[ch] : `CH${ch}`);
     const colors = [configs.primaryColor, configs.secondaryColor, configs.tertiaryColor, configs.quaternaryColor];
     return {
       datasets: chNames.map((ch, i) => ({
           label: ch,
-          // backgroundColor: colors[ch%colors.length],
+          fill: false,
           backgroundColor: alpha(colors[i%colors.length], 0.3),
           borderColor: colors[i%colors.length],
           yAxisID: "y",
@@ -252,7 +261,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
     if (!data || !annotation) {
       return;
     }
-    annotation.annotations = mask.fiducials.filter(f => f.value & configs.fiducial).map((fid) => ({
+    annotation.annotations = mask.fiducials.filter(f => f.value === configs.fiducial).map((fid) => ({
       type: 'line',
       drawTime: 'afterDatasetsDraw',
       borderColor: configs.secondaryColor,

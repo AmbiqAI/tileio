@@ -4,7 +4,7 @@ import { Link as RouterLink, useLocation } from "react-router-dom";
 import { BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { PhysioKitIcon } from "../assets/icons";
+import { TileioIcon } from "../assets/icons";
 
 function getActiveTab(path: string) {
   if (matchPath(path, { path: "/settings" }) != null) {
@@ -31,7 +31,7 @@ function NavBar() {
         <BottomNavigationAction
           label="Devices"
           value="/devices"
-          icon={<PhysioKitIcon />}
+          icon={<TileioIcon />}
           component={RouterLink}
           to={"/devices"}
         />

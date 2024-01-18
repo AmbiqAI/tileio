@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { observer } from "mobx-react-lite";
+import { saveAs } from 'file-saver';
 import SettingsIcon from "@mui/icons-material/Settings";
 import EditIcon from "@mui/icons-material/Edit";
 import CancelIcon from "@mui/icons-material/CancelPresentationOutlined";
+import SaveIcon from '@mui/icons-material/SaveAltRounded';
+import UploadIcon from '@mui/icons-material/UploadRounded';
+import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
+
 import DashboardSettingsForm from "./DashboardSettingsForm";
-import { clone } from "mobx-state-tree";
+import { clone, getSnapshot } from "mobx-state-tree";
 import {
   Avatar,
   CardActions,
@@ -18,8 +23,13 @@ import {
   Button,
   Divider,
   Stack,
+  Tooltip,
 } from "@mui/material";
 import { IDashboardSettings } from "../../models/dashboardSettings";
+import { Device } from "@capacitor/device";
+import { isPlatform } from "@ionic/react";
+import { Share } from "@capacitor/share";
+import { VisuallyHiddenInput } from "../VisuallyHiddenInput";
 
 interface Props {
   settings: IDashboardSettings;
@@ -85,6 +95,73 @@ const DashboardSettingsDialog = ({
                   <EditIcon fontSize="medium" />
                 )}
               </IconButton>
+
+              <Tooltip title="Download config" placement="top">
+              <IconButton
+              size="small"
+              onClick={async () => {
+                const json = getSnapshot(settings);
+                const info = await Device.getInfo();
+                const isMobile = isPlatform("ios") || isPlatform("android") || info.platform === 'ios';
+                const canShare = (await Share.canShare()).value;
+                if (canShare && isMobile) {
+                  const rst = await Filesystem.writeFile({
+                    data: JSON.stringify(json),
+                    recursive: false,
+                    encoding: Encoding.UTF8,
+                    path: 'pk-dashboard-config.json',
+                    directory: Directory.Cache
+                  });
+                  await Share.share({
+                    title: 'Dashboard Configuration',
+                    dialogTitle: 'Dashboard Configuration',
+                    url: rst.uri,
+                  });
+                } else {
+                  const blob = new Blob(
+                    [JSON.stringify(json)],
+                    { type: "text/plain;charset=utf-8" }
+                  );
+                  saveAs(blob, 'pk-dashboard-config.json');
+                }
+              }}
+            >
+              <SaveIcon />
+            </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Upload config" placement="top">
+            <IconButton
+              component="label"
+              size="small"
+            >
+              <UploadIcon />
+              <VisuallyHiddenInput
+                onClick={(e) => {
+                  e.currentTarget.value = "";
+                }}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                      const text = e.target?.result;
+                      if (typeof text === 'string') {
+                        const json = JSON.parse(text);
+                        setDraftSettings(json);
+                        await onSubmit(json);
+                      }
+                    };
+                    reader.readAsText(file);
+                  }
+                }}
+                type="file"
+                accept="application/json"
+                />
+            </IconButton>
+            </Tooltip>
+
+
             </CardActions>
           }
           title="Dashboard Settings"

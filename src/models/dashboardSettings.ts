@@ -1,16 +1,18 @@
-import { cast, detach, Instance, SnapshotIn, types } from 'mobx-state-tree';
+import { detach, Instance, SnapshotIn, types, typecheck } from 'mobx-state-tree';
 import { uuid4 } from '../utils';
 import { DeviceLayoutSize, LayoutSizeType } from './types';
-import { RegisteredTiles } from '../components/Tiles/BaseTile';
+import { Layout as GridLayout } from 'react-grid-layout';
+
 
 export const Tile = types
 .model('Tile', {
-  id: types.optional(types.identifier, uuid4),
+  id: types.optional(types.string, uuid4),
   name: types.optional(types.string, ''),
   type: types.optional(types.string, ''),
   size: types.optional(DeviceLayoutSize, LayoutSizeType.sm),
   visible: types.optional(types.boolean, true),
-  config: types.optional(types.frozen<{ [key: string]: any}>(), {})
+  config: types.optional(types.frozen<{ [key: string]: any}>(), {}),
+  grid: types.optional(types.frozen<{ [key: string]: any}>(), {x: 0, y: 0, w: 1, h: 1})
 })
 .actions(self => ({
   setVisible: function(visible?: boolean) {
@@ -25,6 +27,11 @@ export const Tile = types
   },
   setConfig: function(config: { [key: string]: any}) {
     self.config = config;
+  },
+  setGrid: function(layout: GridLayout) {
+    if (layout.x !== self.grid.x || layout.y !== self.grid.y || layout.w !== self.grid.w || layout.h !== self.grid.h) {
+      self.grid = layout;
+    }
   }
 }))
 export interface ITile extends Instance<typeof Tile> {}
@@ -40,9 +47,27 @@ const DashboardSettings = types
 .views(self => ({
 }))
 .actions(self => ({
+  tileById(targetId: string) {
+    return self.tiles.find(({ id }) => id === targetId);
+  },
+}))
+.actions(self => ({
   setTiles: function(tiles: ITileSnapshot[]) {
-    // Validate tiles (for now check registered types)
-    self.tiles = cast(tiles.filter(t => t.type && RegisteredTiles[t.type] !== undefined));
+    try {
+      console.log(tiles);
+      typecheck(types.array(Tile), tiles);
+    } catch (e) {
+      console.error(e);
+    }
+  },
+  updateTileLayout: function(layouts: GridLayout[]) {
+    for (const layout of layouts) {
+      const tile = self.tileById(layout.i);
+      if (tile) {
+        console.log(`Updating tile ${tile.id} ${tile.config.name} layout`);
+        tile.setGrid(layout);
+      }
+    }
   },
   moveTileToIndex: function(id: string, index: number) {
     const stepIdx = self.tiles.findIndex(l => l.id === id);

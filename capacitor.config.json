@@ -1,6 +1,6 @@
 {
 	"appId": "ai.ambiq.physiokit",
-	"appName": "PhysioKit Pro",
+	"appName": "Tileio",
 	"webDir": "build",
 	"bundledWebRuntime": false,
 	"loggingBehavior": "none"

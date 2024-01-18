@@ -1,6 +1,4 @@
 import { createTheme } from '@mui/material/styles';
-import { red } from '@mui/material/colors';
-import type {} from '@mui/lab/themeAugmentation';
 
 export const lightTheme = createTheme({
   spacing: 8,
@@ -29,7 +27,7 @@ export const lightTheme = createTheme({
       main: '#2fdf75',
     },
     error: {
-      main: red.A400,
+      main: "#ff1744",
     },
     text: {
       primary: '#0000000',
@@ -73,7 +71,7 @@ export const darkTheme = createTheme({
       main: '#2fdf75',
     },
     error: {
-      main: red.A400,
+      main: "#ff1744",
     },
     text: {
       primary: '#FFF',
@@ -104,7 +102,7 @@ export const ThemeColors = {
     primaryColor: '#11acd5', // Blue
     secondaryColor: '#ce6cff', // Purple
     tertiaryColor: '#ea3424', // Red
-    quaternaryColor: '#220f58', // Navy
-    slots: ['#11acd5', '#ce6cff', '#ea3424', '#220f58']
+    quaternaryColor: '#38FF60', // Green
+    slots: ['#11acd5', '#ce6cff', '#ea3424', '#38FF60']
   }
 }

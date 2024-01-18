@@ -62,6 +62,7 @@ const TileSettingDialog = ({ open, onSubmit, onClose, layout, spec, config }: Pr
           variant="outlined"
           autoFocus
           onClick={() => {
+            console.log(formData);
             onSubmit(formData);
           }}>
           Save

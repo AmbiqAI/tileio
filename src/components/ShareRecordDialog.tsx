@@ -101,6 +101,7 @@ const ShareRecordDialog = ({ open, record, close }: Props) => {
             } catch (error) {
               if (`${error}`.includes("cancel")) {
               } else {
+                console.error(error);
                 Notifier.add({
                   message: `Error: ${error}`,
                   options: { variant: 'error' },

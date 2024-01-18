@@ -4,6 +4,8 @@ import { Storage, Drivers } from '@ionic/storage';
 import { Root, IRoot } from './root';
 import persist from '../utils/persist';
 
+const PK_STORAGE_KEY = '__pk_store';
+
 const root = Root.create({
   devices: [],
   records: [],
@@ -15,7 +17,7 @@ const store = {
 };
 
 const storage = new Storage({
-  name: '__pk_store_dbg',
+  name: PK_STORAGE_KEY,
   driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage]
 });
 
@@ -24,6 +26,8 @@ storage.create().then(() => {
   persist('rootStore', root, storage, {
     jsonify: true,
     whitelist: ['devices', 'records', 'settings']
+  }).then(() => {
+    store.root.initialize();
   });
 });
 

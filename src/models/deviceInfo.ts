@@ -1,8 +1,9 @@
-import { Instance, SnapshotIn, cast, types } from 'mobx-state-tree';
+import { Instance, SnapshotIn, applySnapshot, cast, types } from 'mobx-state-tree';
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { JsonStringDate } from '../utils';
 import { ISlotConfigSnapshot, SlotConfig, SlotConfigSchema } from './slot';
 import { UioConfigSchema, UioConfig } from './uioState';
+import { cloneDeep } from 'lodash';
 
 export const DeviceInfoSchema: {schema: RJSFSchema, uischema: UiSchema} = {
   schema: {
@@ -38,8 +39,8 @@ export const DeviceInfoSchema: {schema: RJSFSchema, uischema: UiSchema} = {
 const DeviceInfo = types
 .model('DeviceInfo', {
   id: types.string,
-  name: types.string,
-  location: types.string,
+  name: types.optional(types.string, 'Name'),
+  location: types.optional(types.string, 'Location'),
   slots: types.optional(types.array(SlotConfig), [{name: 's0'}, {name: 's1'}, {name: 's2'}, {name: 's3'}]),
   uio: types.optional(UioConfig, {}),
   lastSeenDate: types.optional(JsonStringDate, new Date()),
@@ -65,6 +66,11 @@ const DeviceInfo = types
   setSlots: function(slots: ISlotConfigSnapshot[]) {
     if (slots == null) { return; }
     self.slots = cast(slots);
+  },
+  copyFrom: function(info: any) {
+    const id = self.id;
+    applySnapshot(self, cloneDeep(info));
+    self.id = id;
   }
 }));
 

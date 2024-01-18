@@ -119,7 +119,7 @@ const DeviceInfoDialog = ({
                     data: JSON.stringify(json),
                     recursive: false,
                     encoding: Encoding.UTF8,
-                    path: 'pk-dashboard-config.json',
+                    path: 'pk-device-config.json',
                     directory: Directory.Cache
                   });
                   await Share.share({
@@ -132,7 +132,7 @@ const DeviceInfoDialog = ({
                     [JSON.stringify(json)],
                     { type: "text/plain;charset=utf-8" }
                   );
-                  saveAs(blob, 'device.json');
+                  saveAs(blob, 'pk-device-config.json');
                 }
               }}
             >
@@ -171,9 +171,7 @@ const DeviceInfoDialog = ({
           }
           title={info.name}
           subheader={
-            isEditing
-              ? `${info.location} ${info.location ? " | " : ""} ${info.shortId}`
-              : undefined
+            `${info.location} ${info.location ? " | " : ""} ${info.shortId}`
           }
         />
       </DialogTitle>

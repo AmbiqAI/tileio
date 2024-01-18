@@ -18,13 +18,13 @@ export const MarkdownTileSpec: TileSpec = {
     properties: {
       name: {
         type: 'string',
-        default: 'Sparkline',
-        description: 'Name',
+        default: 'Markdown',
+        title: 'Name',
       },
       markdown: {
         type: 'string',
         default: '',
-        description: 'Markdown content'
+        title: 'Markdown content'
       }
     }
   },

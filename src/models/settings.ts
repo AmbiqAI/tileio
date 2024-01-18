@@ -1,6 +1,7 @@
 import { Theme } from '@mui/material/styles';
 import { Instance, SnapshotIn, types } from 'mobx-state-tree';
 import { darkTheme } from '../theme/theme';
+import { ApiModeType } from '../api';
 
 export enum ThemeModeType {
   light = "light",
@@ -9,9 +10,12 @@ export enum ThemeModeType {
 }
 export const ThemeMode = types.enumeration<ThemeModeType>('ThemeMode', Object.values(ThemeModeType));
 
+export const ApiMode = types.enumeration<ApiModeType>('ApiMode', Object.values(ApiModeType));
+
 const Settings = types
 .model('Settings', {
-  themeMode: types.optional(ThemeMode, ThemeModeType.system)
+  themeMode: types.optional(ThemeMode, ThemeModeType.system),
+  apiMode: types.optional(ApiMode, ApiModeType.ble)
 })
 .views( self => ({
   get isDarkMode() { return self.themeMode === ThemeModeType.dark; },
@@ -26,6 +30,9 @@ const Settings = types
   },
   setThemeMode: function(themeMode: ThemeModeType) {
     self.themeMode = themeMode;
+  },
+  setApiMode: function(apiMode: ApiModeType) {
+    self.apiMode = apiMode;
   }
 }));
 

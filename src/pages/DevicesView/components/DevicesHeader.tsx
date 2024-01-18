@@ -6,7 +6,7 @@ import AddIcon from "@mui/icons-material/Add";
 import AddDeviceDialog from "../../../components/AddDeviceDialog/AddDeviceDialog";
 import Header from "../../../components/Header";
 import { useStore } from "../../../models/store";
-import { PhysioKitIcon, ScanIcon } from "../../../assets/icons";
+import { TileioIcon, ScanIcon } from "../../../assets/icons";
 import { ScanButton } from "../../../components/ScanButton";
 
 const DevicesHeader = () => {
@@ -25,10 +25,10 @@ const DevicesHeader = () => {
           aria-label="menu"
           sx={{ mr: 2 }}
         >
-          <PhysioKitIcon />
+          <TileioIcon />
         </IconButton>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          PhysioKit
+          Tileio
         </Typography>
         <ScanButton
           disableRipple

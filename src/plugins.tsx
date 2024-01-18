@@ -18,28 +18,32 @@ import AnnotationPlugin from "chartjs-plugin-annotation";
 import StreamingPlugin from "chartjs-plugin-streaming";
 import ZoomPlugin from "chartjs-plugin-zoom";
 import { registerTile } from "./components/Tiles/BaseTile";
-import SignalStateTile, { SignalStateSpec } from "./components/Tiles/SignalStateTile";
+import QosTile, { QosTileSpec } from "./components/Tiles/QosTile";
 import MarkdownTile, { MarkdownTileSpec } from "./components/Tiles/MarkdownTile";
 import MetricsStreamTile, { MetricsStreamTileSpec } from "./components/Tiles/MetricsStreamTile";
-// import MetricsPlot, { MetricsPlotSpec } from "./components/Tiles/MetricsPlot";
 import EventTile, { EventTileSpec } from "./components/Tiles/EventTile";
 import PoincarePlot, { PoincarePlotSpec } from "./components/Tiles/PoincarePlot";
 import SparklineTile, { SparklineTileSpec } from "./components/Tiles/SparklineTile";
 import BarSlideTile, { BarSlideTileSpec } from "./components/Tiles/BarSlideTile";
 import StreamPlotTile, { StreamPlotTileSpec } from "./components/Tiles/StreamPlotTile";
+import SegmentStreamTile, { SegmentStreamTileSpec } from "./components/Tiles/SegmentStreamTile";
 import SegPieTile, { SegPieTileSpec } from "./components/Tiles/SegPieTile";
+import FidPieTile, { FidPieTileSpec } from "./components/Tiles/FidPieTile";
 import UioTile, { UioTileSpec} from "./components/Tiles/UioTile";
 
-registerTile(SignalStateSpec.type, SignalStateSpec, SignalStateTile);
+// Register tile plugins and chartjs plugins
+
+registerTile(QosTileSpec.type, QosTileSpec, QosTile);
 registerTile(MarkdownTileSpec.type, MarkdownTileSpec, MarkdownTile);
-// registerTile(MetricsPlotSpec.type, MetricsPlotSpec, MetricsPlot);
 registerTile(EventTileSpec.type, EventTileSpec, EventTile);
 registerTile(PoincarePlotSpec.type, PoincarePlotSpec, PoincarePlot);
 registerTile(SparklineTileSpec.type, SparklineTileSpec, SparklineTile);
 registerTile(BarSlideTileSpec.type, BarSlideTileSpec, BarSlideTile);
 registerTile(StreamPlotTileSpec.type, StreamPlotTileSpec, StreamPlotTile);
 registerTile(MetricsStreamTileSpec.type, MetricsStreamTileSpec, MetricsStreamTile);
+registerTile(SegmentStreamTileSpec.type, SegmentStreamTileSpec, SegmentStreamTile);
 registerTile(SegPieTileSpec.type, SegPieTileSpec, SegPieTile);
+registerTile(FidPieTileSpec.type, FidPieTileSpec, FidPieTile);
 registerTile(UioTileSpec.type, UioTileSpec, UioTile);
 
 Chart.register(

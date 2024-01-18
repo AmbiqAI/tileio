@@ -1,4 +1,5 @@
 import { Instance, SnapshotIn, types, destroy } from 'mobx-state-tree';
+import { binarySearch } from '../components/Tiles/utils';
 
 
 export const EventMarker = types
@@ -41,16 +42,22 @@ export const EventMarkerSet = types
   },
 }))
 .actions(self => ({
+  findEventByTs: function(ts: number) {
+    return self.events.findIndex(e => e.ts === ts);
+  },
+  findEventIndex: function(ts: number) {
+    return binarySearch(self.events, ts, (a, b) => a - (b.ts ?? 0));
+  }
+}))
+.actions(self => ({
   add: function(event: IEventMarker) {
-    if (self.events.findIndex(e => e.ts === event.ts) >= 0) {
-      return;
+    const idx = self.findEventIndex(event.ts);
+    if (self.events[idx]?.ts !== event.ts) {
+      self.events.splice(idx, 0, event);
     }
-    let idx = self.events.findIndex((e) => event.ts < e.ts);
-    if (idx === -1) { idx = self.events.length; }
-    self.events.splice(idx, 0, event);
   },
   remove: function(ts: number) {
-    const idx = self.events.findIndex(e => e.ts === ts);
+    const idx = self.findEventIndex(ts);
     if (idx === -1) { return }
     self.events.splice(idx, 1);
   },

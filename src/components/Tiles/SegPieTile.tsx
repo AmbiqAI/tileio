@@ -15,7 +15,7 @@ export const SegPieTileSpec: TileSpec = {
   sizes: ["sm", "md"],
   schema: {
     type: 'object',
-    required: ['name', 'slot', 'units', 'segments'],
+    required: ['name', 'slot', 'units', 'segmentMask', 'segments'],
     properties: {
       name: {
         type: 'string',
@@ -32,6 +32,13 @@ export const SegPieTileSpec: TileSpec = {
         default: 'Percent',
         title: 'Units',
       },
+      segmentMask: {
+        type: 'integer',
+        title: 'Segment Mask',
+        default: 0x3F,
+        minimum: 0,
+        maximum: 0x3F,
+      },
       segments: {
         type: 'array',
         title: 'Segments',
@@ -44,8 +51,10 @@ export const SegPieTileSpec: TileSpec = {
               default: 'Segment'
             },
             value: {
-              type: 'number',
-              default: 0
+              type: 'integer',
+              default: 0,
+              minimum: 0,
+              maximum: 0x3F,
             },
             color: {
               type: 'string',
@@ -77,6 +86,7 @@ export interface SegPieTileConfig {
   name: string;
   units: string,
   slot: number;
+  segmentMask: number;
   segments: {name: string, value: number, color: string}[];
 }
 
@@ -85,6 +95,7 @@ export function parseConfig(config: { [key: string]: any }): SegPieTileConfig {
     name: 'Segmentation',
     units: 'Percent',
     slot: 0,
+    segmentMask: 0x3F,
     segments: [],
     ...config
   } as SegPieTileConfig;

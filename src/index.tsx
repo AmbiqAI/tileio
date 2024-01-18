@@ -10,9 +10,9 @@ import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import reportWebVitals from "./reportWebVitals";
 import App from "./App";
 import "./index.css";
-import 'swiper/css';
-import 'swiper/css/pagination';
-import 'swiper/css/navigation';
+// import 'swiper/css';
+// import 'swiper/css/pagination';
+// import 'swiper/css/navigation';
 import "./plugins";
 import { lightTheme, darkTheme } from "./theme/theme";
 import { useMediaQuery } from "@mui/material";
@@ -20,6 +20,7 @@ import { observer } from "mobx-react-lite";
 import { useStore } from "./models/store";
 import { ThemeModeType } from "./models/settings";
 
+// For web, add sqlite wasm
 customElements.define("jeep-sqlite", JeepSqlite);
 window.addEventListener("DOMContentLoaded", async () => {
   const platform = Capacitor.getPlatform();
@@ -28,7 +29,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.body.appendChild(jeepSqlite);
   }
 });
-
 
 const AppContainer = observer(() => {
   const { root: { settings: { isDarkMode, themeMode, setTheme } } } = useStore();

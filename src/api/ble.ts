@@ -3,6 +3,7 @@ import { Device } from '@capacitor/device';
 import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
 import { delay } from '../utils';
 import { IDeviceInfo } from '../models/deviceInfo';
+import { ApiManager } from './api';
 
 const PK_SVC_UUID = "EECB7DB8-8B2D-402C-B995-825538B49328";
 const PK_SLOTS_SIG_CHAR_UUIDS = [
@@ -53,7 +54,6 @@ function dataViewToMetrics(data: DataView): number[] {
     metrics.push(data.getFloat32(offset, true));
     offset += 4;
   };
-  console.log(`Received metricLen: ${metricLen}`);
   return metrics;
 }
 
@@ -63,7 +63,7 @@ async function isMobile(): Promise<boolean> {
 }
 
 
-class BleManager {
+class BleManager implements ApiManager {
   initialized: boolean;
   deviceInfo: Record<string, IDeviceInfo|undefined>;
   callbacks: Record<string, any>;
@@ -161,7 +161,7 @@ class BleManager {
     }
   }
 
-  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => void): Promise<void> {
+  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
     try {
       console.log(`enableSlotNotifications ${deviceId} ${slot}`);
       const deviceInfo = this.deviceInfo[deviceId];
