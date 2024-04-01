@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { Box } from "@mui/system";
 import RecordsTable from "./components/RecordsTable";
 import RecordsHeader from "./components/RecordsHeader";

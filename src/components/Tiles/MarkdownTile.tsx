@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { TileProps } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import { Box, Stack } from "@mui/material";

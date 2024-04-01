@@ -1,6 +1,6 @@
 import Typography from "@mui/material/Typography";
 import { Stack } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { IDevice } from "../../models/device";
 import { ThemeColors } from "../../theme/theme";
 import DisconnectedIcon from '@mui/icons-material/SensorsOffRounded';

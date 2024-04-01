@@ -3,7 +3,7 @@ import { useHistory } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { Divider, Fade, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Stack, Toolbar, useMediaQuery, useTheme } from '@mui/material';
-import { observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackIosNew';
 import EventIcon from '@mui/icons-material/AddLocationRounded';

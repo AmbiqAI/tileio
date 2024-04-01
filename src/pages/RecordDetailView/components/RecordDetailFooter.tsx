@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { Avatar, Divider, Stack, Toolbar, useMediaQuery, useTheme} from '@mui/material';
-import { observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react';
 import { DeviceIcon } from '../../../assets/icons';
 import Footer from '../../../components/Footer';
 import DeviceInfoDialog from '../../../components/DeviceInfoDialog';

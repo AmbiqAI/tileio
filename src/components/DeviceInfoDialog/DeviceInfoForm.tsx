@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { Form } from "@rjsf/mui";
 import validator from '@rjsf/validator-ajv8';
 import { IDeviceInfo, DeviceInfoSchema } from "../../models/deviceInfo";

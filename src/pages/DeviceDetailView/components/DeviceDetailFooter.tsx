@@ -1,5 +1,5 @@
 import { Divider, Stack, Toolbar } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { IDevice } from "../../../models/device";
 import Footer from "../../../components/Footer";
 import QosBarItem from "../../../components/QosBarItem";

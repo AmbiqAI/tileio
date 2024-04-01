@@ -1,6 +1,6 @@
 import { Stack, Typography } from "@mui/material";
 import { TileProps, TileSpec } from "./BaseTile";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { ThemeColors } from "../../theme/theme";
 import { GridContainer, GridZStack } from "./utils";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";

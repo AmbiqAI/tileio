@@ -1,5 +1,5 @@
 import { IconButton, Stack, Typography } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import EventIcon from "@mui/icons-material/AddLocation";
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack, useDebounce } from "./utils";

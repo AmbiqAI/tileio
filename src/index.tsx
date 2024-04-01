@@ -15,7 +15,7 @@ import "./index.css";
 import "./plugins";
 import { lightTheme, darkTheme } from "./theme/theme";
 import { useMediaQuery } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { useStore } from "./models/store";
 import { ThemeModeType } from "./models/settings";
 

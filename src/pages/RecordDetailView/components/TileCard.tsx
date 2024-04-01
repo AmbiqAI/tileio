@@ -1,6 +1,6 @@
 import { Card } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { IRecord } from "../../../models/record";
 import { CreateTile } from "../../../components/Tiles";
 import { TileSize } from "../../../components/Tiles/BaseTile";

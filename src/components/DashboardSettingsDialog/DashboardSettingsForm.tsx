@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import Grid from "@mui/material/Unstable_Grid2";
 import AddTileIcon from '@mui/icons-material/DashboardCustomizeRounded';
 import RestoreIcon from "@mui/icons-material/SettingsBackupRestoreOutlined";

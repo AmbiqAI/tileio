@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { IconButton, Stack, Toolbar, useMediaQuery } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Header from '../../../components/Header';
-import { observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackIosNew';
 import BluetoothIcon from '@mui/icons-material/BluetoothRounded';
 import BluetoothConnectedIcon from '@mui/icons-material/BluetoothConnectedRounded';

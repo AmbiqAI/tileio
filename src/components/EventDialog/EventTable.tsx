@@ -15,7 +15,7 @@ import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import RemoveIcon from "@mui/icons-material/RemoveCircleOutline";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { EventMarker, IEventMarkerSet } from "../../models/event";
 
 interface EventTableProps {

@@ -16,7 +16,7 @@ import SystemModeIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import DarkModeIcon from "@mui/icons-material/DarkModeRounded";
 import BleIcon from '@mui/icons-material/BluetoothConnectedRounded';
 import EmulateIcon from '@mui/icons-material/BugReportRounded';
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { ApiModeType } from "../../../api";
 import { ThemeModeType } from "../../../models/settings";
 import { useStore } from "../../../models/store";

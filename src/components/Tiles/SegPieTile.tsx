@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { Chart, ChartData, ChartOptions } from "chart.js";
 import { Stack, Typography, useTheme } from "@mui/material";
 import { GridContainer, GridZStack } from "./utils";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import { ThemeColors } from "../../theme/theme";
 

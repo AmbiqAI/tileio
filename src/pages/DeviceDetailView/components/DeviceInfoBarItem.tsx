@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import { Stack } from '@mui/material';
-import { observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react';
 import BluetoothConnectedIcon from '@mui/icons-material/BluetoothConnectedRounded';
 import BluetoothOffIcon from '@mui/icons-material/BluetoothDisabledRounded';
 import BatteryIcon from '../../../components/BatteryIcon';

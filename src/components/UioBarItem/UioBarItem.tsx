@@ -1,6 +1,6 @@
 import Typography from "@mui/material/Typography";
 import { Box } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { IDevice } from "../../models/device";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import NavButton from "../NavButton";

@@ -4,7 +4,7 @@ import { Chart, ChartArea, ChartData, ChartOptions } from "chart.js";
 import { alpha } from "@mui/system";
 import { Stack, Typography } from "@mui/material";
 import { GridContainer, GridZStack } from "./utils";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 
 type Props = {
   name: string;

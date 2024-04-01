@@ -1,5 +1,5 @@
 import { Box } from "@mui/system";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { useStore } from "../../../models/store";
 
 const RecordsGrid = () => {

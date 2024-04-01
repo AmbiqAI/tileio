@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import Box from "@mui/system/Box";
 import { grey } from "@mui/material/colors";
 import { useHistory } from "react-router-dom";

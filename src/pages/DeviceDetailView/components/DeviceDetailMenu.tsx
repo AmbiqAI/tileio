@@ -5,7 +5,7 @@ import {
   ListItemText, Menu, MenuItem,
 } from '@mui/material';
 import MoreIcon from '@mui/icons-material/MoreVert';
-import { observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react';
 import BluetoothIcon from '@mui/icons-material/BluetoothRounded';
 import RefreshIcon from '@mui/icons-material/RefreshRounded';
 import SettingsIcon from '@mui/icons-material/DashboardCustomizeRounded';

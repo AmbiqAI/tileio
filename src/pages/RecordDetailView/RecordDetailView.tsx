@@ -8,7 +8,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { useStore } from "../../models/store";
 import Footer from "../../components/Footer";
 import { IRecord, NotFoundRecord } from "../../models/record";

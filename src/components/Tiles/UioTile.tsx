@@ -1,5 +1,5 @@
 import { FormGroup, Stack, Typography } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import Switch from '@mui/material/Switch';
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";

@@ -5,7 +5,7 @@ import { TileProps, TileSpec } from "./BaseTile";
 import { binarySearch, GridContainer, GridZStack } from "./utils";
 import { alpha, useTheme } from "@mui/material";
 import { getPlotDurationMs } from "../constants";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { ThemeColors } from "../../theme/theme";
 
 export const StreamPlotTileSpec: TileSpec =   {

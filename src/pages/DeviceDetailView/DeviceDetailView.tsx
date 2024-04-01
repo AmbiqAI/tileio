@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { Fade, Stack, Typography } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
-import { observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react';
 import { IDevice, NotFoundDevice } from '../../models/device';
 import { useStore } from '../../models/store';
 import DeviceDetailHeader from './components/DeviceDetailHeader';

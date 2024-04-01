@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/DeleteForever";
 import DangerIcon from "@mui/icons-material/WarningAmberRounded";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import ConfirmCountDialog from "../../../components/ConfirmCountDialog";
 import { useStore } from "../../../models/store";
 

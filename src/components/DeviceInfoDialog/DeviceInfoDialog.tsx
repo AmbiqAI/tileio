@@ -1,6 +1,6 @@
 import React from "react";
 import { saveAs } from 'file-saver';
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import EditIcon from "@mui/icons-material/Edit";
 import CancelIcon from "@mui/icons-material/CancelPresentationOutlined";
 import DeviceInfoForm from "./DeviceInfoForm";

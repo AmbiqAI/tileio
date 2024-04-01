@@ -1,6 +1,6 @@
 import Typography from "@mui/material/Typography";
 import { Button, Stack } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { IDevice } from "../models/device";
 import StartRecordIcon from '@mui/icons-material/FiberManualRecordRounded';
 import StopRecordIcon from '@mui/icons-material/StopCircleRounded';

@@ -1,5 +1,5 @@
 import { alpha } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import MetricPlotTile from "./MetricPlotTile";
 import { ThemeColors } from "../../theme/theme";
