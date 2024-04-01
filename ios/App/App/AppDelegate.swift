@@ -8,6 +8,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+
+#if DEBUG // Check if the app is running in debug mode
+        if #available(macOS 13.3, iOS 16.4, tvOS 16.4, *) { // Check if the current platform version is at least macOS 13.3, iOS 16.4, or tvOS 16.4
+            DispatchQueue.global(qos: .background).async { // Execute the following code asynchronously on a background thread with an appropriate quality of service
+                let semaphore = DispatchSemaphore(value: 0) // Create a new DispatchSemaphore with an initial value of 0
+                let delay: TimeInterval = 3.0 // Define a delay of 3 seconds
+                _ = semaphore.wait(timeout: .now() + delay) // Wait for the semaphore to be signaled after the specified delay
+                DispatchQueue.main.async { // Execute the following code asynchronously on the main thread
+                    if let vc = self.window?.rootViewController as? CAPBridgeViewController { // Get a reference to the root view controller of the app's window and cast it to a CAPBridgeViewController
+                        vc.bridge?.webView?.isInspectable = true // Set the isInspectable property of the CAPBridgeViewController's web view to true, allowing it to be inspected with the Safari Developer Tools
+                    }
+                }
+            }
+        }
+#endif // End of debug mode check
+        
         return true
     }
 

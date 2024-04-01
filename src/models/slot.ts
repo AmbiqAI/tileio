@@ -27,6 +27,11 @@ export const SlotConfigSchema: {schema: RJSFSchema, uischema: UiSchema} = {
         default: 200,
         description: 'Sampling frequency'
       },
+      dtype: {
+        type: 'string',
+        enum: ['u8', 'i8', 'u16', 'i16', 'u32', 'i32', 'f32'],
+        default: 'i16',
+      },
       chs: {
         type: 'array',
         minItems: 1,
@@ -73,6 +78,7 @@ export const SlotConfig = types
   type: types.optional(types.string, 'ecg'),
   unit: types.optional(types.string, 'mV'),
   fs: types.optional(types.number, 100),
+  dtype: types.optional(types.string, 'i16'),
   chs: types.optional(types.array(types.string), ['ch0']),
   metrics: types.optional(types.array(types.string), ['met0']),
 })

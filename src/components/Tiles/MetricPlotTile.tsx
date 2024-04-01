@@ -5,7 +5,6 @@ import { alpha } from "@mui/system";
 import { Stack, Typography } from "@mui/material";
 import { GridContainer, GridZStack } from "./utils";
 import { observer } from "mobx-react-lite";
-import { ThemeColors } from "../../theme/theme";
 
 type Props = {
   name: string;
@@ -38,6 +37,7 @@ const MetricPlotTile = observer(({
   data,
   units,
   primaryColor,
+  secondaryColor,
   min,
   max,
   duration,
@@ -186,7 +186,7 @@ const MetricPlotTile = observer(({
           <Typography fontWeight={900} variant="h3" sx={{ lineHeight: 1 }}>
             {value}
           </Typography>
-          <Typography color={ThemeColors.colors.secondaryColor} fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
+          <Typography color={secondaryColor} fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
             {units}
           </Typography>
         </Stack>

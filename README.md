@@ -22,6 +22,7 @@ DeviceConfiguration:
 SlotConfig:
     * name: Slot name
     * type: Slot type (e.g. ecg)
+    * dtype: Slot data type (e.g. int16)
     * unit: Slot units (e.g. mV)
     * fs: Slot sampling rate (e.g. 100 Hz)
     * chs: Channel names

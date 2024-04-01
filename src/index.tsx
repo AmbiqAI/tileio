@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Capacitor } from "@capacitor/core";
 import "typeface-roboto";
-import "chartjs-adapter-luxon";
+// import "chartjs-adapter-luxon";
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';

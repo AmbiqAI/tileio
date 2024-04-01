@@ -8,14 +8,18 @@ export const GridContainer = styled.div`
   position: relative;
 `;
 
-export const GridZStack = styled("div")(({ level }: { level: number }) => ({
-  position: "absolute",
-  top: 0,
-  left: 0,
-  bottom: 0,
-  right: 0,
-  zIndex: level ? level + 99 : 0,
-}));
+type GridZStackProps = {
+  level: number;
+};
+
+export const GridZStack = styled("div")<GridZStackProps>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: ${({ level }) => (level ? level + 99 : 0)};
+`;
 
 export function getMinMax(
   array: number[],
@@ -88,6 +92,27 @@ export function useDebounce(callback: () => void, wait: number) {
   }, [wait]);
 
   return debounceCallback;
+}
+
+export function useAnimationFrame(callback: (deltaTime: number) => void, wait: number) {
+  const savedCallback = useRef<(deltaTime: number) => void>();
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    let previousTime = 0;
+    const animate = (time: number) => {
+      if (previousTime) {
+        const deltaTime = time - previousTime;
+        savedCallback.current?.(deltaTime);
+      }
+      previousTime = time;
+      requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, []);
 }
 
 export function binarySearch<T, S>(

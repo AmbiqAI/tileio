@@ -35,4 +35,6 @@ class Notifier extends EventEmitter {
 
 };
 
-export default new Notifier();
+const defaultNotifier = new Notifier();
+
+export default defaultNotifier;

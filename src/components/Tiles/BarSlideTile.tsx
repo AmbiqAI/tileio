@@ -153,7 +153,6 @@ const BarSlide = ({ name, values: bars }: ChartSlideConfig) => {
   }), [bars]);
 
   const options = useMemo<ChartOptions<"bar">>(() => {
-    // @ts-ignore - chartjs-plugin-annotation types doesnt recognize font key
     const annotations: AnnotationOptions<"label">[] = bars.map((bar) => ({
       type: 'label',
       content: [bar.label || `${bar.value}`],
@@ -202,9 +201,7 @@ const BarSlide = ({ name, values: bars }: ChartSlideConfig) => {
           display: true,
           grid: {
             display: true,
-            borderColor: theme.palette.text.primary,
             color: 'rgba(0, 0, 0, 0)',
-            borderWidth: 4,
             z: 2,
           },
           ticks: {

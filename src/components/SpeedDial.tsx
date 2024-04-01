@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useHistory } from "react-router-dom";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
@@ -8,55 +8,30 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import CloseIcon from "@mui/icons-material/CloseRounded";
 import { TileioIcon } from "../assets/icons";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
-import { IconButton, Theme } from "@mui/material";
+import { Theme, useTheme } from "@mui/material";
 
 function SpeedDialNav() {
+  const theme = useTheme();
   const history = useHistory();
-  const actions = [
-    {
-      name: "Devices",
-      icon: (
-        <IconButton
-          disableRipple
-          color="inherit"
-          sx={{ width: "56px", height: "56px", m: 0 }}
-          onClick={() => {
-            history.push("/devices");
-          }}
-        >
-          <TileioIcon color="primary" sx={{ fontSize: "28px" }} />
-        </IconButton>
-      ),
-    },
-    {
-      name: "Records",
-      icon: (
-        <IconButton
-          color="inherit"
-          sx={{ width: "56px", height: "56px", m: 0 }}
-          onClick={() => {
-            history.push("/records");
-          }}
-        >
-          <ArchiveIcon color="primary" sx={{ fontSize: "28px" }} />
-        </IconButton>
-      ),
-    },
-    {
-      name: "Settings",
-      icon: (
-        <IconButton
-          color="inherit"
-          sx={{ width: "56px", height: "56px", m: 0 }}
-          onClick={() => {
-            history.push("/settings");
-          }}
-        >
-          <SettingsIcon color="primary" sx={{ fontSize: "28px" }} />
-        </IconButton>
-      ),
-    },
-  ];
+  const actions = useMemo(() => {
+    return [
+      {
+        name: "Devices",
+        icon: <TileioIcon color="primary" htmlColor={theme.palette.primary.main} sx={{ fontSize: "28px" }} />,
+        onClick: () => { history.push("/devices");}
+      },
+      {
+        name: "Records",
+        icon: <ArchiveIcon color="primary" sx={{ fontSize: "28px" }} />,
+        onClick: () => { history.push("/records");}
+      },
+      {
+        name: "Settings",
+        icon: <SettingsIcon color="primary" sx={{ fontSize: "28px" }} />,
+        onClick: () => { history.push("/settings");}
+      },
+    ];
+  }, [theme, history]);
   const [open, setOpen] = useState(false);
   const toggleOpen = () => setOpen(!open);
   const handleClose = () => setOpen(false);
@@ -93,6 +68,7 @@ function SpeedDialNav() {
           <SpeedDialAction
             key={action.name}
             icon={action.icon}
+            onClick={action.onClick}
             FabProps={{
               size: "large",
             }}

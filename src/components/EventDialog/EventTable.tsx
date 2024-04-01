@@ -109,7 +109,11 @@ export const EventEditTable = observer(
                     minDateTime={startDate}
                     maxDateTime={endDate}
                     label="Time"
-                    inputFormat="dd/MM/yyyy hh:mm:ss aa"
+                    timeSteps={{
+                      hours: 1,
+                      minutes: 1,
+                      seconds: 1,
+                    }}
                     views={[
                       "year",
                       "month",
@@ -118,24 +122,24 @@ export const EventEditTable = observer(
                       "minutes",
                       "seconds",
                     ]}
-                    value={newEvent.ts}
+                    value={new Date(newEvent.ts)}
                     onChange={(e) => {
                       setNewEvent({
                         ...newEvent,
                         ts: e?.valueOf() || endDate.valueOf(),
                       });
                     }}
-                    renderInput={(params) => (
-                      <TextField
-                        fullWidth
-                        margin="normal"
-                        size="small"
-                        inputProps={{ spellCheck: false }}
-                        autoComplete="off"
-                        disabled
-                        {...params}
-                      />
-                    )}
+                    // renderInput={(params) => (
+                    //   <TextField
+                    //     fullWidth
+                    //     margin="normal"
+                    //     size="small"
+                    //     inputProps={{ spellCheck: false }}
+                    //     autoComplete="off"
+                    //     disabled
+                    //     {...params}
+                    //   />
+                    // )}
                   />
                 </LocalizationProvider>
               </TableCell>

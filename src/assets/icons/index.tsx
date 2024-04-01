@@ -5,16 +5,14 @@ export const TileioIcon = (props: SvgIconProps) => {
     <SvgIcon {...props} viewBox="0 0 288 288">
     <svg height="100%" strokeMiterlimit="10" version="1.1" width="100%" viewBox="0 0 288 288">
     <defs/>
-    <g id="Icon-color">
     <g opacity="1">
     <path d="M28 36C28 31.5817 31.5817 28 36 28L252 28C256.418 28 260 31.5817 260 36L260 84C260 88.4183 256.418 92 252 92L36 92C31.5817 92 28 88.4183 28 84L28 36Z" fill={props.htmlColor} fillRule="nonzero" opacity="1" stroke="none"/>
     <path d="M112 116C112 111.582 115.582 108 120 108L168 108C172.418 108 176 111.582 176 116L176 252C176 256.418 172.418 260 168 260L120 260C115.582 260 112 256.418 112 252L112 116Z" fill={props.htmlColor} fillRule="nonzero" opacity="1" stroke="none"/>
     <path d="M192 116C192 111.582 195.582 108 200 108L252 108C256.418 108 260 111.582 260 116L260 140C260 144.418 256.418 148 252 148L200 148C195.582 148 192 144.418 192 140L192 116Z" fill={props.htmlColor} fillRule="nonzero" opacity="1" stroke="none"/>
     <path d="M192 172C192 167.582 195.582 164 200 164L252 164C256.418 164 260 167.582 260 172L260 196C260 200.418 256.418 204 252 204L200 204C195.582 204 192 200.418 192 196L192 172Z" fill={props.htmlColor} fillRule="nonzero" opacity="1" stroke="none"/>
     <path d="M192 228C192 223.582 195.582 220 200 220L252 220C256.418 220 260 223.582 260 228L260 252C260 256.418 256.418 260 252 260L200 260C195.582 260 192 256.418 192 252L192 228Z" fill={props.htmlColor} fillRule="nonzero" opacity="1" stroke="none"/>
-    <path d="M28 200C28 195.582 31.5817 192 36 192L88 192C92.4183 192 96 195.582 96 200L96 252C96 256.418 92.4183 260 88 260L36 260C31.5817 260 28 256.418 28 252L28 200Z" fill={props.htmlColor} fill-rule="nonzero" opacity="1" stroke="none"/>
-    <path d="M28 116C28 111.582 31.5817 108 36 108L88 108C92.4183 108 96 111.582 96 116L96 168C96 172.418 92.4183 176 88 176L36 176C31.5817 176 28 172.418 28 168L28 116Z" fill={props.htmlColor} fill-rule="nonzero" opacity="1" stroke="none"/>
-    </g>
+    <path d="M28 200C28 195.582 31.5817 192 36 192L88 192C92.4183 192 96 195.582 96 200L96 252C96 256.418 92.4183 260 88 260L36 260C31.5817 260 28 256.418 28 252L28 200Z" fill={props.htmlColor} fillRule="nonzero" opacity="1" stroke="none"/>
+    <path d="M28 116C28 111.582 31.5817 108 36 108L88 108C92.4183 108 96 111.582 96 116L96 168C96 172.418 92.4183 176 88 176L36 176C31.5817 176 28 172.418 28 168L28 116Z" fill={props.htmlColor} fillRule="nonzero" opacity="1" stroke="none"/>
     </g>
     </svg>
     </SvgIcon>

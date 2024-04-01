@@ -5,26 +5,26 @@ import { delay } from '../utils';
 import { IDeviceInfo } from '../models/deviceInfo';
 import { ApiManager } from './api';
 
-const PK_SVC_UUID = "EECB7DB8-8B2D-402C-B995-825538B49328";
-const PK_SLOTS_SIG_CHAR_UUIDS = [
+const TIO_SVC_UUID = "EECB7DB8-8B2D-402C-B995-825538B49328";
+const TIO_SLOTS_SIG_CHAR_UUIDS = [
   "5BCA2754-AC7E-4A27-A127-0F328791057A",
   "45415793-A0E9-4740-BCA4-CE90BD61839F",
   "DD19792C-63F1-420F-920C-C58BADA8EFB9",
   "F1F69158-0BD6-4CAB-90A8-528BAF74CC74"
 ];
-const PK_SLOTS_MET_CHAR_UUIDS = [
+const TIO_SLOTS_MET_CHAR_UUIDS = [
   "44A3A7B8-D7C8-4932-9A10-D99DD63775AE",
   "E64FA683-4628-48C5-BEDE-824AAA7C3F5B",
   "B9D28F53-65F0-4392-AFBC-C602F9DC3C8B",
   "917C9EB4-3DBC-4CB3-BBA2-EC4E288083F4"
 ]
 
-const PK_UIO_CHAR_UUID = "B9488D48-069B-47F7-94F0-387F7FBFD1FA";
-const PK_BATT_SVC_UUID = numberToUUID(0x180f);
-const PK_BATT_LEVEL_CHAR_UUID = numberToUUID(0x2a19);
+const TIO_UIO_CHAR_UUID = "B9488D48-069B-47F7-94F0-387F7FBFD1FA";
+const TIO_BATT_SVC_UUID = numberToUUID(0x180f);
+const TIO_BATT_LEVEL_CHAR_UUID = numberToUUID(0x2a19);
 
-
-function dataViewToSignalData(data: DataView, numChs: number, fs: number): {signals: number[][], mask: number[][]} {
+function dataViewToSignalData(data: DataView, numChs: number, fs: number, dtype: string): {signals: number[][], mask: number[][]} {
+  // let dtype = 'i16'; // u8, u16, i16, u32, i32, f32  const decoder =
   const ts = 1000/fs;
   const signalLen = data.getUint16(0, true);
   const signals: number[][] = [];
@@ -36,8 +36,30 @@ function dataViewToSignalData(data: DataView, numChs: number, fs: number): {sign
     offset += 2;
     let row = [refDate];
     for (let ch = 0; ch < numChs; ch++) {
-      row.push(data.getInt16(offset, true));
-      offset += 2;
+      if (dtype === 'u16') {
+        row.push(data.getUint16(offset, true));
+        offset += 2;
+      } else if (dtype === 'i16') {
+        row.push(data.getInt16(offset, true));
+        offset += 2;
+      } else if (dtype === 'u32') {
+        row.push(data.getUint32(offset, true));
+        offset += 4;
+      } else if (dtype === 'i32') {
+        row.push(data.getInt32(offset, true));
+        offset += 4;
+      } else if (dtype === 'f32') {
+        row.push(data.getFloat32(offset, true));
+        offset += 4;
+      } else if (dtype === 'i8') {
+        row.push(data.getInt8(offset));
+        offset += 1;
+      } else {
+        row.push(data.getUint8(offset));
+        offset += 1;
+      }
+      // row.push(data.getInt16(offset, true));
+      // offset += 2;
     }
     signals.push(row);
     refDate += ts;
@@ -88,7 +110,7 @@ class BleManager implements ApiManager {
     const mobile = await isMobile();
     if (mobile) {
       await BleClient.requestLEScan({
-        services: [PK_SVC_UUID],
+        services: [TIO_SVC_UUID],
       }, async (result) => {
         done = cb(result.device.deviceId, result.localName || result.device.deviceId.substring(0, 7));
         if (done) {
@@ -97,7 +119,7 @@ class BleManager implements ApiManager {
       });
     } else {
       const device = await BleClient.requestDevice({
-        services: [PK_SVC_UUID],
+        services: [TIO_SVC_UUID],
         optionalServices: []
       });
       cb(device.deviceId, device.name || device.deviceId);
@@ -129,7 +151,7 @@ class BleManager implements ApiManager {
   }
 
   async getConnectedDevices(): Promise<string[]> {
-    const devices = await BleClient.getConnectedDevices([PK_SVC_UUID]);
+    const devices = await BleClient.getConnectedDevices([TIO_SVC_UUID]);
     return devices.map(d => d.deviceId);
   }
 
@@ -149,7 +171,7 @@ class BleManager implements ApiManager {
   async bleWrite(deviceId: string, service: string, characteristic: string, value: DataView): Promise<void> {
     try {
       await BleClient.write(deviceId, service, characteristic, value);
-      await delay(100);
+      await delay(200);
     } catch (error) {
       const err_msg = (error as Error).message;
       if (err_msg.includes('Unlikely error') || err_msg.includes('unknown reason')) {
@@ -168,11 +190,12 @@ class BleManager implements ApiManager {
       if (deviceInfo === undefined || slot >= deviceInfo.slots.length) {
         throw new Error('Device info not found');
       }
-      await BleClient.startNotifications(deviceId, PK_SVC_UUID,  PK_SLOTS_SIG_CHAR_UUIDS[slot], async (data: DataView) => {
+      await BleClient.startNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_SIG_CHAR_UUIDS[slot], async (data: DataView) => {
         try {
           const numChs = deviceInfo.slots[slot].chs.length;
           const fs = deviceInfo.slots[slot].fs;
-          const rst = dataViewToSignalData(data, numChs, fs);
+          const dtype = deviceInfo.slots[slot].dtype;
+          const rst = dataViewToSignalData(data, numChs, fs, dtype);
           await cb(slot, rst.signals, rst.mask);
         } catch (error) {
           console.error(`Failed with notifications ${error}`);
@@ -185,7 +208,7 @@ class BleManager implements ApiManager {
 
   async disableSlotNotifications(deviceId: string, slot: number): Promise<void> {
     try {
-      await BleClient.stopNotifications(deviceId, PK_SVC_UUID,  PK_SLOTS_SIG_CHAR_UUIDS[slot]);
+      await BleClient.stopNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_SIG_CHAR_UUIDS[slot]);
     } catch (error) {
       console.error(`Failed disabling signal notifications: ${error}`);
     }
@@ -202,7 +225,7 @@ class BleManager implements ApiManager {
       if (deviceInfo === undefined || slot >= deviceInfo.slots.length) {
         throw new Error('Device info not found');
       }
-      await BleClient.startNotifications(deviceId, PK_SVC_UUID,  PK_SLOTS_MET_CHAR_UUIDS[slot], async (data: DataView) => {
+      await BleClient.startNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_MET_CHAR_UUIDS[slot], async (data: DataView) => {
         try {
           const metrics = dataViewToMetrics(data);
           await cb(slot, metrics);
@@ -217,7 +240,7 @@ class BleManager implements ApiManager {
 
   async disableSlotMetricsNotifications(deviceId: string, slot: number): Promise<void> {
     try {
-      await BleClient.stopNotifications(deviceId, PK_SVC_UUID,  PK_SLOTS_MET_CHAR_UUIDS[slot]);
+      await BleClient.stopNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_MET_CHAR_UUIDS[slot]);
     } catch (error) {
       console.error(`Failed disabling metrics notifications: ${error}`);
     }
@@ -229,7 +252,7 @@ class BleManager implements ApiManager {
 
   async getDeviceBatteryLevel(deviceId: string): Promise<number> {
     try {
-      return (await BleClient.read(deviceId, PK_BATT_SVC_UUID, PK_BATT_LEVEL_CHAR_UUID)).getUint8(0);
+      return (await BleClient.read(deviceId, TIO_BATT_SVC_UUID, TIO_BATT_LEVEL_CHAR_UUID)).getUint8(0);
     } catch (error) {
     }
     return -1;
@@ -247,22 +270,27 @@ class BleManager implements ApiManager {
   }
 
   async getUioState(deviceId: string): Promise<number[]> {
-    const data = await BleClient.read(deviceId, PK_SVC_UUID, PK_UIO_CHAR_UUID);
+    const data = await BleClient.read(deviceId, TIO_SVC_UUID, TIO_UIO_CHAR_UUID);
     const state = [];
     for (let i = 0; i < data.byteLength; i++) {
       state.push(data.getUint8(i));
     }
+    console.log(`UIO state: ${state}`);
     return state;
   }
 
   async setUioState(deviceId: string, state: number[]): Promise<void> {
-    const data = new DataView(new ArrayBuffer(state.length));
+    const buffer = new ArrayBuffer(state.length);
+    const data = new DataView(buffer);
     for (let i = 0; i < state.length; i++) {
       data.setUint8(i, state[i]);
     }
-    await this.bleWrite(deviceId, PK_SVC_UUID, PK_UIO_CHAR_UUID, data);
+    await this.bleWrite(deviceId, TIO_SVC_UUID, TIO_UIO_CHAR_UUID, data);
+    console.debug(`Setting UIO state: ${data}`);
   }
 
 }
 
-export default new BleManager();
+const defaultManager = new BleManager();
+
+export default defaultManager;

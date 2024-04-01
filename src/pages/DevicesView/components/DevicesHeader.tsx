@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import Typography from "@mui/material/Typography";
-import { Button, IconButton, Toolbar } from "@mui/material";
+import { Button, IconButton, Toolbar, useTheme } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AddDeviceDialog from "../../../components/AddDeviceDialog/AddDeviceDialog";
 import Header from "../../../components/Header";
@@ -15,17 +15,19 @@ const DevicesHeader = () => {
   const performScan = async () => {
     await refreshDevices();
   };
+  const theme = useTheme();
   return (
     <Header>
       <Toolbar>
         <IconButton
           size="large"
           edge="start"
-          color="inherit"
+          // color="inherit"
+          color="secondary"
           aria-label="menu"
           sx={{ mr: 2 }}
         >
-          <TileioIcon />
+          <TileioIcon htmlColor={theme.palette.text.primary} />
         </IconButton>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           Tileio

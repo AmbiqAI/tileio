@@ -83,12 +83,10 @@ const AddDeviceDialog = ({ open, close }: Props) => {
                 <IconButton
                   component="label"
                   size="small"
+                  role={undefined}
                 >
                   <UploadIcon />
                   <VisuallyHiddenInput
-                    onClick={(e) => {
-                      e.currentTarget.value = "";
-                    }}
                     onChange={(e) => {
                       if (e.target.files && e.target.files.length > 0) {
                         const file = e.target.files[0];
@@ -102,6 +100,7 @@ const AddDeviceDialog = ({ open, close }: Props) => {
                         };
                         reader.readAsText(file);
                       }
+                      e.currentTarget.value = "";
                     }}
                     type="file"
                     accept="application/json"

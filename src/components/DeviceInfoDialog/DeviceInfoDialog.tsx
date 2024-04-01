@@ -119,7 +119,7 @@ const DeviceInfoDialog = ({
                     data: JSON.stringify(json),
                     recursive: false,
                     encoding: Encoding.UTF8,
-                    path: 'pk-device-config.json',
+                    path: 'tio-device-config.json',
                     directory: Directory.Cache
                   });
                   await Share.share({
@@ -132,7 +132,7 @@ const DeviceInfoDialog = ({
                     [JSON.stringify(json)],
                     { type: "text/plain;charset=utf-8" }
                   );
-                  saveAs(blob, 'pk-device-config.json');
+                  saveAs(blob, 'tio-device-config.json');
                 }
               }}
             >
@@ -145,9 +145,6 @@ const DeviceInfoDialog = ({
             >
               <UploadIcon />
               <VisuallyHiddenInput
-                onClick={(e) => {
-                  e.currentTarget.value = "";
-                }}
                 onChange={(e) => {
                   if (e.target.files && e.target.files.length > 0) {
                     const file = e.target.files[0];
@@ -162,6 +159,7 @@ const DeviceInfoDialog = ({
                     };
                     reader.readAsText(file);
                   }
+                  e.currentTarget.value = "";
                 }}
                 type="file"
                 accept="application/json"

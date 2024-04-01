@@ -98,34 +98,34 @@ const DashboardSettingsDialog = ({
 
               <Tooltip title="Download config" placement="top">
               <IconButton
-              size="small"
-              onClick={async () => {
-                const json = getSnapshot(settings);
-                const info = await Device.getInfo();
-                const isMobile = isPlatform("ios") || isPlatform("android") || info.platform === 'ios';
-                const canShare = (await Share.canShare()).value;
-                if (canShare && isMobile) {
-                  const rst = await Filesystem.writeFile({
-                    data: JSON.stringify(json),
-                    recursive: false,
-                    encoding: Encoding.UTF8,
-                    path: 'pk-dashboard-config.json',
-                    directory: Directory.Cache
-                  });
-                  await Share.share({
-                    title: 'Dashboard Configuration',
-                    dialogTitle: 'Dashboard Configuration',
-                    url: rst.uri,
-                  });
-                } else {
-                  const blob = new Blob(
-                    [JSON.stringify(json)],
-                    { type: "text/plain;charset=utf-8" }
-                  );
-                  saveAs(blob, 'pk-dashboard-config.json');
-                }
-              }}
-            >
+                size="small"
+                onClick={async () => {
+                  const json = getSnapshot(settings);
+                  const info = await Device.getInfo();
+                  const isMobile = isPlatform("ios") || isPlatform("android") || info.platform === 'ios';
+                  const canShare = (await Share.canShare()).value;
+                  if (canShare && isMobile) {
+                    const rst = await Filesystem.writeFile({
+                      data: JSON.stringify(json),
+                      recursive: false,
+                      encoding: Encoding.UTF8,
+                      path: 'tio-dashboard-config.json',
+                      directory: Directory.Cache
+                    });
+                    await Share.share({
+                      title: 'Dashboard Configuration',
+                      dialogTitle: 'Dashboard Configuration',
+                      url: rst.uri,
+                    });
+                  } else {
+                    const blob = new Blob(
+                      [JSON.stringify(json)],
+                      { type: "text/plain;charset=utf-8" }
+                    );
+                    saveAs(blob, 'tio-dashboard-config.json');
+                  }
+                }}
+              >
               <SaveIcon />
             </IconButton>
             </Tooltip>

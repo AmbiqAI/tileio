@@ -154,7 +154,7 @@ class EmulatorManager implements ApiManager {
     const numPackets = Math.ceil(fs/maxSlotsPerPacket);
     const ts = 1000/numPackets;
     const numSignals = fs/numPackets;
-    console.log(`${numChs} ${fs} ${numPackets} ${ts} ${numSignals}`);
+    console.debug(`${numChs} ${fs} ${numPackets} ${ts} ${numSignals}`);
     const intervalcb = setInterval(() => {
       const rst = generateDummySlotSignals(slot, numSignals, numChs, fs);
       cb(slot, rst.signals, rst.mask);
@@ -218,4 +218,6 @@ class EmulatorManager implements ApiManager {
 
 }
 
-export default new EmulatorManager();
+const defaultManager = new EmulatorManager();
+
+export default defaultManager;

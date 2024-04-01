@@ -164,7 +164,9 @@ const Device = types
     if (enable === undefined) {
       enable = !self.notifications;
     }
-    if (self.state.disconnected || self.notifications === enable) { return; }
+    if (self.state.disconnected) {
+      return;
+    }
     for (let slot = 0; slot < self.info.slots.length; slot++) {
       if (enable) {
         yield getApi().enableSlotNotifications(self.id, slot, self.receivedSlotData);
@@ -222,14 +224,15 @@ const Device = types
 .actions(self => ({
   connect: flow(function*() {
     try {
+      self.notifications = false;
       self.slots.forEach(slot => slot.clear());
       self.state.setConnectionState(DeviceConnectionType.CONNECTING);
       yield getApi().deviceConnect(self.id, self.info, self.onDisconnected);
       self.state.setConnectionState(DeviceConnectionType.CONNECTED);
+      yield self.startPolling();
       yield delay(500);
       yield self.fetchUioState();
       yield self.fetchInfo();
-      yield self.startPolling();
       yield self.setNotifications(self.settings.streaming);
     } catch (error) {
       console.error(error);

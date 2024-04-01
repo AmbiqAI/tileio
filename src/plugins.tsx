@@ -15,8 +15,9 @@ import {
 } from "chart.js";
 import "chartjs-adapter-luxon";
 import AnnotationPlugin from "chartjs-plugin-annotation";
-import StreamingPlugin from "chartjs-plugin-streaming";
-import ZoomPlugin from "chartjs-plugin-zoom";
+// import StreamingPlugin from "chartjs-plugin-streaming";
+import StreamingPlugin from "@ambiqai/chartjs-plugin-streaming";
+// import ZoomPlugin from "chartjs-plugin-zoom";
 import { registerTile } from "./components/Tiles/BaseTile";
 import QosTile, { QosTileSpec } from "./components/Tiles/QosTile";
 import MarkdownTile, { MarkdownTileSpec } from "./components/Tiles/MarkdownTile";
@@ -30,6 +31,7 @@ import SegmentStreamTile, { SegmentStreamTileSpec } from "./components/Tiles/Seg
 import SegPieTile, { SegPieTileSpec } from "./components/Tiles/SegPieTile";
 import FidPieTile, { FidPieTileSpec } from "./components/Tiles/FidPieTile";
 import UioTile, { UioTileSpec} from "./components/Tiles/UioTile";
+import SvgTile, { SvgTileSpec } from "./components/Tiles/SvgTile";
 
 // Register tile plugins and chartjs plugins
 
@@ -45,6 +47,7 @@ registerTile(SegmentStreamTileSpec.type, SegmentStreamTileSpec, SegmentStreamTil
 registerTile(SegPieTileSpec.type, SegPieTileSpec, SegPieTile);
 registerTile(FidPieTileSpec.type, FidPieTileSpec, FidPieTile);
 registerTile(UioTileSpec.type, UioTileSpec, UioTile);
+registerTile(SvgTileSpec.type, SvgTileSpec, SvgTile);
 
 Chart.register(
   LineController,
@@ -61,5 +64,5 @@ Chart.register(
   Filler
 );
 Chart.register(StreamingPlugin);
-Chart.register(ZoomPlugin);
+// Chart.register(ZoomPlugin);
 Chart.register(AnnotationPlugin);

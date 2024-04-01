@@ -3,6 +3,7 @@ import { TileProps } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import { Box, Stack } from "@mui/material";
 import Markdown from 'react-markdown';
+// import { MuiMarkdown } from 'mui-markdown';
 import { TileSpec } from "./BaseTile";
 import { useMemo } from "react";
 

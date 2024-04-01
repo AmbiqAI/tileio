@@ -129,7 +129,6 @@ export const UioState = types
     led1: types.optional(types.boolean, false),
     led2: types.optional(types.boolean, false),
     led3: types.optional(types.boolean, false),
-    led4: types.optional(types.boolean, false),
 })
 .views(self => ({
     get state(): number[] {
@@ -142,7 +141,6 @@ export const UioState = types
             self.led1 ? 1 : 0,
             self.led2 ? 1 : 0,
             self.led3 ? 1 : 0,
-            self.led4 ? 1 : 0,
         ]
     }
 }))
@@ -156,7 +154,6 @@ export const UioState = types
         self.led1 = state[5] === 1;
         self.led2 = state[6] === 1;
         self.led3 = state[7] === 1;
-        self.led4 = state[8] === 1;
     },
     setButtonState(idx: number, state: boolean) {
         switch (idx) {
@@ -172,7 +169,6 @@ export const UioState = types
             case 1: self.led1 = state; break;
             case 2: self.led2 = state; break;
             case 3: self.led3 = state; break;
-            case 4: self.led4 = state; break;
         }
     },
     getButtonState(idx: number): boolean {
@@ -190,7 +186,6 @@ export const UioState = types
             case 1: return self.led1;
             case 2: return self.led2;
             case 3: return self.led3;
-            case 4: return self.led4;
         }
         return false;
     }

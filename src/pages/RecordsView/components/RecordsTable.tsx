@@ -4,21 +4,19 @@ import {
   GridColDef,
   GridRenderCellParams,
   GridRowModel,
-  GridValueFormatterParams,
   GridToolbarContainer,
   GridToolbarFilterButton,
   GridToolbarColumnsButton,
   GridToolbarDensitySelector,
   GridRowId,
-  GridCallbackDetails,
   GridSortModel,
 } from "@mui/x-data-grid";
 import ViewRecordIcon from "@mui/icons-material/LaunchRounded";
 import { Link as RouterLink } from "react-router-dom";
-import { Button, Card, IconButton, Theme } from "@mui/material";
+import { Button, Card, IconButton } from "@mui/material";
 import { useStore } from "../../../models/store";
 import { IRecord } from "../../../models/record";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ConfirmCountDialog from "../../../components/ConfirmCountDialog";
 
@@ -28,21 +26,20 @@ const columns: GridColDef[] = [
     headerName: "ID",
     width: 100,
     sortable: false,
-    hide: false,
-    valueFormatter: (params: GridValueFormatterParams) =>
-      `${(params.value as string).substring(0, 7)}`,
+    hideable: false,
+    valueFormatter: (value?: string) => value?.slice(0, 8) ?? "",
   },
   {
     field: "view",
     headerName: "View",
     width: 70,
     sortable: false,
-    hide: false,
+    hideable: false,
     filterable: false,
     disableExport: true,
     disableColumnMenu: true,
     hideSortIcons: true,
-    renderCell: (params: GridRenderCellParams<string>) => (
+    renderCell: (params: GridRenderCellParams<any, string>) => (
       <strong>
         <IconButton component={RouterLink} to={`/records/${params.id}`}>
           <ViewRecordIcon />
@@ -54,7 +51,7 @@ const columns: GridColDef[] = [
   {
     field: "duration",
     headerName: "Duration",
-    valueFormatter: (params) => Math.floor(params.value as number),
+    valueFormatter: (value?: number) => value?.toFixed(0) ?? "",
     minWidth: 100,
     type: "number",
   },
@@ -63,7 +60,7 @@ const columns: GridColDef[] = [
     field: "deviceLocation",
     headerName: "Location",
     minWidth: 100,
-    hide: true,
+    hideable: true,
   },
 ];
 
@@ -100,10 +97,55 @@ const RecordsTable = () => {
   }, [removeRecord, selectedRows]);
 
   const dataRows = records.map((r) => recordToRow(r));
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortModel, setSortModel] = useState<GridSortModel>([
     { field: "date", sort: "desc" },
   ]);
+
+  const slots = useMemo(() => ({
+    toolbar: () => (
+      <GridToolbarContainer
+        style={{
+          overflowX: "scroll",
+          display: "flex",
+          flexWrap: "wrap",
+        }}
+      >
+        <GridToolbarColumnsButton slotProps={{
+          button: { color: "secondary"}
+        }} />
+        <GridToolbarFilterButton
+          slotProps={{
+            button: {
+              color: "secondary",
+            }
+          }}
+        />
+        <GridToolbarDensitySelector slotProps={{
+          button: {
+            color: "secondary",
+          }
+        }} />
+        <Button
+          variant="text"
+          size="small"
+          color="secondary"
+          disabled={selectedRows.length === 0}
+          onClick={async () => {
+            setConfirmOptions({
+              title: `Are you sure you want to delete ${selectedRows.length} record(s)?`,
+              count: selectedRows.length,
+              open: true,
+            });
+          }}
+          startIcon={<DeleteIcon />}
+        >
+          Delete
+        </Button>
+      </GridToolbarContainer>
+    ),
+  }
+
+  ), [selectedRows]);
 
   return (
     <Card
@@ -114,52 +156,13 @@ const RecordsTable = () => {
         <DataGrid
           rows={dataRows}
           columns={columns}
-          pageSize={rowsPerPage}
-          onPageSizeChange={(
-            pageSize: number,
-            details: GridCallbackDetails
-          ) => {
-            setRowsPerPage(pageSize);
-          }}
+          autoPageSize
+          pageSizeOptions={[25, 50, 100]}
           scrollbarSize={1}
-          rowsPerPageOptions={[5, 10, 25]}
           checkboxSelection
-          disableSelectionOnClick
-          components={{
-            Toolbar: () => (
-              <GridToolbarContainer
-                style={{
-                  overflowX: "scroll",
-                  display: "flex",
-                  flexWrap: "wrap",
-                }}
-              >
-                <GridToolbarColumnsButton color="secondary" />
-                <GridToolbarFilterButton
-                  color="secondary"
-                  sx={{ color: (theme: Theme) => theme.palette.secondary.main }}
-                />
-                <GridToolbarDensitySelector color="secondary" />
-                <Button
-                  variant="text"
-                  size="small"
-                  color="secondary"
-                  disabled={selectedRows.length === 0}
-                  onClick={async () => {
-                    setConfirmOptions({
-                      title: `Are you sure you want to delete ${selectedRows.length} record(s)?`,
-                      count: selectedRows.length,
-                      open: true,
-                    });
-                  }}
-                  startIcon={<DeleteIcon />}
-                >
-                  Delete
-                </Button>
-              </GridToolbarContainer>
-            ),
-          }}
-          onSelectionModelChange={(ids) => {
+          disableRowSelectionOnClick
+          slots={slots}
+          onRowSelectionModelChange={(ids: GridRowId[]) => {
             setSelectedRows(ids);
           }}
           sortModel={sortModel}

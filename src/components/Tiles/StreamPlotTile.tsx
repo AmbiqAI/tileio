@@ -230,7 +230,6 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
     return {
       datasets: chNames.map((ch, i) => ({
           label: ch,
-          fill: false,
           backgroundColor: alpha(colors[i%colors.length], 0.3),
           borderColor: colors[i%colors.length],
           yAxisID: "y",
@@ -246,17 +245,19 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
     if (pause || !chart || !signals || !mask || !signals.data || !signals.data.length) {
       return;
     }
-    for (let ch = 0; ch < configs.chs.length; ch++) {
-      const dataset = chart.data.datasets[ch];
+    for (let i = 0; i < configs.chs.length; i++) {
+      const ch = configs.chs[i];
+      const dataset = chart.data.datasets[i];
       if (!dataset || signals.data[0].length < ch) { continue; }
       const sigData = dataset.data as { x: number; y: number }[];
       const refTs = sigData.length ? sigData[sigData.length - 1].x : 0;
       const newIdx = binarySearch(signals.data, refTs, (a, b) => a - b[0]);
-      if (newIdx >= signals.data.length) { return; }
-      for (let i = newIdx; i < signals.data.length; i++) {
-        sigData.push({ x: signals.data[i][0], y: signals.data[i][ch+1] });
+      if (newIdx >= signals.data.length) { continue; }
+      for (let j = newIdx; j < signals.data.length; j++) {
+        sigData.push({ x: signals.data[j][0], y: signals.data[j][ch+1] });
       }
     }
+
     const annotation = chart.options.plugins?.annotation;
     if (!data || !annotation) {
       return;
@@ -271,7 +272,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
       value: fid.ts,
     }));
 
-    chart.update("none");
+    chart.update("quiet");
   }, [latestTs, configs, pause, data, slots]);
 
   return (

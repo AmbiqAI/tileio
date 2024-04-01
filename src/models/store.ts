@@ -4,7 +4,7 @@ import { Storage, Drivers } from '@ionic/storage';
 import { Root, IRoot } from './root';
 import persist from '../utils/persist';
 
-const PK_STORAGE_KEY = '__pk_store';
+const TIO_STORAGE_KEY = '__tio_store';
 
 const root = Root.create({
   devices: [],
@@ -17,7 +17,7 @@ const store = {
 };
 
 const storage = new Storage({
-  name: PK_STORAGE_KEY,
+  name: TIO_STORAGE_KEY,
   driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage]
 });
 
