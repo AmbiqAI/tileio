@@ -10,13 +10,12 @@ const DeviceDetailFooter = ({ device }: { device: IDevice }) => {
   return (
     <>
       <Footer>
-        <Toolbar>
+        <Toolbar sx={{alignItems: "stretch"}}>
             <Stack
               spacing={1}
-              py={0}
+              py={0.5}
               direction="row"
               alignItems="stretch"
-              height="100%"
             >
 
             <QosBarItem device={device} />
