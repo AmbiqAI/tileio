@@ -71,27 +71,27 @@ const UioTile = observer(({ config, uioState }: TileProps) => {
 
   const btnItems = [{
     info: configs.btn0,
-    state: uioState ? uioState.btn0 : false,
+    state: uioState ? uioState.io0 : false,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      uioState?.setButtonState(0, event.target.checked);
+      // uioState?.setIoState(0, event.target.checked ? 1 : 0);
     }
   }, {
     info: configs.btn1,
-    state: uioState ? uioState.btn1 : false,
+    state: uioState ? uioState.io1 : false,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      uioState?.setButtonState(1, event.target.checked);
+      // uioState?.setIoState(1, event.target.checked ? 1 : 0);
     }
   }, {
     info: configs.btn2,
-    state: uioState ? uioState.btn2 : false,
+    state: uioState ? uioState.io2 : false,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      uioState?.setButtonState(2, event.target.checked);
+      // uioState?.setIoState(2, event.target.checked ? 1 : 0);
     }
   }, {
     info: configs.btn3,
-    state: uioState ? uioState.btn3 : false,
+    state: uioState ? uioState.io3 : false,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      uioState?.setButtonState(3, event.target.checked);
+      // uioState?.setIoState(3, event.target.checked ? 1 : 0);
     }
   }];
 
@@ -112,7 +112,7 @@ const UioTile = observer(({ config, uioState }: TileProps) => {
                 <Stack direction="column" alignItems="center">
                 <Stack direction="row" alignItems="center">
                   <Switch
-                    checked={btn.state}
+                    checked={!!btn.state}
                     onChange={btn.onChange}
                     size="small"
                     disabled={!btn.info.enabled || !uioState} />

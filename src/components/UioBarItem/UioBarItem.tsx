@@ -9,29 +9,29 @@ import { useState } from "react";
 
 const UioBarItem = observer(({ device }: { device: IDevice }) => {
 
-  const btnItems = [{
-    info: device.info.uio.btn0,
-    state: device.uioState.btn0,
+  const ioItems = [{
+    info: device.info.uio.io0,
+    state: device.uioState.io0,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      device.setUioButton(0, event.target.checked);
+      // device.setIoState(0, event.target.checked ? 1 : 0);
     }
   }, {
-    info: device.info.uio.btn1,
-    state: device.uioState.btn1,
+    info: device.info.uio.io1,
+    state: device.uioState.io1,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      device.setUioButton(1, event.target.checked);
+      // device.setIoState(1, event.target.checked ? 1 : 0);
     }
   }, {
-    info: device.info.uio.btn2,
-    state: device.uioState.btn2,
+    info: device.info.uio.io2,
+    state: device.uioState.io2,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      device.setUioButton(2, event.target.checked);
+      // device.setIoState(2, event.target.checked ? 1 : 0);
     }
   }, {
-    info: device.info.uio.btn3,
-    state: device.uioState.btn3,
+    info: device.info.uio.io3,
+    state: device.uioState.io3,
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      device.setUioButton(3, event.target.checked);
+      // device.setIoState(3, event.target.checked ? 1 : 0);
     }
   }];
 
@@ -43,12 +43,25 @@ const UioBarItem = observer(({ device }: { device: IDevice }) => {
       onClick={() => { showDialog(true); }}
     >
         <Grid container alignItems="center" rowSpacing={0.5} columnSpacing={1} minWidth="80px" maxWidth="180px">
-          {btnItems.filter(btn => btn.info.enabled).map((btn, idx) => (
-            <Grid xs={6} key={`btn-${btn.info.name}-${idx}`} >
+          {ioItems.filter(btn => btn.info.enabled).map((io, idx) => (
+            <Grid xs={6} key={`btn-${io.info.name}-${idx}`} >
               <Box alignItems="center">
-                <Typography variant="subtitle2" fontWeight={600} >
-                  {btn.state ? btn.info.on : btn.info.off}
-                </Typography>
+                {(io.info.ioType === "Toggle") && (
+                  <Typography variant="subtitle2" fontWeight={600} >
+                  {io.state ? io.info.on : io.info.off}
+                  </Typography>
+                )}
+                {(io.info.ioType === "Slider") && (
+                  <Typography variant="subtitle2" fontWeight={600} >
+                  {io.state}
+                  </Typography>
+                )}
+                {(io.info.ioType === "Select") && (
+
+                  <Typography variant="subtitle2" fontWeight={600} >
+                  {io.info.selectInputs[io.state] || io.state}
+                  </Typography>
+                )}
               </Box>
             </Grid>
           ))}

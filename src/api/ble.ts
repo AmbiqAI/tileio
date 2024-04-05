@@ -97,6 +97,7 @@ class BleManager implements ApiManager {
   }
 
   async initialize(): Promise<boolean> {
+
     if (!this.initialized) {
       await BleClient.initialize();
       this.initialized = true;
@@ -117,7 +118,8 @@ class BleManager implements ApiManager {
           await BleClient.stopLEScan();
         }
       });
-    } else {
+    }
+    else {
       const device = await BleClient.requestDevice({
         services: [TIO_SVC_UUID],
         optionalServices: []
@@ -132,6 +134,7 @@ class BleManager implements ApiManager {
 
   async refreshPreviousDevices(deviceIds: string[], cb: (deviceId: string, name: string) => void): Promise<void> {
     const devices: string[] = [];
+
     await this.startScan((deviceId: string, name: string) => {
       if (deviceIds.includes(deviceId)) {
         devices.push(deviceId);
@@ -142,6 +145,7 @@ class BleManager implements ApiManager {
     });
     await delay(4000);
     await this.stopScan();
+
   }
 
   async refreshPreviousDevice(deviceId: string): Promise<boolean> {

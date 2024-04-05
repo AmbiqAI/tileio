@@ -210,10 +210,13 @@ class EmulatorManager implements ApiManager {
   }
 
   async getUioState(deviceId: string): Promise<number[]> {
-    return new Array(8).fill(0).map(() => randomInt(0, 2));
+    const state = new Array(8).fill(0).map(() => randomInt(0, 2));
+    console.log(`UIO state: ${state}`);
+    return state;
   }
 
   async setUioState(deviceId: string, state: number[]): Promise<void> {
+    console.log(`Setting UIO state: ${state}`);
   }
 
 }

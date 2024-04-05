@@ -22,7 +22,7 @@ const Device = types
   settings: types.optional(DashboardSettings, {}),
   state: types.optional(DeviceState, {}),
   slots: types.optional(types.array(Slot), [{}, {}, {}, {}]),
-  uioState: types.optional(UioState, {}),
+  uioState: types.optional(UioState, {id: 'uioState'}),
 })
 .volatile(self => ({
   record: undefined as (undefined | IRecord),
@@ -92,15 +92,16 @@ const Device = types
   fetchUioState: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.uioState.setState(yield getApi().getUioState(self.id));
+      yield self.uioState.fetchState();
     } catch(error) {
       console.error(`Failed reading UIO state: ${error}`);
     }
   }),
-  setUioButton: flow(function*(button: number, state: boolean) {
+  setIoState: flow(function*(io: number, state: number) {
     if (self.state.disconnected) { return; }
-    self.uioState.setButtonState(button, state);
-    yield getApi().setUioState(self.id, self.uioState.state);
+    yield self.uioState.updateIoState(io, state);
+    // self.uioState.setIoState(io, state);
+    // yield getApi().setUioState(self.id, self.uioState.state);
   }),
   fetchInfo: flow(function*() {
     yield delay(1);
@@ -291,6 +292,7 @@ const Device = types
   afterCreate: function() {
     self.slots = cast(self.info.slots.map((slot, idx) => Slot.create({
     })));
+    self.uioState.id = self.id;
   }
 }));
 

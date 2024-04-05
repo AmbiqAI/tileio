@@ -1,7 +1,0 @@
-{
-	"appId": "ai.ambiq.physiokit",
-	"appName": "Tileio",
-	"webDir": "build",
-	"bundledWebRuntime": false,
-	"loggingBehavior": "none"
-}

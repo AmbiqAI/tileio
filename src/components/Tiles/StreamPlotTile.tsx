@@ -172,7 +172,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
         },
         tooltip: { enabled: false },
         legend: {
-          display: configs.chs.length > 1,
+          display: true, // configs.chs.length > 1,
           fullSize: true,
           position: "top",
           align: "center",

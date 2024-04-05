@@ -31,6 +31,8 @@ import SegmentStreamTile, { SegmentStreamTileSpec } from "./components/Tiles/Seg
 import SegPieTile, { SegPieTileSpec } from "./components/Tiles/SegPieTile";
 import FidPieTile, { FidPieTileSpec } from "./components/Tiles/FidPieTile";
 import UioTile, { UioTileSpec} from "./components/Tiles/UioTile";
+import IoTile, { IoTileSpec} from "./components/Tiles/IoTile";
+
 import SvgTile, { SvgTileSpec } from "./components/Tiles/SvgTile";
 
 // Register tile plugins and chartjs plugins
@@ -47,6 +49,7 @@ registerTile(SegmentStreamTileSpec.type, SegmentStreamTileSpec, SegmentStreamTil
 registerTile(SegPieTileSpec.type, SegPieTileSpec, SegPieTile);
 registerTile(FidPieTileSpec.type, FidPieTileSpec, FidPieTile);
 registerTile(UioTileSpec.type, UioTileSpec, UioTile);
+registerTile(IoTileSpec.type, IoTileSpec, IoTile);
 registerTile(SvgTileSpec.type, SvgTileSpec, SvgTile);
 
 Chart.register(
