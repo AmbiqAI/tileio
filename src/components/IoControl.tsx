@@ -8,8 +8,8 @@ import {
   MenuItem,
   FormControl,
 } from "@mui/material";
-import { IIoConfig } from "../models/uioState";
-import { useState } from "react";
+import { IIoConfig, UIOType } from "../models/uioState";
+import { useMemo, useState } from "react";
 
 interface Props {
   io: number;
@@ -17,13 +17,19 @@ interface Props {
   state: number;
   onChange: (state: number) => Promise<void>;
   disabled: boolean;
-
+  hideLabel?: boolean;
 }
 
-const IoSlider = ({ io, info, state, onChange, disabled }: Props) => {
+const IoSlider = ({ io, info, state, onChange, disabled, hideLabel }: Props) => {
   const [isDirty, setDirty] = useState(false);
   const [value, setValue] = useState(state);
   const [isSubmitting, setSubmitting] = useState(false);
+
+  useMemo(() => {
+    if (!isDirty) {
+      setValue(state);
+    }
+  }, [state, isDirty]);
 
   return (
     <Stack spacing={2} direction="row" alignItems="center" width="100%" px={2}>
@@ -47,17 +53,17 @@ const IoSlider = ({ io, info, state, onChange, disabled }: Props) => {
       max={info.max}
       step={info.step}
     />
-    <Typography variant="h6"> {state} </Typography>
+    <Typography variant="subtitle2" fontWeight={800}> {state} </Typography>
   </Stack>
   )
 }
 
-const IoControl = ({ io, info, state, onChange, disabled }: Props) => {
+const IoControl = ({ io, info, state, onChange, disabled, hideLabel }: Props) => {
   return (
     <>
-      {info.ioType === "Toggle" && (
+      {info.ioType === UIOType.Toggle && (
         <Stack direction="row" alignItems="center">
-          <Typography variant="button" fontWeight={800} >
+          <Typography variant="subtitle2" fontWeight={800} >
             {info.off}
           </Typography>
           <Switch
@@ -68,12 +74,12 @@ const IoControl = ({ io, info, state, onChange, disabled }: Props) => {
             disabled={!info.enabled || disabled}
             size="medium"
           />
-          <Typography variant="button" fontWeight={800} >
+          <Typography variant="subtitle2" fontWeight={800} >
             {info.on}
           </Typography>
         </Stack>
       )}
-      {info.ioType === "Slider" && (
+      {info.ioType === UIOType.Slider && (
         <IoSlider
           io={io}
           info={info}
@@ -82,7 +88,7 @@ const IoControl = ({ io, info, state, onChange, disabled }: Props) => {
           disabled={disabled}
         />
       )}
-      {info.ioType === "Select" && (
+      {info.ioType === UIOType.Select && (
         <Stack direction="row" alignItems="center">
           <FormControl sx={{ m: 1, minWidth: 110 }} size="small">
             <Select
@@ -99,9 +105,11 @@ const IoControl = ({ io, info, state, onChange, disabled }: Props) => {
           </FormControl>
         </Stack>
       )}
-      <Typography variant="h6">
-        {info.name}
-      </Typography>
+      {!hideLabel && (
+        <Typography variant="button">
+          {info.name}
+        </Typography>
+      )}
     </>
   );
 };

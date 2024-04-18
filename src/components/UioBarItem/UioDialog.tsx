@@ -1,101 +1,28 @@
-import React from "react";
 import { observer } from "mobx-react";
 import {
   DialogTitle,
   Dialog,
   DialogContent,
-  Typography,
   Divider,
   Stack,
   FormGroup,
-  Switch,
-  Slider,
-  Select,
-  MenuItem,
-  FormControl,
+  CardHeader,
+  CardActions,
+  IconButton,
+  Avatar,
 } from "@mui/material";
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
+import UioIcon from '@mui/icons-material/SettingsInputSvideoRounded';
 import { IDevice } from "../../models/device";
-import { IIoConfig } from "../../models/uioState";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import IoControl from "../IoControl";
-import { delay } from "../../utils";
+import { useState } from "react";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   device: IDevice;
 }
-
-interface IoControlProps {
-  io: number;
-  info: IIoConfig;
-  state: number;
-  onChange: (state: number) => void;
-  disabled: boolean;
-
-}
-
-// const IoControl = observer(({ io, info, state, onChange, disabled }: IoControlProps) => {
-//   return (
-//     <>
-//       {info.ioType === "Toggle" && (
-//         <Stack direction="row" alignItems="center">
-//           <Typography variant="button" fontWeight={800} >
-//             {info.off}
-//           </Typography>
-//           <Switch
-//             checked={!!state}
-//             onChange={(_, checked) => {
-//               onChange(checked ? 1 : 0);
-//             }}
-//             disabled={!info.enabled || disabled}
-//             size="medium"
-//           />
-//           <Typography variant="button" fontWeight={800} >
-//             {info.on}
-//           </Typography>
-//         </Stack>
-//       )}
-//       {info.ioType === "Slider" && (
-//         <Stack spacing={2} direction="row" alignItems="center" width="100%">
-//           <Slider
-//             value={state}
-//             onChange={(_, value) => {
-//               console.log("Setting I/O", io, "to", value);
-//               onChange(value as number);
-//             }}
-//             disabled={!info.enabled || disabled}
-//             min={info.min}
-//             max={info.max}
-//             step={info.step}
-//           />
-//           <Typography variant="h6"> {state} </Typography>
-//         </Stack>
-//       )}
-//       {info.ioType === "Select" && (
-//         <Stack direction="row" alignItems="center">
-//           <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-//             <Select
-//               value={state}
-//               onChange={(e) => {
-//                 onChange(e.target.value as number);
-//               }}
-//               disabled={disabled || !info.enabled || info.direction === "Output"}
-//             >
-//               {info.selectInputs.map((item, idx) => (
-//                 <MenuItem key={idx} value={idx}> {item} </MenuItem>
-//               ))}
-//             </Select>
-//           </FormControl>
-//         </Stack>
-//       )}
-//       <Typography variant="h6">
-//         {info.name}
-//       </Typography>
-//     </>
-//   );
-// });
-
 
 const UioDialog = ({ open, onClose, device }: Props) => {
 
@@ -125,24 +52,56 @@ const UioDialog = ({ open, onClose, device }: Props) => {
     state: device.uioState.io7,
   }];
 
+  const [isSubmitting, setSubmitting] = useState(false);
+
   return (
     <Dialog
       open={open}
-      maxWidth="lg"
+      maxWidth="md"
       onClose={onClose}
     >
-      <DialogTitle>
-        User I/O
+      <DialogTitle sx={{ p: 0 }}>
+      <CardHeader
+          titleTypographyProps={{ variant: "h6" }}
+          avatar={
+            <Avatar
+              variant="rounded"
+              aria-label="device"
+              sx={{ bgcolor: "rgba(0,0,0,0)" }}
+            >
+              <UioIcon color="action" fontSize="large"/>
+            </Avatar>
+          }
+          action={
+            <CardActions>
+              <IconButton
+                aria-label="edit"
+                size="small"
+                disabled={isSubmitting || !device.state.connected}
+                onClick={async () => {
+                  setSubmitting(true);
+                  await device.uioState.fetchState();
+                  setSubmitting(false);
+                }}
+
+              >
+                <RefreshIcon fontSize="large" />
+              </IconButton>
+            </CardActions>
+          }
+          title="User I/O"
+
+        />
       </DialogTitle>
       <Divider />
       <DialogContent>
-
         <FormGroup>
-          <Grid container spacing={5} width="100%" height="100%" pb={4}>
+          <Grid container spacing={3} width="100%" height="100%" minWidth="480px" pb={4} flexGrow={1}>
             {ioItems.map((io, idx) => (
               io.info.enabled && (
-              <Grid xs={6} key={`io-${io.info.name}-${idx}`}>
-                <Stack direction="column" alignItems="center">
+                <>
+                <Grid xs={6} sm={4} lg={3} key={`io-${io.info.name}-${idx}`} flexGrow={1}>
+                  <Stack direction="column" alignItems="center" width="100%" flexGrow={1}>
                     <IoControl
                       io={idx}
                       info={io.info}
@@ -151,9 +110,11 @@ const UioDialog = ({ open, onClose, device }: Props) => {
                         await device.uioState.updateIoState(idx, state);
                       }}
                       disabled={!device.state.connected} />
-                    </Stack>
-                    </Grid>
-                  )
+                  </Stack>
+                </Grid>
+                <Divider />
+                </>
+              )
             ))}
           </Grid>
         </FormGroup>

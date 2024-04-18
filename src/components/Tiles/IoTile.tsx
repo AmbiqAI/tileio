@@ -4,6 +4,7 @@ import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import IoControl from "../IoControl";
 import { delay } from "../../utils";
+import { useMemo } from "react";
 
 export const IoTileSpec: TileSpec = {
   type: "IO_TILE",
@@ -36,8 +37,19 @@ export interface IoTileConfig {
 
 }
 
+export function parseConfig(config: { [key: string]: any }): IoTileConfig {
+  const configs = {
+    name: "",
+    io: 0,
+    ...config
+  } as IoTileConfig;
+  return configs;
+}
+
+
 const UioTile = observer(({ config, uioState, device, pause }: TileProps) => {
-  const configs = config as IoTileConfig;
+
+  const configs = useMemo(() => parseConfig(config || {}), [config]);
 
   const info = device.uio.list[configs.io] || null;
   const state = uioState ? uioState.state[configs.io] : 0;
@@ -49,7 +61,25 @@ const UioTile = observer(({ config, uioState, device, pause }: TileProps) => {
   }
   return (
     <GridContainer>
-      <GridZStack level={0}>
+
+    <GridZStack level={1}>
+        <Stack
+          width="100%"
+          height="100%"
+          alignItems="center"
+          justifyContent="flex-start"
+          padding={0}
+          sx={{
+            pt: 1.2,
+          }}
+        >
+          <Typography fontWeight={700} variant="subtitle1" sx={{ lineHeight: 1 }}>
+            {configs.name}
+          </Typography>
+        </Stack>
+      </GridZStack>
+
+      <GridZStack level={2}>
         <Stack
           width="100%"
           height="100%"
@@ -63,6 +93,7 @@ const UioTile = observer(({ config, uioState, device, pause }: TileProps) => {
             state={state}
             onChange={onChange}
             disabled={!!pause}
+            hideLabel
           />
         </Stack>
       </GridZStack>

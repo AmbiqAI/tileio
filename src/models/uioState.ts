@@ -1,7 +1,13 @@
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { flow, Instance, SnapshotIn, types } from 'mobx-state-tree';
-import { Notifier, getApi } from '../api';
+import { getApi } from '../api';
 import { delay } from '../utils';
+
+export enum UIOType {
+  Toggle = 'Toggle',
+  Slider = 'Slider',
+  Select = 'Select'
+}
 
 export const IoSchema: RJSFSchema = {
   type: "object",
@@ -27,9 +33,9 @@ export const IoSchema: RJSFSchema = {
     ioType: {
       "title": "I/O Type",
       "enum": [
-        "Toggle",
-        "Slider",
-        "Select"
+        UIOType.Toggle,
+        UIOType.Slider,
+        UIOType.Select
       ]
     }
   },
@@ -38,7 +44,7 @@ export const IoSchema: RJSFSchema = {
       if: {
         properties: {
           "ioType": {
-            "const": "Toggle"
+            "const": UIOType.Toggle
           }
         }
       },
@@ -61,7 +67,7 @@ export const IoSchema: RJSFSchema = {
       if: {
         properties: {
           "ioType": {
-            "const": "Slider"
+            "const": UIOType.Slider
           }
         }
       },
@@ -94,7 +100,7 @@ export const IoSchema: RJSFSchema = {
       if: {
         properties: {
           "ioType": {
-            "const": "Select"
+            "const": UIOType.Select
           }
         }
       },
@@ -120,12 +126,13 @@ export const IoSchema: RJSFSchema = {
   ]
 };
 
+
 export const IoConfig = types
   .model('IoConfig', {
     name: types.optional(types.string, 'Input'),
     enabled: types.optional(types.boolean, false),
     direction: types.optional(types.enumeration(['Input', 'Output']), 'Input'),
-    ioType: types.optional(types.enumeration(['Toggle', 'Slider', 'Select']), 'Toggle'),
+    ioType: types.optional(types.enumeration<UIOType>('UIOType', Object.values(UIOType)), UIOType.Toggle),
     off: types.optional(types.string, 'Off'),
     on: types.optional(types.string, 'On'),
     min: types.optional(types.number, 0),

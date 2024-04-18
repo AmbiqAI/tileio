@@ -1,5 +1,5 @@
 {
-  "appId": "com.yourdoamnin.yourapp",
+  "appId": "ai.ambiq.tileio",
   "directories": {
     "buildResources": "resources"
   },

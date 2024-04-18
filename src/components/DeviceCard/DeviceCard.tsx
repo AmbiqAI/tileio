@@ -20,6 +20,7 @@ import BluetoothOffIcon from "@mui/icons-material/BluetoothDisabledRounded";
 import RecordIcon from "@mui/icons-material/Adjust";
 import { IDevice } from "../../models/device";
 import { DeviceIcon } from "../../assets/icons";
+import DeviceDetailMenu from "../DeviceDetailMenu";
 import { useMemo } from "react";
 
 interface Props {
@@ -85,13 +86,14 @@ const DeviceCard = ({ device }: Props) => {
         </Box>
 
         <Divider />
+        </CardActionArea>
 
         {/* Device Badges */}
         <Stack
           direction="row"
           alignItems="center"
           justifyContent="space-between"
-          sx={{ px: 2, py: 2 }}
+          sx={{ px: 2, py: 0 }}
         >
           <Stack direction="row" alignItems="center" justifyContent="start">
             <Tooltip arrow title={connState.description}>
@@ -109,7 +111,7 @@ const DeviceCard = ({ device }: Props) => {
             </Typography>
           </Stack>
 
-          {device.recording && (
+          {device.recording ? (
             <Tooltip title="Recording">
               <Chip
                 color="error"
@@ -118,9 +120,11 @@ const DeviceCard = ({ device }: Props) => {
                 label={device.recordDurationStr}
               />
             </Tooltip>
+          ) : (
+            <DeviceDetailMenu device={device} />
           )}
         </Stack>
-      </CardActionArea>
+
     </Card>
   );
 };

@@ -11,9 +11,10 @@ import RefreshIcon from '@mui/icons-material/RefreshRounded';
 import SettingsIcon from '@mui/icons-material/DashboardCustomizeRounded';
 import BluetoothConnectedIcon from '@mui/icons-material/BluetoothConnectedRounded';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { IDevice } from '../../../models/device';
-import DashboardSettingsDialog from '../../../components/DashboardSettingsDialog';
-import { IDashboardSettings } from '../../../models/dashboardSettings';
+import { IDevice } from '../models/device';
+import DashboardSettingsDialog from './DashboardSettingsDialog';
+import { IDashboardSettings } from '../models/dashboardSettings';
+import ConfirmCountDialog from './ConfirmCountDialog';
 
 interface Props {
   device: IDevice;
@@ -39,6 +40,8 @@ const DeviceDetailMenu = ({ device }: Props) => {
     setMoreActionsAnchorEl(null);
   };
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   return (
     <>
     <IconButton size="large" aria-label="more"
@@ -59,11 +62,13 @@ const DeviceDetailMenu = ({ device }: Props) => {
         anchorEl={moreActionsAnchorEl}
         open={openMoreActions}
         onClose={handleCloseMoreActions}
-        PaperProps={{
+        slotProps={{
+          paper: {
           style: {
-            maxHeight: 48 * 5.5,
-            width: '20ch',
-          },
+              maxHeight: 48 * 5.5,
+              width: '20ch',
+            },
+          }
         }}
       >
 
@@ -101,9 +106,8 @@ const DeviceDetailMenu = ({ device }: Props) => {
         <Divider />
 
         <MenuItem key="delete" color='red' onClick={async () => {
-          await device.delete();
+          setDeleteConfirmOpen(true);
           handleCloseMoreActions();
-          history.push('/devices');
         }}>
           <ListItemIcon sx={{ color: 'error.main' }}>
             <DeleteIcon fontSize="small" />
@@ -121,6 +125,20 @@ const DeviceDetailMenu = ({ device }: Props) => {
         }}
         onClose={() => { showDeviceSettingsDialog(false); }}
         disabled={false}
+      />
+
+      <ConfirmCountDialog
+        title={"Are you sure you want to forget this device?"}
+        count={1}
+        open={deleteConfirmOpen}
+        setOpen={(open) =>
+          setDeleteConfirmOpen(open)
+        }
+        onConfirm={async () => {
+          await device.delete();
+          setDeleteConfirmOpen(false);
+          history.push('/devices');
+        }}
       />
 
     </>

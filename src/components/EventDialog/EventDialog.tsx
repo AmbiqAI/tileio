@@ -49,8 +49,8 @@ const EventDialog = ({ open, record, onSubmit, onClose }: Props) => {
       open={open}
       fullWidth
       maxWidth="sm"
-      onBackdropClick={() => {
-        if (isEditing) {
+      onClose={(_: Event, reason: string) => {
+        if (isEditing && reason === "backdropClick") {
           return;
         }
         onClose();

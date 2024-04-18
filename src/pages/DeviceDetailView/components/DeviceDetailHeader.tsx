@@ -11,7 +11,7 @@ import { IDevice } from '../../../models/device';
 import { useTheme } from '@mui/system';
 import RecordBarItem from '../../../components/RecordBarItem';
 import DeviceInfoBarItem from './DeviceInfoBarItem';
-import DeviceDetailMenu from './DeviceDetailMenu';
+import DeviceDetailMenu from '../../../components/DeviceDetailMenu';
 
 
 const DeviceDetailHeader = ({ device }: { device: IDevice }) => {

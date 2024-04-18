@@ -37,6 +37,13 @@ export const SparklineTileSpec: TileSpec = {
         default: '',
         description: 'Units',
       },
+      precision: {
+        type: 'integer',
+        default: 0,
+        minimum: 0,
+        maximum: 2,
+        description: 'Decimal places'
+      },
       primaryColor: {
         type: 'string',
         default: ThemeColors.colors.primaryColor,
@@ -80,6 +87,7 @@ export interface SparklineTileConfig {
   slot: number;
   metric: number;
   units: string;
+  precision?: number;
   primaryColor: string;
   secondaryColor: string;
   min: number;
@@ -92,6 +100,7 @@ export function parseConfig(config: { [key: string]: any }): SparklineTileConfig
     slot: 0,
     metric: 0,
     units: '',
+    precision: 0,
     ...config
   } as SparklineTileConfig;
   return configs;
@@ -112,6 +121,7 @@ const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
       secondaryColor={configs.secondaryColor}
       min={configs.min}
       max={configs.max}
+      precision={configs.precision}
       duration={duration}
     />
   );

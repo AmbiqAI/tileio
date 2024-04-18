@@ -5,6 +5,7 @@ import { ThemeColors } from "../../theme/theme";
 import { GridContainer, GridZStack } from "./utils";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import { QosIcon } from "../QosBarItem/QosBarItem";
+import { getQoSName } from "../../models/slot";
 
 
 export const QosTileSpec: TileSpec = {
@@ -17,8 +18,25 @@ export const QosTileSpec: TileSpec = {
     type: 'object',
     required: [],
     properties: {
+      slots: {
+        type: 'array',
+        title: 'Slots',
+        items: {
+          type: "integer",
+          enum: [ 0, 1, 2, 3 ]
+        },
+        uniqueItems: true
+      }
     }
   },
+  uischema: {
+    "slots": {
+      "ui:widget": "checkboxes",
+      "ui:options": {
+        "inline": true
+      }
+    },
+  }
 };
 
 
@@ -63,9 +81,8 @@ const QosTile = ({ pause, slots, device }: TileProps) => {
         height="100%"
         justifyContent="center"
         alignItems="center"
-        p={1}
         >
-        <Grid alignItems="center" container rowSpacing={0.5} columnSpacing={2} maxWidth="180px" height="100%">
+        {/* <Grid alignItems="center" container rowSpacing={0.5} columnSpacing={2} maxWidth="180px" height="100%">
           {slotStates.map((state, idx) => (
             <Grid xs={6} key={`state-${idx}`}>
               <Stack
@@ -87,6 +104,40 @@ const QosTile = ({ pause, slots, device }: TileProps) => {
                   </Typography>
                 </div>
                 <QosIcon connected={state.enabled} state={state.state} fontSize="small" />
+              </Stack>
+            </Grid>
+          ))}
+        </Grid> */}
+
+      <Grid alignItems="center" container spacing={2} height="100%">
+          {slotStates.map((state, idx) => (
+            <Grid width="100%" xs={6} key={`state-${idx}`}>
+              <Stack
+                m={0}
+                width="100%"
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                spacing={1}
+              >
+                <div
+                  style={{
+                    borderLeftStyle: "solid",
+                    borderLeftWidth: "4px",
+                    borderLeftColor: state.color,
+                    paddingLeft: "8px",
+                  }}
+                >
+                  <Typography variant="h6" fontWeight={800} pr="8px">
+                    {state.name}
+                  </Typography>
+                </div>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="button" fontWeight={800} pr="8px">
+                    {getQoSName(state.enabled, state.state)}
+                  </Typography>
+                  <QosIcon connected={state.enabled} state={state.state} fontSize="medium" />
+                </Stack>
               </Stack>
             </Grid>
           ))}
