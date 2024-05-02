@@ -1,12 +1,30 @@
-import { Stack, Typography } from "@mui/material";
+import { Card, Stack, Typography } from "@mui/material";
 import { TileProps, TileSpec } from "./BaseTile";
 import { observer } from "mobx-react";
 import { ThemeColors } from "../../theme/theme";
 import { GridContainer, GridZStack } from "./utils";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
+import { styled } from "@mui/system";
 import { QosIcon } from "../QosBarItem/QosBarItem";
 import { getQoSName } from "../../models/slot";
+import { useMemo } from "react";
 
+type ColoredDivProps = {
+  animated?: boolean;
+};
+
+// Create styled div that animated font of text
+export const ColoredDiv = styled("div")<ColoredDivProps>`
+
+  @keyframes color-change {
+    0% { color: ${ThemeColors.colors.tertiaryColor}; }
+    50% { color: ${ThemeColors.colors.purple}; }
+    100% { color: ${ThemeColors.colors.tertiaryColor}; }
+  }
+  animation: ${(props) => props.animated ? 'color-change 1s infinite' : 'none'};
+}
+
+`;
 
 export const QosTileSpec: TileSpec = {
   type: "QOS_TILE",
@@ -18,6 +36,11 @@ export const QosTileSpec: TileSpec = {
     type: 'object',
     required: [],
     properties: {
+      name: {
+        type: 'string',
+        title: 'Name',
+        default: 'QOS Tile'
+      },
       slots: {
         type: 'array',
         title: 'Slots',
@@ -39,9 +62,25 @@ export const QosTileSpec: TileSpec = {
   }
 };
 
+export interface QosTileConfig {
+  name: string;
+  slots: number[];
+}
 
-const QosTile = ({ pause, slots, device }: TileProps) => {
+export function parseConfig(config: { [key: string]: any }): QosTileConfig {
+  const configs = {
+    name: "",
+    slots: [],
+    ...config
+  } as QosTileConfig;
+  return configs;
+}
+
+
+const QosTile = ({ pause, slots, device, config }: TileProps) => {
   const connected = !pause;
+
+  const configs = useMemo(() => parseConfig(config || {}), [config]);
 
   const colors = ThemeColors.colors.slots;
 
@@ -54,6 +93,24 @@ const QosTile = ({ pause, slots, device }: TileProps) => {
 
   return (
     <GridContainer>
+
+      <GridZStack level={1}>
+        <Stack
+          width="100%"
+          height="100%"
+          alignItems="center"
+          justifyContent="flex-start"
+          padding={0}
+          sx={{
+            pt: 1.2,
+          }}
+        >
+          <Typography fontWeight={700} variant="subtitle1" sx={{ lineHeight: 1 }}>
+            {configs.name}
+          </Typography>
+        </Stack>
+      </GridZStack>
+
     <GridZStack level={1}>
       <Stack
         width="100%"
@@ -108,7 +165,10 @@ const QosTile = ({ pause, slots, device }: TileProps) => {
             </Grid>
           ))}
         </Grid> */}
-
+      <Card
+        elevation={0}
+      >
+      </Card>
       <Grid alignItems="center" container spacing={2} height="100%">
           {slotStates.map((state, idx) => (
             <Grid width="100%" xs={6} key={`state-${idx}`}>
@@ -128,14 +188,16 @@ const QosTile = ({ pause, slots, device }: TileProps) => {
                     paddingLeft: "8px",
                   }}
                 >
-                  <Typography variant="h6" fontWeight={800} pr="8px">
+                  <Typography variant="h5" fontWeight={800} pr="8px">
                     {state.name}
                   </Typography>
                 </div>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="button" fontWeight={800} pr="8px">
+                  <ColoredDiv animated={state.state <= 0}>
+                  <Typography variant="h6" fontWeight={800} pr="8px">
                     {getQoSName(state.enabled, state.state)}
                   </Typography>
+                  </ColoredDiv>
                   <QosIcon connected={state.enabled} state={state.state} fontSize="medium" />
                 </Stack>
               </Stack>

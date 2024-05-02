@@ -103,7 +103,7 @@ export function parseConfig(config: { [key: string]: any }): SegPieTileConfig {
 }
 
 
-const SegPieTile = observer(({ slots, config }: TileProps) => {
+const SegPieTile = observer(({ slots, config, size }: TileProps) => {
 
   const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
@@ -139,8 +139,9 @@ const SegPieTile = observer(({ slots, config }: TileProps) => {
           display: true,
           position: "right",
           labels: {
+            boxWidth: size === "sm" ? 20 : 40,
             font: {
-              size: 14,
+              size: 12,
               weight: "bold",
             },
             color: theme.palette.text.primary

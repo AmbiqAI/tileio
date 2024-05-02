@@ -15,6 +15,7 @@ import UserSettingsIcon from "@mui/icons-material/DisplaySettingsRounded";
 import SystemModeIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import DarkModeIcon from "@mui/icons-material/DarkModeRounded";
 import BleIcon from '@mui/icons-material/BluetoothConnectedRounded';
+import UsbIcon from '@mui/icons-material/UsbRounded';
 import EmulateIcon from '@mui/icons-material/BugReportRounded';
 import { observer } from "mobx-react";
 import { ApiModeType } from "../../../api";
@@ -117,6 +118,15 @@ const UserPreferenceCard = () => {
             >
               <BleIcon sx={{ mr: 1 }} /> BLE
             </ToggleButton>
+
+            <ToggleButton
+              size="small"
+              value={ApiModeType.usb}
+              aria-label="USB"
+            >
+              <UsbIcon sx={{ mr: 1 }} /> USB
+            </ToggleButton>
+
             <ToggleButton
               size="small"
               value={ApiModeType.emulate}

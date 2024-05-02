@@ -1,9 +1,11 @@
 import { ApiManager } from './api';
 import BleManager from './ble';
+import UsbManager from './usb';
 import EmulatorManager from './dummy';
 
 export enum ApiModeType {
   ble = "ble",
+  usb = "usb",
   emulate = "emulate",
 }
 
@@ -18,6 +20,8 @@ export function initApi(mode: ApiModeType) {
 export function getApi(): ApiManager {
   if (apiMode === ApiModeType.emulate) {
     return EmulatorManager;
+  } else if (apiMode === ApiModeType.usb) {
+    return UsbManager;
   } else {
     return BleManager;
   }

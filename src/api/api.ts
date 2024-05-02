@@ -13,6 +13,8 @@ export interface ApiManager {
     disableSlotNotifications(deviceId: string, slot: number): Promise<void>;
     enableSlotMetricsNotifications(deviceId: string, slot: number, cb: (slot: number, metrics: number[]) => void): Promise<void>;
     disableSlotMetricsNotifications(deviceId: string, slot: number): Promise<void>;
+    enableUioNotifications(deviceId: string, cb: (state: number[]) => void): Promise<void>;
+    disableUioNotifications(deviceId: string): Promise<void>;
     getDeviceBatteryLevel(deviceId: string): Promise<number>;
     getDeviceStrength(deviceId: string): Promise<number>;
     getUioState(deviceId: string): Promise<number[]>;

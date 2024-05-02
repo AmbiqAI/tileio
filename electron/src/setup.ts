@@ -61,6 +61,7 @@ export class ElectronCapacitorApp {
 
   private bluetoothPinCallback;
   private selectBluetoothCallback;
+  private grantedDeviceThroughPermHandler;
 
   constructor(
     capacitorFileConfig: CapacitorElectronConfig,
@@ -224,7 +225,7 @@ export class ElectronCapacitorApp {
         // The device wasn't found so we need to either wait longer (eg until the
         // device is turned on) or until the user cancels the request
       }
-    })
+    });
 
     ipcMain.on('cancel-bluetooth-request', (event) => {
       this.selectBluetoothCallback('')
@@ -242,99 +243,103 @@ export class ElectronCapacitorApp {
     })
     //////////// TESTING BLUETOOTH SUPPORT
 
-    //////////// TESTING SERIAL SUPPORT
-    this.MainWindow.webContents.session.on('select-serial-port', (event, portList, webContents, callback) => {
-      console.log('select-serial-port FIRED WITH', portList);
-      // Add listeners to handle ports being added or removed before the callback for `select-serial-port`
-      // is called.
-      this.MainWindow.webContents.session.on('serial-port-added', (event, port) => {
-        console.log('serial-port-added FIRED WITH', port)
-        // Optionally update portList to add the new port
-      })
+    // //////////// TESTING SERIAL SUPPORT
+    // this.MainWindow.webContents.session.on('select-serial-port', (event, portList, webContents, callback) => {
+    //   console.log('select-serial-port FIRED WITH', portList);
+    //   // Add listeners to handle ports being added or removed before the callback for `select-serial-port`
+    //   // is called.
+    //   this.MainWindow.webContents.session.on('serial-port-added', (event, port) => {
+    //     console.log('serial-port-added FIRED WITH', port)
+    //     // Optionally update portList to add the new port
+    //   })
 
-      this.MainWindow.webContents.session.on('serial-port-removed', (event, port) => {
-        console.log('serial-port-removed FIRED WITH', port)
-        // Optionally update portList to remove the port
-      })
+    //   this.MainWindow.webContents.session.on('serial-port-removed', (event, port) => {
+    //     console.log('serial-port-removed FIRED WITH', port)
+    //     // Optionally update portList to remove the port
+    //   })
 
-      event.preventDefault()
-      if (portList && portList.length > 0) {
-        callback(portList[0].portId)
-      } else {
-        // eslint-disable-next-line n/no-callback-literal
-        callback('') // Could not find any matching devices
-      }
-    })
+    //   event.preventDefault()
+    //   if (portList && portList.length > 0) {
+    //     callback(portList[0].portId)
+    //   } else {
+    //     // eslint-disable-next-line n/no-callback-literal
+    //     callback('') // Could not find any matching devices
+    //   }
+    // })
 
-    this.MainWindow.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
-      if (permission === 'serial' && details.securityOrigin === 'file:///') {
-        return true
-      }
+    // this.MainWindow.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+    //   if (permission === 'serial' && details.securityOrigin === 'file:///') {
+    //     return true
+    //   }
 
-      return false
-    })
+    //   return false
+    // })
 
-    this.MainWindow.webContents.session.setDevicePermissionHandler((details) => {
-      if (details.deviceType === 'serial' && details.origin === 'file://') {
-        return true
-      }
+    // this.MainWindow.webContents.session.setDevicePermissionHandler((details) => {
+    //   if (details.deviceType === 'serial' && details.origin === 'file://') {
+    //     return true
+    //   }
 
-      return false
-    })
-    //////////// TESTING SERIAL SUPPORT
+    //   return false
+    // })
+    // //////////// TESTING SERIAL SUPPORT
 
     //////////// TESTING USB SUPPORT
-    let grantedDeviceThroughPermHandler;
 
-    this.MainWindow.webContents.session.on('select-usb-device', (event, details, callback) => {
-      // Add events to handle devices being added or removed before the callback on
-      // `select-usb-device` is called.
-      this.MainWindow.webContents.session.on('usb-device-added', (event, device) => {
-        console.log('usb-device-added FIRED WITH', device)
-        // Optionally update details.deviceList
-      })
+    // this.MainWindow.webContents.session.on('select-usb-device', (event, details, callback) => {
+    //   // Add events to handle devices being added or removed before the callback on
+    //   // `select-usb-device` is called.
+    //   this.MainWindow.webContents.session.on('usb-device-added', (event, device) => {
+    //     console.log('usb-device-added FIRED WITH', device)
+    //     // Optionally update details.deviceList
+    //   })
 
-      this.MainWindow.webContents.session.on('usb-device-removed', (event, device) => {
-        console.log('usb-device-removed FIRED WITH', device)
-        // Optionally update details.deviceList
-      })
+    //   this.MainWindow.webContents.session.on('usb-device-removed', (event, device) => {
+    //     console.log('usb-device-removed FIRED WITH', device)
+    //     // Optionally update details.deviceList
+    //   })
 
-      event.preventDefault()
-      if (details.deviceList && details.deviceList.length > 0) {
-        const deviceToReturn = details.deviceList.find((device) => {
-          return !grantedDeviceThroughPermHandler || (device.deviceId !== grantedDeviceThroughPermHandler.deviceId)
-        })
-        if (deviceToReturn) {
-          callback(deviceToReturn.deviceId)
-        } else {
-          callback()
-        }
-      }
-    })
+    //   event.preventDefault()
+    //   if (details.deviceList && details.deviceList.length > 0) {
+    //     console.log('select-usb-device FIRED WITH', details.deviceList);
+    //     const deviceToReturn = details.deviceList.find((device) => {
+    //       return !this.grantedDeviceThroughPermHandler || (device.deviceId !== this.grantedDeviceThroughPermHandler.deviceId)
+    //     })
+    //     if (deviceToReturn) {
+    //       callback(deviceToReturn.deviceId)
+    //     } else {
+    //       callback()
+    //     }
+    //   }
+    // })
 
-    this.MainWindow.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
-      if (permission === 'usb' && details.securityOrigin === 'file:///') {
-        return true
-      }
-    })
+    // this.MainWindow.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+    //   if (permission === 'usb' && details.securityOrigin === 'file:///') {
+    //     console.log('setPermissionCheckHandler FIRED WITH', details);
+    //     return true
+    //   }
+    // })
 
-    this.MainWindow.webContents.session.setDevicePermissionHandler((details) => {
-      if (details.deviceType === 'usb' && details.origin === 'file://') {
-        if (!grantedDeviceThroughPermHandler) {
-          grantedDeviceThroughPermHandler = details.device
-          return true
-        } else {
-          return false
-        }
-      }
-    })
+    // this.MainWindow.webContents.session.setDevicePermissionHandler((details) => {
+    //   if (details.deviceType === 'usb' && details.origin === 'file://') {
+    //     if (!this.grantedDeviceThroughPermHandler) {
+    //       this.grantedDeviceThroughPermHandler = details.device
+    //       return true
+    //     } else {
+    //       return false
+    //     }
+    //   }
+    // })
 
-    this.MainWindow.webContents.session.setUSBProtectedClassesHandler((details) => {
-      return details.protectedClasses.filter((usbClass) => {
-        // Exclude classes except for audio classes
-        return usbClass.indexOf('audio') === -1
-      })
-    })
+
+    // this.MainWindow.webContents.session.setUSBProtectedClassesHandler((details) => {
+    //   // Return empty list to allow all USB classes
+    //   return []
+    //   // return details.protectedClasses.filter((usbClass) => {
+    //   //   // Exclude classes except for audio classes
+    //   //   return usbClass.indexOf('audio') === -1
+    //   // })
+    // })
     //////////// TESTING USB SUPPORT
 
     // When the web app is loaded we hide the splashscreen if needed and show the mainwindow.
@@ -351,6 +356,31 @@ export class ElectronCapacitorApp {
         }
         CapElectronEventEmitter.emit('CAPELECTRON_DeeplinkListenerInitialized', '');
       }, 400);
+
+      this.MainWindow.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+        if (permission === 'usb') {
+          // Add logic here to determine if permission should be given to allow USB selection
+          return true
+        }
+        return false
+      })
+
+      // Optionally, retrieve previously persisted devices from a persistent store (fetchGrantedDevices needs to be implemented by developer to fetch persisted permissions)
+
+      this.MainWindow.webContents.session.setDevicePermissionHandler((details) => {
+        // Add logic here to determine if permission should be given to allow USB selection
+        return true
+      })
+
+      this.MainWindow.webContents.session.on('select-usb-device', (event, details, callback) => {
+        event.preventDefault()
+        console.log('select-usb-device', details);
+        const selectedDevice = details.deviceList.find((device) => {
+          return device.vendorId === 0xCAFE
+        })
+        callback(selectedDevice?.deviceId)
+      })
+
     });
   }
 }

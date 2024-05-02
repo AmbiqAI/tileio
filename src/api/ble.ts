@@ -1,9 +1,10 @@
-import { isPlatform } from '@ionic/react';
-import { Device } from '@capacitor/device';
+/// <reference types="w3c-web-usb" />
+
 import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
 import { delay } from '../utils';
 import { IDeviceInfo } from '../models/deviceInfo';
 import { ApiManager } from './api';
+import { isMobile, dataViewToSignalData, dataViewToMetrics } from './utils';
 
 const TIO_SVC_UUID = "EECB7DB8-8B2D-402C-B995-825538B49328";
 const TIO_SLOTS_SIG_CHAR_UUIDS = [
@@ -23,68 +24,6 @@ const TIO_UIO_CHAR_UUID = "B9488D48-069B-47F7-94F0-387F7FBFD1FA";
 const TIO_BATT_SVC_UUID = numberToUUID(0x180f);
 const TIO_BATT_LEVEL_CHAR_UUID = numberToUUID(0x2a19);
 
-function dataViewToSignalData(data: DataView, numChs: number, fs: number, dtype: string): {signals: number[][], mask: number[][]} {
-  // let dtype = 'i16'; // u8, u16, i16, u32, i32, f32  const decoder =
-  const ts = 1000/fs;
-  const signalLen = data.getUint16(0, true);
-  const signals: number[][] = [];
-  const mask: number[][] = [];
-  let offset = 2;
-  let refDate = Date.now() - ts*signalLen;
-  for (let i = 0; i < signalLen; i++) {
-    mask.push([refDate, data.getUint16(offset, true)]);
-    offset += 2;
-    let row = [refDate];
-    for (let ch = 0; ch < numChs; ch++) {
-      if (dtype === 'u16') {
-        row.push(data.getUint16(offset, true));
-        offset += 2;
-      } else if (dtype === 'i16') {
-        row.push(data.getInt16(offset, true));
-        offset += 2;
-      } else if (dtype === 'u32') {
-        row.push(data.getUint32(offset, true));
-        offset += 4;
-      } else if (dtype === 'i32') {
-        row.push(data.getInt32(offset, true));
-        offset += 4;
-      } else if (dtype === 'f32') {
-        row.push(data.getFloat32(offset, true));
-        offset += 4;
-      } else if (dtype === 'i8') {
-        row.push(data.getInt8(offset));
-        offset += 1;
-      } else {
-        row.push(data.getUint8(offset));
-        offset += 1;
-      }
-      // row.push(data.getInt16(offset, true));
-      // offset += 2;
-    }
-    signals.push(row);
-    refDate += ts;
-  };
-  return {signals, mask};
-}
-
-function dataViewToMetrics(data: DataView): number[] {
-  const ts = Date.now();
-  const metricLen = data.getUint16(0, true);
-  const metrics: number[] = [ts];
-  let offset = 2;
-  for (let i = 0; i < metricLen; i++) {
-    metrics.push(data.getFloat32(offset, true));
-    offset += 4;
-  };
-  return metrics;
-}
-
-async function isMobile(): Promise<boolean> {
-  const info = await Device.getInfo();
-  return isPlatform("ios") || isPlatform("android") || info.platform === 'ios';
-}
-
-
 class BleManager implements ApiManager {
   initialized: boolean;
   deviceInfo: Record<string, IDeviceInfo|undefined>;
@@ -101,6 +40,11 @@ class BleManager implements ApiManager {
     if (!this.initialized) {
       await BleClient.initialize();
       this.initialized = true;
+      console.debug('BLE initializing');
+      navigator.usb.requestDevice({ filters: [] }).then((device) => {
+        console.log(device.productName);
+      });
+      console.debug('BLE initialized');
     }
     return this.initialized;
   }
@@ -232,7 +176,7 @@ class BleManager implements ApiManager {
       await BleClient.startNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_MET_CHAR_UUIDS[slot], async (data: DataView) => {
         try {
           const metrics = dataViewToMetrics(data);
-          await cb(slot, metrics);
+          cb(slot, metrics);
         } catch (error) {
           console.error('Failed with notifications');
         }
@@ -247,6 +191,32 @@ class BleManager implements ApiManager {
       await BleClient.stopNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_MET_CHAR_UUIDS[slot]);
     } catch (error) {
       console.error(`Failed disabling metrics notifications: ${error}`);
+    }
+  }
+
+  async enableUioNotifications(deviceId: string, cb: (state: number[]) => void): Promise<void> {
+    try {
+      await BleClient.startNotifications(deviceId, TIO_SVC_UUID, TIO_UIO_CHAR_UUID, async (data: DataView) => {
+        try {
+          const state = [];
+          for (let i = 0; i < data.byteLength; i++) {
+            state.push(data.getUint8(i));
+          }
+          cb(state);
+        } catch (error) {
+          console.error('Failed with notifications');
+        }
+      });
+    } catch (error) {
+      console.error('Failed enabling UIO notifications');
+    }
+  }
+
+  async disableUioNotifications(deviceId: string): Promise<void> {
+    try {
+      await BleClient.stopNotifications(deviceId, TIO_SVC_UUID, TIO_UIO_CHAR_UUID);
+    } catch (error) {
+      console.error(`Failed disabling UIO notifications: ${error}`);
     }
   }
 

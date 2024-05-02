@@ -148,6 +148,7 @@ const Device = types
     for (let slot = 0; slot < self.info.slots.length; slot++) {
       yield getApi().enableSlotMetricsNotifications(self.id, slot, self.receivedSlotMetrics);
     }
+    yield getApi().enableUioNotifications(self.id, self.uioState.updateState);
     self.polling = setInterval(self.fetchUpdates, 2500);
   }),
   stopPolling: flow(function*(){
@@ -158,6 +159,7 @@ const Device = types
     for (let slot = 0; slot < self.info.slots.length; slot++) {
       yield getApi().disableSlotMetricsNotifications(self.id, slot);
     }
+    yield getApi().disableUioNotifications(self.id);
   }),
 }))
 .actions(self => ({

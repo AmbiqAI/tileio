@@ -13,6 +13,7 @@ const DevicesHeader = () => {
   const { root: { fetching, refreshDevices } } = useStore();
   const [isAddDeviceDialogOpen, showAddDeviceDialog] = useState(false);
   const performScan = async () => {
+    console.log("Performing scan");
     await refreshDevices();
   };
   const theme = useTheme();

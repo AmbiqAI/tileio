@@ -53,7 +53,7 @@ const IoSlider = ({ io, info, state, onChange, disabled, hideLabel }: Props) => 
       max={info.max}
       step={info.step}
     />
-    <Typography variant="subtitle2" fontWeight={800}> {state} </Typography>
+    <Typography variant="h6" fontWeight={800}> {state} </Typography>
   </Stack>
   )
 }

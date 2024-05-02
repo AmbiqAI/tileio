@@ -196,6 +196,24 @@ class EmulatorManager implements ApiManager {
     }
   }
 
+  async enableUioNotifications(deviceId: string, cb: (state: number[]) => void): Promise<void> {
+    console.log(`enableUioNotifications ${deviceId}`);
+    await this.disableUioNotifications(deviceId);
+    const ts = 1000;
+    const intervalcb = setInterval(async () => {
+      const state = await this.getUioState(deviceId);
+      cb(state);
+    }, ts);
+    this.callbacks[`dev${deviceId}.uio`] = intervalcb;
+  }
+
+  async disableUioNotifications(deviceId: string): Promise<void> {
+    const intervalcb = this.callbacks[`dev${deviceId}.uio`];
+    if (intervalcb) {
+      clearInterval(intervalcb);
+    }
+  }
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Device Info Routes
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +229,7 @@ class EmulatorManager implements ApiManager {
 
   async getUioState(deviceId: string): Promise<number[]> {
     const state = new Array(8).fill(0).map(() => randomInt(0, 2));
-    console.log(`UIO state: ${state}`);
+    // console.log(`UIO state: ${state}`);
     return state;
   }
 
