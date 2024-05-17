@@ -206,6 +206,13 @@ const DeviceInfoDialog = ({
               </Typography>
               <Typography variant="body1"> {info.location || "NA"} </Typography>
             </Stack>
+            <Stack direction="row" alignItems="center">
+              <Typography sx={{ mr: 2, color: "primary.main" }} variant="h6">
+                Interface
+              </Typography>
+              <Typography variant="body1"> {info.type.toUpperCase() || "NA"} </Typography>
+            </Stack>
+
             {lastSeenDate && (
               <Stack direction="row" alignItems="center">
                 <Typography sx={{ mr: 2, color: "primary.main" }} variant="h6">

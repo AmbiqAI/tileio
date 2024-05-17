@@ -6,12 +6,11 @@ import {
 } from '@mui/material';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import { observer } from 'mobx-react';
-import BluetoothIcon from '@mui/icons-material/BluetoothRounded';
 import RefreshIcon from '@mui/icons-material/RefreshRounded';
 import SettingsIcon from '@mui/icons-material/DashboardCustomizeRounded';
-import BluetoothConnectedIcon from '@mui/icons-material/BluetoothConnectedRounded';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IDevice } from '../models/device';
+import DeviceStateIcon from './DeviceStateIcon';
 import DashboardSettingsDialog from './DashboardSettingsDialog';
 import { IDashboardSettings } from '../models/dashboardSettings';
 import ConfirmCountDialog from './ConfirmCountDialog';
@@ -26,9 +25,8 @@ const DeviceDetailMenu = ({ device }: Props) => {
   const [isDeviceSettingsDialogOpen, showDeviceSettingsDialog] = useState(false);
   const [moreActionsAnchorEl, setMoreActionsAnchorEl] = useState<null | HTMLElement>(null);
   const openMoreActions = Boolean(moreActionsAnchorEl);
-  const BluetoothStateIcon = deviceState.connected ? BluetoothConnectedIcon : BluetoothIcon;
 
-  const handleBluetoothClick = async () => {
+  const handleConnectClick = async () => {
     if (deviceState.connected) { await device.disconnect(); }
     else { await device.connect(); }
     handleCloseMoreActions();
@@ -74,10 +72,10 @@ const DeviceDetailMenu = ({ device }: Props) => {
 
         <MenuItem key="connect"
           disabled={deviceState.connecting || deviceState.disconnecting || !deviceState.online}
-          onClick={handleBluetoothClick}
+          onClick={handleConnectClick}
         >
           <ListItemIcon>
-            <BluetoothStateIcon />
+            <DeviceStateIcon type={device.info.type} online={deviceState.online} connected={deviceState.connecting} />
           </ListItemIcon>
           <ListItemText>{deviceState.connected ? "Disconnect" : "Connect"}</ListItemText>
         </MenuItem>

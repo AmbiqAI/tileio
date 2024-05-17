@@ -4,6 +4,8 @@ import { JsonStringDate } from '../utils';
 import { ISlotConfigSnapshot, SlotConfig, SlotConfigSchema } from './slot';
 import { UioConfigSchema, UioConfig } from './uioState';
 import { cloneDeep } from 'lodash';
+import { DeviceInterface, DeviceInterfaceType } from './types';
+
 
 export const DeviceInfoSchema: {schema: RJSFSchema, uischema: UiSchema} = {
   schema: {
@@ -41,6 +43,7 @@ const DeviceInfo = types
   id: types.string,
   name: types.optional(types.string, 'Name'),
   location: types.optional(types.string, 'Location'),
+  type: types.optional(DeviceInterface, DeviceInterfaceType.ble),
   slots: types.optional(types.array(SlotConfig), [{name: 's0'}, {name: 's1'}, {name: 's2'}, {name: 's3'}]),
   uio: types.optional(UioConfig, {}),
   lastSeenDate: types.optional(JsonStringDate, new Date()),

@@ -1,9 +1,10 @@
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { flow, Instance, SnapshotIn, types } from 'mobx-state-tree';
-import { getApi } from '../api';
+import ApiManager from '../api';
 import { delay } from '../utils';
 
 export enum UIOType {
+  Momentary = 'Momentary',
   Toggle = 'Toggle',
   Slider = 'Slider',
   Select = 'Select'
@@ -33,6 +34,7 @@ export const IoSchema: RJSFSchema = {
     ioType: {
       "title": "I/O Type",
       "enum": [
+        UIOType.Momentary,
         UIOType.Toggle,
         UIOType.Slider,
         UIOType.Select
@@ -40,6 +42,24 @@ export const IoSchema: RJSFSchema = {
     }
   },
   allOf: [
+    {
+      if: {
+        properties: {
+          "ioType": {
+            "const": UIOType.Momentary
+          }
+        }
+      },
+      then: {
+        properties: {
+          on: {
+            type: "string",
+            default: "Trigger",
+            description: "Trigger Label",
+          },
+        }
+      }
+    },
     {
       if: {
         properties: {
@@ -262,7 +282,7 @@ export const UioState = types
   .actions(self => ({
     _pushState: flow(function*() {
       try {
-      yield getApi().setUioState(self.id, self.state);
+      yield ApiManager.setUioState(self.id, self.state);
       yield delay(100);
       } catch (e) {
         console.error(e);
@@ -270,7 +290,7 @@ export const UioState = types
     }),
     fetchState: flow(function*() {
       try {
-        const state = yield getApi().getUioState(self.id);
+        const state = yield ApiManager.getUioState(self.id);
         self._setState(state);
       } catch (e) {
         console.error(e);

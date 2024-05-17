@@ -1,14 +1,22 @@
 /// <reference types="w3c-web-usb" />
 
-import { ApiManager } from "./api";
+import { ApiHandler } from "./handler";
 import { IDeviceInfo } from '../models/deviceInfo';
-import { calculateCRC16, dataViewToSignalData, dataViewToMetrics } from './utils';
+import { calculateCRC16, dataViewToSignalData, dataViewToMetrics, isMobile } from './utils';
 
 enum PacketType {
   Signal = 0,
   Metrics = 1,
   Uio = 2,
 }
+
+  // A packet includes the following fields:
+  //  START: 1 byte [0x55]
+  //  SLOT: 1 byte [0,1,2,3]
+  //  TYPE: 1 byte [0,1,2]
+  //  DATA: 242 bytes [...]
+  //  CRC: 2 bytes [CRC16]
+  //  STOP: 1 byte [0xAA]
 
 const TIO_USB_VENDOR_ID = 0xCAFE
 const TIO_USB_PRODUCT_ID = 0x0001;
@@ -24,7 +32,7 @@ const TIO_USB_CRC_LEN = 2;
 const TIO_USB_STOP_IDX = 247;
 const TIO_USB_STOP_VAL = 0xAA;
 
-class UsbManager implements ApiManager {
+export class UsbHandler implements ApiHandler {
 
   initialized: boolean;
   deviceInfo: Record<string, IDeviceInfo|undefined>;
@@ -40,9 +48,24 @@ class UsbManager implements ApiManager {
     this.deviceFifos = {};
   }
 
+  _disconnectCallback(event: USBConnectionEvent) {
+    console.log(event);
+  }
+
+  static async supportedPlatform(): Promise<boolean> {
+    // USB only supported on Desktop browser or electron
+    const mobile = await isMobile();
+    return !mobile && !!navigator.usb;
+  }
+
   async initialize(): Promise<boolean> {
     // Verify if webUSB is supported
+    if (this.initialized) {
+      return true;
+
+    }
     this.initialized = true;
+    navigator.usb.ondisconnect = this._disconnectCallback;
     return true;
   }
 
@@ -56,14 +79,34 @@ class UsbManager implements ApiManager {
     }
   }
 
+  async _removeDevice(deviceId: string): Promise<void> {
+    const idx = this._devices.findIndex(device => device.serialNumber === deviceId);
+    if (idx >= 0) {
+      this._devices.splice(idx, 1);
+    }
+  }
+
+  encodePacket(slot: number, ptype: PacketType, data: number[]): ArrayBuffer {
+    const packet = new ArrayBuffer(TIO_USB_PACKET_LEN);
+    const dataView = new DataView(packet);
+
+    dataView.setUint8(TIO_USB_START_IDX, TIO_USB_START_VAL);
+    dataView.setUint8(TIO_USB_SLOT_IDX, slot);
+    dataView.setUint8(TIO_USB_TYPE_IDX, ptype);
+    for (let i = 0; i < data.length; i++) {
+      dataView.setUint8(TIO_USB_DATA_IDX + i, data[i]);
+    }
+    // Fill remaining data with zeros
+    for (let i = data.length; i < TIO_USB_DATA_LEN; i++) {
+      dataView.setUint8(TIO_USB_DATA_IDX + i, 0);
+    }
+    const crc = calculateCRC16(Uint8Array.from(data));
+    dataView.setUint16(TIO_USB_CRC_IDX, crc, true);
+    dataView.setUint8(TIO_USB_STOP_IDX, TIO_USB_STOP_VAL);
+    return packet;
+  }
+
   async decodePacket(deviceId: string, packet: DataView) {
-    // A USB frame includes the following fields:
-    //  START: 1 byte [0x55]
-    //  SLOT: 1 byte [0,1,2,3]
-    //  TYPE: 1 byte [0,1,2]
-    //  DATA: 242 bytes [...]
-    //  CRC: 2 bytes [CRC16]
-    //  STOP: 1 byte [0xAA]
 
     if (packet.byteLength !== TIO_USB_PACKET_LEN) {
       console.log(`Invalid packet length ${packet.byteLength}`);
@@ -185,7 +228,7 @@ class UsbManager implements ApiManager {
   }
 
   async refreshPreviousDevice(deviceId: string): Promise<boolean> {
-    console.log('Refresh previous device');
+    await this._removeDevice(deviceId);
     const dev = await navigator.usb.requestDevice({ filters: [{ serialNumber: deviceId }] });
     await this._addDevice(dev);
     return !!dev;
@@ -195,21 +238,12 @@ class UsbManager implements ApiManager {
     return this._devices.map(device => device.serialNumber || `${device.productId}`);
   }
 
-  async deviceConnect(deviceId: string, deviceInfo: IDeviceInfo, onDisconnect?: (deviceId: string) => void): Promise<void> {
-
-    this.deviceInfo[deviceId] = deviceInfo;
-    this.callbacks[`dev${deviceId}.disconnect`] = onDisconnect;
-    // Get device by serial number
-    let device = await this._getDevice(deviceId);
-    if (!device) {
-      await this.refreshPreviousDevice(deviceId);
-      device = await this._getDevice(deviceId);
-    }
-
+  async enableDevicePolling(deviceId: string): Promise<void> {
+    const device = await this._getDevice(deviceId);
     if (device) {
+
       this.deviceFifos[deviceId] = new Uint8Array([]);
-      // Open device
-      await device.open();
+
       // Select configuration
       if (device.configuration === null) {
         await device.selectConfiguration(1);
@@ -239,7 +273,7 @@ class UsbManager implements ApiManager {
       }
 
       // Claim interface
-      console.log(`USB claiming interface ${ifaceNumber} endpointIn ${endpointIn} endpointOut ${endpointOut}`);
+      console.debug(`USB claiming interface ${ifaceNumber} endpointIn ${endpointIn} endpointOut ${endpointOut}`);
       await device.claimInterface(ifaceNumber);
       await device.selectAlternateInterface(ifaceNumber, 0);
       await device.controlTransferOut({
@@ -249,40 +283,79 @@ class UsbManager implements ApiManager {
         'value' : 0x01,
         'index' : ifaceNumber
       });
-      const intervalcb = setInterval(async () => {
-        try {
 
-          // NOTE: Should enqueue data into fifo and dequeue packets
-          const rst = await device.transferIn(endpointIn, 64);
-          if (rst.status === 'ok' && rst.data) {
-            await this.enqueueFrame(deviceId, rst.data);
+      this.deviceFifos[deviceId] = new Uint8Array([]);
+
+      const intervalcb = setTimeout(async () => {
+        let done = false;
+        while (!done) {
+          try {
+            if (!device || device.opened === false) {
+              done = true;
+              console.log(`Device ${deviceId} closed`);
+              this.deviceDisconnect(deviceId);
+              // Should handle
+            } else {
+              const rst = await device.transferIn(endpointIn, 64);
+              if (rst.status === 'ok' && rst.data) {
+                await this.enqueueFrame(deviceId, rst.data);
+              }
+              // Perhaps delay
+            }
+          } catch (error) {
+            console.error(error);
           }
-        } catch (error) {
-          console.error(error);
         }
       }, 100);
       this.callbacks[`dev${deviceId}.poll`] = intervalcb;
-
-      console.log('Connected');
     }
   }
 
+  async disableDevicePolling(deviceId: string): Promise<void> {
+    this.deviceFifos[deviceId] = new Uint8Array([]);
+  }
+
+  async deviceConnect(deviceId: string, deviceInfo: IDeviceInfo, onDisconnect?: (deviceId: string) => void): Promise<void> {
+
+    this.deviceInfo[deviceId] = deviceInfo;
+    this.callbacks[`dev${deviceId}.disconnect`] = onDisconnect;
+
+    let device = await this._getDevice(deviceId);
+    if (!device) {
+      await this.refreshPreviousDevice(deviceId);
+      device = await this._getDevice(deviceId);
+    }
+
+    if (!device) {
+      throw new Error(`Device ${deviceId} not found`);
+    }
+
+    await device.open();
+
+    await this.enableDevicePolling(deviceId);
+  }
+
+
   async deviceDisconnect(deviceId: string): Promise<void> {
     const device = this._devices.find(device => device.serialNumber === deviceId);
-    if (device) {
-      this.deviceInfo[deviceId] = undefined;
-      clearInterval(this.callbacks[`dev${deviceId}.poll`]);
-      this.callbacks[`dev${deviceId}.poll`] = undefined;
-      for (let i = 0; i < 4; i++) {
-        this.callbacks[`dev${deviceId}.slot${i}.sig`] = undefined;
-        this.callbacks[`dev${deviceId}.slot${i}.met`] = undefined;
-      }
-      this.callbacks[`dev${deviceId}.uio`] = undefined;
-      const onDisconnect = this.callbacks[`dev${deviceId}.disconnect`];
-      if (onDisconnect) {
-        onDisconnect(deviceId);
-        this.callbacks[`dev${deviceId}.disconnect`] = undefined;
-      }
+    if (!device) {
+      return;
+    }
+    this.deviceInfo[deviceId] = undefined;
+
+    await this.disableDevicePolling(deviceId);
+
+    for (let i = 0; i < 4; i++) {
+      await this.disableSlotNotifications(deviceId, i);
+      await this.disableSlotMetricsNotifications(deviceId, i);
+    }
+    await this.disableUioNotifications(deviceId);
+    const onDisconnect = this.callbacks[`dev${deviceId}.disconnect`];
+    if (onDisconnect) {
+      onDisconnect(deviceId);
+      this.callbacks[`dev${deviceId}.disconnect`] = undefined;
+    }
+    if (device.opened) {
       await device.close();
     }
   }
@@ -323,26 +396,6 @@ class UsbManager implements ApiManager {
     return [];
   }
 
-  encodePacket(slot: number, ptype: PacketType, data: number[]): ArrayBuffer {
-    const packet = new ArrayBuffer(TIO_USB_PACKET_LEN);
-    const dataView = new DataView(packet);
-
-    dataView.setUint8(TIO_USB_START_IDX, TIO_USB_START_VAL);
-    dataView.setUint8(TIO_USB_SLOT_IDX, slot);
-    dataView.setUint8(TIO_USB_TYPE_IDX, ptype);
-    for (let i = 0; i < data.length; i++) {
-      dataView.setUint8(TIO_USB_DATA_IDX + i, data[i]);
-    }
-    // Fill remaining data with zeros
-    for (let i = data.length; i < TIO_USB_DATA_LEN; i++) {
-      dataView.setUint8(TIO_USB_DATA_IDX + i, 0);
-    }
-    const crc = calculateCRC16(Uint8Array.from(data));
-    dataView.setUint16(TIO_USB_CRC_IDX, crc, true);
-    dataView.setUint8(TIO_USB_STOP_IDX, TIO_USB_STOP_VAL);
-    return packet;
-  }
-
   async setUioState(deviceId: string, state: number[]): Promise<void> {
 
     if (state.length !== 8) {
@@ -370,11 +423,9 @@ class UsbManager implements ApiManager {
       bufferArray.set(chunkArray, 2);
       await device.transferOut(3, bufferView);
     }
-
   }
-
 }
 
-const defaultManager = new UsbManager();
+const defaultHandler = new UsbHandler();
 
-export default defaultManager;
+export default defaultHandler;

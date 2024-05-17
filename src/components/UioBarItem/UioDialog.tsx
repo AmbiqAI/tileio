@@ -57,6 +57,7 @@ const UioDialog = ({ open, onClose, device }: Props) => {
   return (
     <Dialog
       open={open}
+      fullWidth
       maxWidth="md"
       onClose={onClose}
     >
@@ -96,7 +97,7 @@ const UioDialog = ({ open, onClose, device }: Props) => {
       <Divider />
       <DialogContent>
         <FormGroup>
-          <Grid container spacing={3} width="100%" height="100%" minWidth="480px" pb={4} flexGrow={1}>
+          <Grid container spacing={3} width="100%" height="100%" minWidth="480px" pb={4} justifyContent="space-evenly">
             {ioItems.map((io, idx) => (
               io.info.enabled && (
                 <>

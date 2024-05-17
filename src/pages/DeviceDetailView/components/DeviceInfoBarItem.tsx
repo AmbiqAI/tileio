@@ -2,8 +2,7 @@ import { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import { Stack } from '@mui/material';
 import { observer } from 'mobx-react';
-import BluetoothConnectedIcon from '@mui/icons-material/BluetoothConnectedRounded';
-import BluetoothOffIcon from '@mui/icons-material/BluetoothDisabledRounded';
+import DeviceStateIcon from '../../../components/DeviceStateIcon';
 import BatteryIcon from '../../../components/BatteryIcon';
 import SignalIcon from '../../../components/SignalIcon';
 import { IDevice } from '../../../models/device';
@@ -31,7 +30,7 @@ const DeviceInfoBarItem = ({ device, small }: Props) => {
           <Typography variant={small ? "subtitle1" : "h6"} fontWeight={700}>{deviceInfo.name}</Typography>
           {!deviceState.online ? (
             <Stack spacing={-0.1} flexDirection="row" alignItems="center">
-              <BluetoothOffIcon fontSize="small" color="error" sx={{ fontSize: 16 }} />
+              <DeviceStateIcon type={deviceInfo.type} online={deviceState.online} connected={deviceState.connected} sx={{ fontSize: 16 }} color="error" />
               <Typography variant="overline" color="error" sx={{ lineHeight: 'normal' }}> Offline </Typography>
             </Stack>
           ) : (
@@ -41,7 +40,7 @@ const DeviceInfoBarItem = ({ device, small }: Props) => {
               </Typography>
               <BatteryIcon level={deviceState.batteryLevel} color={deviceState.connected ? "inherit" : "disabled"} sx={{ fontSize: 16 }} />
               <SignalIcon level={deviceState.signalStrength} color={deviceState.connected ? "inherit" : "disabled"} sx={{ fontSize: 16 }} />
-              {deviceState.connected && (<BluetoothConnectedIcon sx={{ fontSize: 16 }} />)}
+              {deviceState.connected && (<DeviceStateIcon type={deviceInfo.type} online={deviceState.online} connected={deviceState.connected} sx={{ fontSize: 16 }} />)}
             </Stack>
           )}
         </Stack>
@@ -54,7 +53,6 @@ const DeviceInfoBarItem = ({ device, small }: Props) => {
         lastSeenDate={deviceInfo.lastSeenDate}
         onSubmit={async (info: IDeviceInfo) => {
           deviceInfo.copyFrom(info);
-          // device.setInfo(info)
         }}
         onClose={() => { showDeviceInfoDialog(false); }}
         disabled={false}

@@ -1,6 +1,6 @@
 import { IDeviceInfo } from "../models/deviceInfo";
 
-export interface ApiManager {
+export interface ApiHandler {
     initialize(): Promise<boolean>;
     startScan(cb: (deviceId: string, name: string) => boolean): Promise<void>;
     stopScan(): Promise<void>;

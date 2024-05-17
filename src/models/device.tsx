@@ -5,7 +5,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { IconButton } from '@mui/material';
 import ViewRecordIcon from '@mui/icons-material/LaunchRounded';
 import DeviceInfo, { DefaultDeviceInfo, IDeviceInfo, IDeviceInfoSnapshot } from './deviceInfo';
-import { Notifier, getApi } from '../api';
+import ApiManager, { Notifier } from '../api';
 import Record, { IRecord } from './record';
 import { delay } from '../utils';
 import { IRoot, Root } from './root';
@@ -76,7 +76,8 @@ const Device = types
   fetchSignalStrength: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.state.setSignalStrength(yield getApi().getDeviceStrength(self.id));
+      const strength = yield ApiManager.getDeviceStrength(self.id);
+      self.state.setSignalStrength(strength);
     } catch(error) {
       console.error(`Failed fetching RSSI: ${error}`);
     }
@@ -84,7 +85,8 @@ const Device = types
   fetchBatterylevel: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.state.setBatteryLevel(yield getApi().getDeviceBatteryLevel(self.id));
+      const level = yield ApiManager.getDeviceBatteryLevel(self.id);
+      self.state.setBatteryLevel(level);
     } catch(error) {
       console.error(`Failed reading battery level: ${error}`);
     }
@@ -146,9 +148,9 @@ const Device = types
       self.polling = undefined;
     }
     for (let slot = 0; slot < self.info.slots.length; slot++) {
-      yield getApi().enableSlotMetricsNotifications(self.id, slot, self.receivedSlotMetrics);
+      yield ApiManager.enableSlotMetricsNotifications(self.id, slot, self.receivedSlotMetrics);
     }
-    yield getApi().enableUioNotifications(self.id, self.uioState.updateState);
+    yield ApiManager.enableUioNotifications(self.id, self.uioState.updateState);
     self.polling = setInterval(self.fetchUpdates, 2500);
   }),
   stopPolling: flow(function*(){
@@ -157,9 +159,9 @@ const Device = types
       self.polling = undefined;
     }
     for (let slot = 0; slot < self.info.slots.length; slot++) {
-      yield getApi().disableSlotMetricsNotifications(self.id, slot);
+      yield ApiManager.disableSlotMetricsNotifications(self.id, slot);
     }
-    yield getApi().disableUioNotifications(self.id);
+    yield ApiManager.disableUioNotifications(self.id);
   }),
 }))
 .actions(self => ({
@@ -172,9 +174,9 @@ const Device = types
     }
     for (let slot = 0; slot < self.info.slots.length; slot++) {
       if (enable) {
-        yield getApi().enableSlotNotifications(self.id, slot, self.receivedSlotData);
+        yield ApiManager.enableSlotNotifications(self.id, slot, self.receivedSlotData);
       } else {
-        yield getApi().disableSlotNotifications(self.id, slot);
+        yield ApiManager.disableSlotNotifications(self.id, slot);
       }
     }
     self.notifications = enable;
@@ -230,7 +232,7 @@ const Device = types
       self.notifications = false;
       self.slots.forEach(slot => slot.clear());
       self.state.setConnectionState(DeviceConnectionType.CONNECTING);
-      yield getApi().deviceConnect(self.id, self.info, self.onDisconnected);
+      yield ApiManager.deviceConnect(self.id, self.info, self.onDisconnected);
       self.state.setConnectionState(DeviceConnectionType.CONNECTED);
       yield self.startPolling();
       yield delay(500);
@@ -244,13 +246,14 @@ const Device = types
         options: { variant: 'error' },
       });
       self.state.setConnectionState(DeviceConnectionType.DISCONNECTED);
+      self.state.setOnline(false);
     }
   }),
   refresh: flow(function*() {
     try {
       // If not connected, refresh online state
       if (self.state.disconnected && !self.state.online) {
-        const available = yield getApi().refreshPreviousDevice(self.id);
+        const available = yield ApiManager.refreshPreviousDevice(self.info);
         self.setOnline(available);
       // If connected, refresh device info
       } else if (self.state.connected) {
@@ -265,7 +268,7 @@ const Device = types
       yield self.setNotifications(false);
       yield self.stopPolling();
       yield self.stopRecording();
-      yield getApi().deviceDisconnect(self.id);
+      yield ApiManager.deviceDisconnect(self.id);
       self.state.setConnectionState(DeviceConnectionType.DISCONNECTED);
     }
   }),

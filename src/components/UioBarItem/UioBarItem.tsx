@@ -49,6 +49,11 @@ const UioBarItem = observer(({ device }: { device: IDevice }) => {
           {ioItems.filter(btn => btn.info.enabled).map((io, idx) => (
             <Grid xs={itemSize} key={`btn-${io.info.name}-${idx}`} minWidth="40px">
               <Box alignItems="center">
+              {(io.info.ioType === UIOType.Momentary) && (
+                  <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
+                  {io.state ? io.info.on : io.info.off}
+                  </Typography>
+                )}
                 {(io.info.ioType === UIOType.Toggle) && (
                   <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
                   {io.state ? io.info.on : io.info.off}

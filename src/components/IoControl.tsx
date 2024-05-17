@@ -7,6 +7,7 @@ import {
   Select,
   MenuItem,
   FormControl,
+  Button,
 } from "@mui/material";
 import { IIoConfig, UIOType } from "../models/uioState";
 import { useMemo, useState } from "react";
@@ -61,6 +62,23 @@ const IoSlider = ({ io, info, state, onChange, disabled, hideLabel }: Props) => 
 const IoControl = ({ io, info, state, onChange, disabled, hideLabel }: Props) => {
   return (
     <>
+      {info.ioType === UIOType.Momentary && (
+        <Stack direction="row" alignItems="center">
+          {/* <Typography variant="subtitle2" fontWeight={800} >
+            TEST
+          </Typography> */}
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!info.enabled || disabled}
+            onClick={async () => {
+              await onChange(1);
+            }}
+          >
+            {info.on}
+          </Button>
+        </Stack>
+      )}
       {info.ioType === UIOType.Toggle && (
         <Stack direction="row" alignItems="center">
           <Typography variant="subtitle2" fontWeight={800} >

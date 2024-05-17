@@ -14,9 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import LocationOn from "@mui/icons-material/LocationOn";
-import BluetoothOnIcon from "@mui/icons-material/BluetoothOutlined";
-import BluetoothConnectedIcon from "@mui/icons-material/BluetoothConnectedRounded";
-import BluetoothOffIcon from "@mui/icons-material/BluetoothDisabledRounded";
+import DeviceStateIcon from "../DeviceStateIcon";
 import RecordIcon from "@mui/icons-material/Adjust";
 import { IDevice } from "../../models/device";
 import { DeviceIcon } from "../../assets/icons";
@@ -33,8 +31,7 @@ const DeviceCard = ({ device }: Props) => {
   const connState = useMemo(() => {
     const description = device.state.connected ? "Connected" : device.state.online ? "Online" : "Offline";
     const color: 'primary'|'action'|'error' = device.state.connected ? "primary" : device.state.online ? "action" : "error";
-    const Icon = device.state.connected ? BluetoothConnectedIcon : device.state.online ? BluetoothOnIcon : BluetoothOffIcon;
-    return { description, color, Icon };
+    return { description, color };
   }, [device.state.online, device.state.connected]);
 
   return (
@@ -73,13 +70,13 @@ const DeviceCard = ({ device }: Props) => {
 
           {/* Device Info */}
           <Stack spacing={0} sx={{ flexGrow: 1 }} alignItems="flex-start">
-            <Typography fontSize={20} fontWeight={900}>
+            <Typography variant="h6" fontWeight={900}>
               {device.info.name}
             </Typography>
             <Stack spacing={0} flexDirection="row" alignItems="center">
               <LocationOn sx={{ color: grey[500], fontSize: 18 }} />
-              <Typography fontSize={18} variant="body2" color="text.secondary">
-                {device.info.location || device.info.shortId}
+              <Typography variant="body2" color="text.secondary">
+                {`${device.info.location || ""} | ${device.info.shortId}`}
               </Typography>
             </Stack>
           </Stack>
@@ -98,7 +95,12 @@ const DeviceCard = ({ device }: Props) => {
           <Stack direction="row" alignItems="center" justifyContent="start">
             <Tooltip arrow title={connState.description}>
               <Avatar sx={{ bgcolor: "transparent", width: 24, height: 24 }}>
-                <connState.Icon fontSize="small" color={connState.color} />
+                <DeviceStateIcon
+                  type={device.info.type}
+                  connected={device.state.connected}
+                  online={device.state.online}
+                  fontSize="small" color={connState.color}
+                  />
               </Avatar>
             </Tooltip>
             <Typography

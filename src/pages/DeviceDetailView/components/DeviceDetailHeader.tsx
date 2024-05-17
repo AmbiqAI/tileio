@@ -5,8 +5,8 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import Header from '../../../components/Header';
 import { observer } from 'mobx-react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackIosNew';
-import BluetoothIcon from '@mui/icons-material/BluetoothRounded';
-import BluetoothConnectedIcon from '@mui/icons-material/BluetoothConnectedRounded';
+
+import DeviceStateIcon from '../../../components/DeviceStateIcon';
 import { IDevice } from '../../../models/device';
 import { useTheme } from '@mui/system';
 import RecordBarItem from '../../../components/RecordBarItem';
@@ -19,8 +19,8 @@ const DeviceDetailHeader = ({ device }: { device: IDevice }) => {
   const isSmall = useMediaQuery(theme.breakpoints.down(500));
   const history = useHistory();
   const deviceState = device.state;
-  const BluetoothStateIcon = deviceState.connected ? BluetoothConnectedIcon : BluetoothIcon;
-  const handleBluetoothClick = async () => {
+  const deviceInfo = device.info;
+  const handleConnectClick = async () => {
     if (deviceState.connected) { await device.disconnect(); }
     else { await device.connect(); }
   };
@@ -52,9 +52,14 @@ const DeviceDetailHeader = ({ device }: { device: IDevice }) => {
             loading={deviceState.connecting || deviceState.disconnecting}
             loadingPosition="center"
             variant="outlined"
-            onClick={handleBluetoothClick}
+            onClick={handleConnectClick}
           >
-            <BluetoothStateIcon sx={{ opacity: deviceState.connecting || deviceState.disconnecting ? 0 : 1 }} />
+            <DeviceStateIcon
+              type={deviceInfo.type}
+              online={deviceState.online}
+              connected={deviceState.connected}
+              sx={{ opacity: deviceState.connecting || deviceState.disconnecting ? 0 : 1 }}
+            />
           </LoadingButton>
           )}
 

@@ -1,10 +1,10 @@
-import { flow, Instance, types, } from 'mobx-state-tree';
+import { flow, Instance, types } from 'mobx-state-tree';
 import Device, { IDevice, IDeviceSnapshot, NewDevice } from './device';
 import Record, { IRecord, IRecordSnapshot } from './record';
-import { Notifier, initApi, getApi } from '../api';
-import { delay } from '../utils';
+import ApiManager, { Notifier } from '../api';
 import Settings from './settings';
 import { closeDB, initDB } from '../db';
+import { DeviceInterfaceType } from './types';
 
 export const Root = types
 .model('Root', {
@@ -28,9 +28,9 @@ export const Root = types
   },
 }))
 .actions(self => ({
-  addAvailableDevice(deviceId: string, name: string) {
+  addAvailableDevice(deviceId: string, name: string, type: DeviceInterfaceType) {
     if (!self.deviceById(deviceId)) {
-      const device = NewDevice(deviceId, {id: deviceId, name: name});
+      const device = NewDevice(deviceId, {id: deviceId, name: name, type: type});
       device.setOnline(true);
       self.availableDevices = [device, ...self.availableDevices];
     }
@@ -46,7 +46,7 @@ export const Root = types
     try {
       self.fetching = true;
       const deviceIds: string[] = [];
-      yield getApi().refreshPreviousDevices(self.devices.map(d => d.id), (deviceId: string, _name: string) => {
+      yield ApiManager.refreshPreviousDevices(self.devices.map(d => d.info), (deviceId: string, _name: string) => {
         deviceIds.push(deviceId);
         self.deviceById(deviceId)?.setOnline(true);
       });
@@ -65,13 +65,10 @@ export const Root = types
     try {
       self.fetching = true;
       self.availableDevices.splice(0, self.availableDevices.length);
-      yield getApi().startScan((deviceId: string, name: string) => {
-        self.addAvailableDevice(deviceId, name);
+      yield ApiManager.scan((deviceId: string, name: string, type: DeviceInterfaceType) => {
+        self.addAvailableDevice(deviceId, name, type);
         return false;
-      });
-      // Stop scan after 4 seconds
-      yield delay(4000);
-      yield getApi().stopScan();
+      }, 5000);
     } catch (error) {
       Notifier.add({ message: `Failed fetching devices: (${error})`, options: { variant: 'error' }});
     } finally {
@@ -125,7 +122,7 @@ export const Root = types
     closeDB();
   },
   initialize: function() {
-    initApi(self.settings.apiMode);
+    ApiManager.initialize(self.settings.apiMode);
   },
 }));
 

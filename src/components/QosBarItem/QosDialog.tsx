@@ -35,6 +35,8 @@ const QosDialog =  ({ open, onClose, device }: Props) => {
   return (
     <Dialog
       open={open}
+      maxWidth="sm"
+      fullWidth
       onClose={onClose}
     >
       <DialogTitle>
@@ -49,7 +51,7 @@ const QosDialog =  ({ open, onClose, device }: Props) => {
             <Grid xs={6} key={`state-${idx}`}>
               <Stack
                 direction="row"
-                justifyContent="space-between"
+                justifyContent="space-evenly"
                 alignItems="center"
                 spacing={1}
               >

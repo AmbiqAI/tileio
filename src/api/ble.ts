@@ -1,9 +1,9 @@
-/// <reference types="w3c-web-usb" />
+/// <reference types="web-bluetooth" />
 
 import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
 import { delay } from '../utils';
 import { IDeviceInfo } from '../models/deviceInfo';
-import { ApiManager } from './api';
+import { ApiHandler } from './handler';
 import { isMobile, dataViewToSignalData, dataViewToMetrics } from './utils';
 
 const TIO_SVC_UUID = "EECB7DB8-8B2D-402C-B995-825538B49328";
@@ -24,7 +24,7 @@ const TIO_UIO_CHAR_UUID = "B9488D48-069B-47F7-94F0-387F7FBFD1FA";
 const TIO_BATT_SVC_UUID = numberToUUID(0x180f);
 const TIO_BATT_LEVEL_CHAR_UUID = numberToUUID(0x2a19);
 
-class BleManager implements ApiManager {
+export class BleHandler implements ApiHandler {
   initialized: boolean;
   deviceInfo: Record<string, IDeviceInfo|undefined>;
   callbacks: Record<string, any>;
@@ -35,16 +35,17 @@ class BleManager implements ApiManager {
     this.callbacks = {};
   }
 
+  static async supportedPlatform(): Promise<boolean> {
+    // BLE supported on mobile, chrome browser, and electron
+    const mobile = await isMobile();
+    return mobile || !!navigator.bluetooth;
+  }
+
   async initialize(): Promise<boolean> {
 
     if (!this.initialized) {
       await BleClient.initialize();
       this.initialized = true;
-      console.debug('BLE initializing');
-      navigator.usb.requestDevice({ filters: [] }).then((device) => {
-        console.log(device.productName);
-      });
-      console.debug('BLE initialized');
     }
     return this.initialized;
   }
@@ -89,7 +90,6 @@ class BleManager implements ApiManager {
     });
     await delay(4000);
     await this.stopScan();
-
   }
 
   async refreshPreviousDevice(deviceId: string): Promise<boolean> {
@@ -265,6 +265,6 @@ class BleManager implements ApiManager {
 
 }
 
-const defaultManager = new BleManager();
+const defaultHandler = new BleHandler();
 
-export default defaultManager;
+export default defaultHandler;

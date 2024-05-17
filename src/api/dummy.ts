@@ -1,6 +1,6 @@
 import { IDeviceInfo } from '../models/deviceInfo';
 import { delay } from '../utils';
-import { ApiManager } from './api';
+import { ApiHandler } from './handler';
 
 const devices: {id: string, name: string}[] = [
   {
@@ -70,7 +70,7 @@ function generateDummySlotMetrics(slot: number, numMetrics: number): number[] {
   return metrics;
 }
 
-class EmulatorManager implements ApiManager {
+export class EmulatorHandler implements ApiHandler {
 
   initialized: boolean;
   deviceInfo: Record<string, IDeviceInfo|undefined>;
@@ -234,11 +234,10 @@ class EmulatorManager implements ApiManager {
   }
 
   async setUioState(deviceId: string, state: number[]): Promise<void> {
-    console.log(`Setting UIO state: ${state}`);
   }
 
 }
 
-const defaultManager = new EmulatorManager();
+const defaultHandler = new EmulatorHandler();
 
-export default defaultManager;
+export default defaultHandler;

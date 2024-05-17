@@ -146,7 +146,7 @@ const SignalPlotTile = observer(({ size, slots, pause, duration, config, device 
   const chartEl = useRef<Chart<"line">>(null);
 
   const options = useMemo<ChartOptions<"line">>(() => {
-    const showAxis = size === "lg";
+    const showAxis = false;
     const durationMs = getPlotDurationMs(duration, size);
 
     return {
