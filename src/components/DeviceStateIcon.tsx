@@ -20,40 +20,40 @@ const DeviceStateIcon = (props: Props) => {
   if (type === "ble") {
     if (connected) {
       return (
-        <Tooltip title="Connected" arrow>
+        // <Tooltip title="Connected" arrow>
           <BluetoothConnectedIcon {...cprops} />
-        </Tooltip>
+        // </Tooltip>
       );
     } else if (online) {
       return (
-        <Tooltip title="Available" arrow>
+        // <Tooltip title="Available" arrow>
           <BluetoothOnIcon {...cprops} />
-        </Tooltip>
+        // </Tooltip>
       );
     }
     return (
-      <Tooltip title="Unavailable" arrow>
+      // <Tooltip title="Unavailable" arrow>
         <BluetoothOffIcon {...cprops} />
-      </Tooltip>
+      // </Tooltip>
     )
   } else {
     if (connected) {
       return (
-        <Tooltip title="Connected" arrow>
+        // <Tooltip title="Connected" arrow>
           <UsbConnectedIcon {...cprops} />
-        </Tooltip>
+        // </Tooltip>
       );
     } else if (online) {
       return (
-        <Tooltip title="Available" arrow>
+        // <Tooltip title="Available" arrow>
           <UsbOnIcon {...cprops} />
-        </Tooltip>
+        // </Tooltip>
       );
     }
     return (
-      <Tooltip title="Unavailable" arrow>
+      // <Tooltip title="Unavailable" arrow>
         <UsbOffIcon {...cprops} />
-      </Tooltip>
+      // </Tooltip>
     )
   }
 };

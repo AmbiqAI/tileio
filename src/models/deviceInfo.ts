@@ -20,6 +20,13 @@ export const DeviceInfoSchema: {schema: RJSFSchema, uischema: UiSchema} = {
         type: 'string',
         default: 'Location'
       },
+      type: {
+        type: 'string',
+        enum: Object.values(DeviceInterfaceType),
+        default: DeviceInterfaceType.ble,
+        readOnly: true,
+        description: 'Interface type'
+      },
       slots: {
         type: 'array',
         minItems: 1,

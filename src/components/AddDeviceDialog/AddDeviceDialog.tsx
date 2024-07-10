@@ -19,6 +19,7 @@ import {
   Avatar,
   CardHeader,
   IconButton,
+  Box,
 } from "@mui/material";
 import validator from '@rjsf/validator-ajv8';
 import { DeviceIcon, ScanIcon } from "../../assets/icons";
@@ -34,6 +35,7 @@ import { IDeviceInfo, DeviceInfoSchema } from "../../models/deviceInfo";
 import JsonView from "@uiw/react-json-view";
 import { VisuallyHiddenInput } from "../VisuallyHiddenInput";
 import { NewDevice } from "../../models/device";
+import DeviceStateIcon from "../DeviceStateIcon";
 
 interface Props {
   open: boolean;
@@ -51,7 +53,7 @@ const AddDeviceDialog = ({ open, close }: Props) => {
     await root.fetchDevices();
   };
   const [inputValue, setInputValue] = useState("");
-  const [selectedId, setSelectedId] = useState<string|null>(null);
+  const [selectedId, setSelectedId] = useState<IDeviceInfo|null>(null);
   const [formData, setFormData] = useState<IDeviceInfo|null>();
   const steps = ['Select Device', 'Configure Device', 'Review'];
   const [activeStep, setActiveStep] = useState(0);
@@ -140,14 +142,22 @@ const AddDeviceDialog = ({ open, close }: Props) => {
             setInputValue(newInputValue);
           }}
           noOptionsText="No devices found"
-          options={root.availableDevices.map(d => d.id)}
-          getOptionLabel={(option) => root.availableDeviceById(option)?.info.name || option}
+          options={root.availableDevices.map(d => d.info)}
+          getOptionLabel={(option) => root.availableDeviceById(option.id)?.info.name || option.id}
           sx={{ width: "100%" }}
           value={selectedId}
           onChange={(event, newValue) => {
             setSelectedId(newValue);
             setFormData(null);
           }}
+          renderOption={(props, option) => (
+            <Stack direction="row" alignItems="center" justifyContent="space-between" mx={1}>
+            <Typography {...props}>
+              {option.name || option.id}
+            </Typography>
+            <DeviceStateIcon connected={true} online={true} type={option.type} />
+            </Stack>
+          )}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -185,7 +195,7 @@ const AddDeviceDialog = ({ open, close }: Props) => {
       {(activeStep === 2) && selectedId && (
         <>
           <Typography variant="subtitle1" mb={1}>
-            {`Device: ${selectedId.substring(0, 7)}`}
+            {`Device: ${selectedId.shortId}`}
           </Typography>
           <JsonView value={formData || {}} style={jsonTheme}/>
         </>
@@ -213,7 +223,9 @@ const AddDeviceDialog = ({ open, close }: Props) => {
             disabled={(selectedId === null) || (activeStep === DEVICE_CONFIG_STEP && !formData)}
             onClick={() => {
               if (activeStep === DEVICE_REVIEW_STEP && selectedId && formData) {
-                const device = NewDevice(selectedId, formData);
+                formData.id = selectedId.id;
+                formData.type = selectedId.type;
+                const device = NewDevice(selectedId.id, formData);
                 device.setOnline(true);
                 root.addDevice(device);
                 Notifier.add({

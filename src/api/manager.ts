@@ -82,6 +82,7 @@ export class ApiManager {
       await handler.startScan((deviceId: string, name: string) => {
         let deviceInfo = this.devices[deviceId];
         if (!deviceInfo) {
+          console.info(`Found new device ${deviceId} ${name} ${handlerType}`);
           deviceInfo = { id: deviceId, name: name, type: handlerType };
           this.devices[deviceId] = deviceInfo;
         }
