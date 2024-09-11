@@ -12,7 +12,6 @@ export const SignalPlotTileSpec: TileSpec =   {
   type: "SIGNAL_PLOT_TILE",
   name: "Simple Signal Plot",
   description: "Signal plot",
-  streamingRequired: true,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
@@ -139,7 +138,7 @@ export interface SignalPlotTileConfig {
 }
 
 
-const SignalPlotTile = observer(({ size, slots, pause, duration, config, device }: TileProps) => {
+const SignalPlotTile = observer(({ size, slots, pause, duration, config, dashboard }: TileProps) => {
   const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
   const latestTs = configs.slot < slots.length ? slots[configs.slot].signals.latestTs : 0;
@@ -219,7 +218,7 @@ const SignalPlotTile = observer(({ size, slots, pause, duration, config, device 
   }, [pause, configs, theme, duration, size]);
 
   const data = useMemo<ChartData<"line">>(() => {
-    const chNames = configs.chs.map(ch => configs.slot < device.slots.length && ch < device.slots[configs.slot].chs.length ? device.slots[configs.slot].chs[ch] : `CH${ch}`);
+    const chNames = configs.chs.map(ch => configs.slot < dashboard.device.slots.length && ch < dashboard.device.slots[configs.slot].chs.length ? dashboard.device.slots[configs.slot].chs[ch] : `CH${ch}`);
     const colors = [configs.primaryColor, configs.secondaryColor, configs.tertiaryColor, configs.quaternaryColor];
     return {
       datasets: chNames.map((ch, i) => ({
@@ -230,7 +229,7 @@ const SignalPlotTile = observer(({ size, slots, pause, duration, config, device 
           data: [],
       })),
     };
-  }, [configs, device.slots]);
+  }, [configs, dashboard.device.slots]);
 
   useEffect(() => {
     const chart = chartEl.current;

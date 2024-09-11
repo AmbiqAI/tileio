@@ -1,13 +1,12 @@
 import { Instance, SnapshotIn, types, flow, applySnapshot, destroy, getSnapshot, clone } from 'mobx-state-tree';
 import { matchPath } from 'react-router';
-import DeviceInfo, { DefaultDeviceInfo, IDeviceInfoSnapshot } from './deviceInfo';
 import { formatDurationHMS, JsonStringDate, uuid4 } from '../utils';
 import { RecordData } from '../db/record';
 import {createRecordData, deleteRecordData} from '../db';
 import { Notifier } from '../api';
 import { Slot } from './slot';
 import { EventMarker, IEventMarkerSnapshot, IEventMarker } from './event';
-import DashboardSettings, { DefaultDashboardSettings, IDashboardSettings } from './dashboardSettings';
+import Dashboard, { IDashboard } from './dashboard';
 
 export enum RecordFormat {
   Sqlite = "SQLITE",
@@ -19,8 +18,7 @@ const Record = types
     id: types.optional(types.string, (): string => uuid4()),
     date: types.optional(JsonStringDate, () => new Date()),
     duration: types.optional(types.number, (): number => 0),
-    device: DeviceInfo,
-    settings: types.optional(DashboardSettings, DefaultDashboardSettings),
+    dashboard: types.optional(Dashboard, {id: 'dashboard'}),
     slots: types.optional(types.array(Slot), []),
   })
   .volatile(self => ({
@@ -44,7 +42,7 @@ const Record = types
     },
     _openDB: flow(function*() {
       if (self.db === undefined) {
-        self.db = yield createRecordData(self.id, self.device);
+        self.db = yield createRecordData(self.id, self.dashboard.device.slots);
         yield self.db!.open();
       }
       return self.db!;
@@ -56,19 +54,13 @@ const Record = types
       self.db = undefined;
     }),
     pruneData: function() {
-      const oldestTs = Date.now() - 1000*(5+self.settings.duration);
+      const oldestTs = Date.now() - 1000*(5+self.dashboard.duration);
       self.slots.forEach(slot => slot.prune(oldestTs));
     },
   }))
   .actions(self => ({
-    setDeviceInfo: flow(function*(info: IDeviceInfoSnapshot) {
-      if (info == null) { return; }
-      applySnapshot(self.device, info);
-      const db: RecordData = yield self._openDB();
-      yield db.setDeviceInfo(self.device);
-    }),
-    setSettings: function(settings: IDashboardSettings) {
-      applySnapshot(self.settings, getSnapshot(clone(settings)));
+    setDashboard: function(dashboard: IDashboard) {
+      applySnapshot(self.dashboard, getSnapshot(clone(dashboard)));
     },
     subscribe: function(id: string, cb: (signals: number[][]) => void) {
       console.log(`RECORD subscribed by ${id}`);
@@ -146,7 +138,7 @@ const Record = types
     }),
     generateRecordUri: flow(function*(format: RecordFormat){
       const db: RecordData = yield self._openDB();
-      return yield db.generateUri(self.date, self.duration, self.device, format);
+      return yield db.generateUri(self.date, self.duration, format);
     }),
     delete: flow(function*() {
       try {
@@ -205,5 +197,4 @@ export interface IRecordSnapshot extends SnapshotIn<typeof Record> {}
 
 export const NotFoundRecord = (id: string) => Record.create({
   id: id,
-  device: DefaultDeviceInfo(id),
 })

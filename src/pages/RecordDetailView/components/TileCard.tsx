@@ -47,12 +47,13 @@ const TileCard = ({ name, type, size, record, config }: Params) => {
           name: name,
           type: type,
           size: size,
+          config: config,
+
+          dashboard: record.dashboard,
           slots: record.slots,
           pause: false,
-          duration: record.settings.duration,
+          duration: record.dashboard.duration,
           record: record,
-          config: config,
-          device: record.device
         })}
       </Card>
     </Grid>

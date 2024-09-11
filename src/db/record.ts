@@ -1,4 +1,3 @@
-import { IDeviceInfoSnapshot } from '../models/deviceInfo';
 import { RecordFormat } from '../models/record';
 import { IEventMarkerSnapshot } from '../models/event';
 
@@ -8,7 +7,6 @@ export interface RecordData {
   close(): Promise<void>;
   delete(): Promise<void>;
 
-  setDeviceInfo(device: IDeviceInfoSnapshot): Promise<void>;
   setEvents(events: IEventMarkerSnapshot[]): Promise<void>;
   setEvent(event: IEventMarkerSnapshot): Promise<void>;
 
@@ -30,5 +28,5 @@ export interface RecordData {
 
   deleteEvent(ts: number): Promise<void>;
 
-  generateUri(date: Date, duration: number, device: IDeviceInfoSnapshot, format: RecordFormat): Promise<string>;
+  generateUri(date: Date, duration: number, format: RecordFormat): Promise<string>;
 }

@@ -11,7 +11,6 @@ export const FidPieTileSpec: TileSpec = {
   type: "FID_PIE_TILE",
   name: "Fiducial Pie Tile",
   description: "Fiducial Pie Tile",
-  streamingRequired: true,
   sizes: ["sm", "md"],
   schema: {
     type: 'object',

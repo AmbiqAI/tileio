@@ -1,100 +1,70 @@
-import { FormGroup, Stack, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { observer } from "mobx-react";
-import Switch from '@mui/material/Switch';
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
-import { RJSFSchema } from "@rjsf/utils";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
-
-const ButtonSchema: RJSFSchema = {
-  type: "object",
-  required: ["name", "enabled", "off", "on"],
-  properties: {
-    name: {
-      type: "string",
-      default: "Button",
-      description: "Button Name",
-    },
-    enabled: {
-      type: "boolean",
-      default: false,
-      description: "Enable Button",
-    },
-    off: {
-      type: "string",
-      default: "Off",
-      description: "Off Label",
-    },
-    on: {
-      type: "string",
-      default: "On",
-      description: "On Label",
-    },
-  }
-};
-
+import { useMemo } from "react";
+import IoControl from "../IoControl";
 
 export const UioTileSpec: TileSpec = {
   type: "UIO_TILE",
   name: "UIO Tile",
   description: "Control user I/O",
-  streamingRequired: false,
-  sizes: ["sm"],
+  sizes: ["sm", "md", "lg"],
   schema: {
     type: "object",
-    required: ["name"],
+    required: ["name", "ios"],
     properties: {
       name: {
         type: "string",
         default: "UIO",
+        title: "Tile name",
         description: "Tile name",
       },
-      btn0: {title: "Button 0", ...ButtonSchema},
-      btn1: ButtonSchema,
-      btn2: ButtonSchema,
-      btn3: ButtonSchema,
+      ios: {
+        type: "array",
+        title: "I/O",
+        items: {
+          type: "integer",
+          enum: [0, 1, 2, 3, 4, 5, 6, 7]
+        },
+        uniqueItems: true
+      },
     },
   },
+  uischema: {
+    "ios": {
+      "ui:widget": "checkboxes",
+      "ui:options": {
+        "inline": true
+      }
+    },
+  }
 };
 
 export interface UioTileConfig {
   name: string;
-  slot: number;
-  btn0: {name: string, enabled: boolean, off: string, on: string};
-  btn1: {name: string, enabled: boolean, off: string, on: string};
-  btn2: {name: string, enabled: boolean, off: string, on: string};
-  btn3: {name: string, enabled: boolean, off: string, on: string};
+  ios: number[];
 }
 
-const UioTile = observer(({ config, uioState }: TileProps) => {
-  const configs = config as UioTileConfig;
+export function parseConfig(config: { [key: string]: any }): UioTileConfig {
+  const configs = {
+    name: "",
+    ios: [],
+    ...config,
+  } as UioTileConfig;
+  return configs;
+}
 
-  const btnItems = [{
-    info: configs.btn0,
-    state: uioState ? uioState.io0 : false,
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      // uioState?.setIoState(0, event.target.checked ? 1 : 0);
+const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProps) => {
+  const configs = useMemo(() => parseConfig(config || {}), [config]);
+  const onChange = async (io: number, state: number) => {
+    if (uioState) {
+      console.log("Setting I/O", io, "to", state);
+      await uioState.updateIoState(io, state);
     }
-  }, {
-    info: configs.btn1,
-    state: uioState ? uioState.io1 : false,
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      // uioState?.setIoState(1, event.target.checked ? 1 : 0);
-    }
-  }, {
-    info: configs.btn2,
-    state: uioState ? uioState.io2 : false,
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      // uioState?.setIoState(2, event.target.checked ? 1 : 0);
-    }
-  }, {
-    info: configs.btn3,
-    state: uioState ? uioState.io3 : false,
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-      // uioState?.setIoState(3, event.target.checked ? 1 : 0);
-    }
-  }];
-
+  }
+  const gridSize = size === "lg" ? 4 : size === "md" ? 6 : 12;
   return (
     <GridContainer>
       <GridZStack level={0}>
@@ -105,33 +75,44 @@ const UioTile = observer(({ config, uioState }: TileProps) => {
           alignItems="center"
           p={1}
         >
-          <FormGroup>
-          <Grid container spacing={1} width="100%" height="100%" pb={4}>
-            {btnItems.map((btn, idx) => (
-              <Grid xs={6} key={`btn-${btn.info.name}-${idx}`}>
-                <Stack direction="column" alignItems="center">
-                <Stack direction="row" alignItems="center">
-                  <Switch
-                    checked={!!btn.state}
-                    onChange={btn.onChange}
-                    size="small"
-                    disabled={!btn.info.enabled || !uioState} />
-                  <Typography variant="button" fontWeight={800} >
-                    {btn.state ? btn.info.on: btn.info.off}
-                  </Typography>
-                </Stack>
-                <Typography variant="button">
-                  {btn.info.name}
-                </Typography>
-                </Stack>
-              </Grid>
-            ))}
+          <Grid
+            container
+            spacing={0.5}
+            width="100%"
+            height="100%"
+            m={1}
+            overflow="scroll"
+            flexDirection="row"
+            justifyContent="center"
+            alignContent="center"
+            alignItems="center"
+          >
+            {configs.ios.map((io, idx) => {
+              const state = uioState ? uioState.state[io] : 0;
+              const info = dashboard.device.uio.list[io];
+              return (
+                <Grid xs={gridSize}
+                  key={`io-${io}`}
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  flexDirection="column"
+                >
+                  <IoControl
+                    io={io}
+                    info={info}
+                    state={state}
+                    onChange={(state: number) => onChange(io, state)}
+                    disabled={!!pause}
+                  />
+                </Grid>
+              );
+            })}
           </Grid>
-          </FormGroup>
         </Stack>
       </GridZStack>
 
-      <GridZStack level={1} style={{pointerEvents: "none"}}>
+      <GridZStack level={1} style={{ pointerEvents: "none" }}>
         <Stack
           width="100%"
           height="100%"
@@ -147,7 +128,7 @@ const UioTile = observer(({ config, uioState }: TileProps) => {
           }}
         >
           <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-            UIO
+            I/O
           </Typography>
         </Stack>
       </GridZStack>

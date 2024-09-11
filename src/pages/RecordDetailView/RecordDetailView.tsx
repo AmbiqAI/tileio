@@ -11,7 +11,7 @@ import {
 import { observer } from "mobx-react";
 import { useStore } from "../../models/store";
 import Footer from "../../components/Footer";
-import { IRecord, NotFoundRecord } from "../../models/record";
+import Record, { IRecord } from "../../models/record";
 import RecordDetailHeader from "./components/RecordDetailHeader";
 import RecordDetailFooter from "./components/RecordDetailFooter";
 import TileCard from "./components/TileCard";
@@ -24,10 +24,10 @@ const RecordDetailView = () => {
   const { id } = useParams<RecordParams>();
   const { root: { recordById } } = useStore();
 
-  let record = recordById(id) as IRecord|undefined;
+  let record = recordById(id);
 
   if (record === undefined) {
-    record = NotFoundRecord(id);
+    record = Record.create({ id: id });
     return (
       <Box sx={{ pb: 8, pt: 8, pl: 4 }}>
         <RecordDetailHeader record={record} disabled={true} />
@@ -84,7 +84,7 @@ const RecordDetailView = () => {
           width="100%"
           margin="auto"
         >
-          {record.settings.tiles.map((item, idx) => {
+          {record.dashboard.tiles.map((item, idx) => {
             return (
               <TileCard key={`${item.name}-${idx}`}
                 name={item.name}
@@ -97,44 +97,6 @@ const RecordDetailView = () => {
           })}
         </Grid>
       </Fade>
-      {/* <Fade in>
-        <Stack direction="column">
-          <Stack
-            direction="row"
-            justifyContent="center"
-            height="100%"
-            width="100%"
-          >
-            <Grid
-              m={0}
-              container
-              spacing={1.5}
-              justifyContent="flex-start"
-              alignContent="flex-start"
-              alignItems="flex-start"
-              pl={"8px"} pr={"16px"}
-              height="100%" width="100%"
-              flexGrow={0}
-              sx={{ maxWidth: "1280px" }}
-            >
-              <Grid flexGrow={0} xs={12} xl={12}>
-                <Card
-                  elevation={1}
-                  sx={{
-                    m: 0,
-                    p: 0,
-                    borderRadius: 2,
-                    height: 576,
-                    maxWidth: 1024,
-                    minWidth: 124,
-                  }}
-                >
-                </Card>
-              </Grid>
-            </Grid>
-          </Stack>
-        </Stack>
-      </Fade> */}
       <RecordDetailFooter record={record} />
     </Box>
   );

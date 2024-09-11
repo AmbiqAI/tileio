@@ -1,4 +1,5 @@
 import { IDeviceInfo, IDeviceInfoSnapshot } from "../models/deviceInfo";
+import { ISlotConfig } from "../models/slot";
 import { DeviceInterfaceType } from "../models/types";
 import { delay } from "../utils";
 import { BleHandler } from "./ble";
@@ -16,10 +17,7 @@ export class ApiManager {
   constructor() {
     this.devices = {};
     this.initialized = false;
-    this.handlers = {
-      [DeviceInterfaceType.ble]: undefined,
-      [DeviceInterfaceType.usb]: undefined
-    };
+    this.handlers = {} as Record<DeviceInterfaceType, ApiHandler>;
   }
 
   async initialize(mode: ApiModeType): Promise<boolean> {
@@ -43,66 +41,66 @@ export class ApiManager {
     return true;
   }
 
-  getDeviceHandler(deviceId: string, deviceInfo?: IDeviceInfo): ApiHandler {
+  getAvailableInterfaces(): DeviceInterfaceType[] {
+    /**
+     * Get the list of available interfaces
+     * @returns List of available interfaces
+     */
+    return Object.keys(this.handlers) as DeviceInterfaceType[];
+  }
+
+  getDeviceHandler(deviceId: string): ApiHandler {
     /**
      * Get the handler for a device
      * @param deviceId Device ID
-     * @param deviceInfo Device information (optional)
      * @returns Handler for the device
      */
-    if (deviceInfo) {
-      this.devices[deviceId] = deviceInfo;
-    }
     let deviceInfoSnapshot = this.devices[deviceId];
     if (!deviceInfoSnapshot || !deviceInfoSnapshot.type) {
       throw new Error(`Device ${deviceId} not found`);
     }
     const handler = this.handlers[deviceInfoSnapshot.type];
-    if (!handler) {
-      throw new Error(`Handler for ${deviceInfoSnapshot.type} not found`);
+    if (handler === undefined) {
+      throw new Error(`Handler ${deviceInfoSnapshot.type} not available`);
     }
     return handler;
   }
 
-  async scan(cb: (deviceId: string, name: string, type: DeviceInterfaceType) => boolean, timeout: number): Promise<void> {
+  async scan(iface: DeviceInterfaceType, cb: (deviceId: string, name: string, type: DeviceInterfaceType) => boolean, timeout: number): Promise<void> {
     /**
-     * Perform scan on all handlers to discover new devices
+     * Perform scan for devices on a interface
+     * @param iface Interface type
      * @param cb Callback function to be called when a device is found
      * @param timeout Timeout in milliseconds per handler
      */
 
-    // Scan for devices on all handlers one by one (some platforms require user interaction to start scanning)
-    let numScans = 0;
-    for await (const [stype, handler] of Object.entries(this.handlers)) {
-      const handlerType = stype as DeviceInterfaceType;
-      let done = false;
-      if (handler === undefined) {
-        continue;
-      }
-      await handler.startScan((deviceId: string, name: string) => {
-        let deviceInfo = this.devices[deviceId];
-        if (!deviceInfo) {
-          console.info(`Found new device ${deviceId} ${name} ${handlerType}`);
-          deviceInfo = { id: deviceId, name: name, type: handlerType };
-          this.devices[deviceId] = deviceInfo;
-        }
-        deviceInfo.name = name;
-        deviceInfo.type = handlerType;
-        done = cb(deviceId, name, handlerType);
-        return done;
-      });
-      numScans++;
-      const start = Date.now();
-      while (!done && Date.now() - start < timeout) {
-        await delay(100);
-      };
-      if (!done) {
-        await handler.stopScan();
-      }
+    let done = false;
+    console.debug(`Scanning for devices on iface ${iface}`);
+    const handler = this.handlers[iface];
+    if (handler === undefined) {
+      console.warn(`Handler ${iface} not available`);
+      return;
     }
-    if (numScans === 0) {
-      console.warn('No interfaces available on platform');
-      throw new Error('No interfaces available on platform');
+
+    await handler.startScan((deviceId: string, name: string) => {
+      let deviceInfo = this.devices[deviceId];
+      if (!deviceInfo) {
+        console.debug(`Found new device ${deviceId} ${name}`);
+        deviceInfo = { id: deviceId, name: name, type: iface };
+        this.devices[deviceId] = deviceInfo;
+      }
+      deviceInfo.name = name;
+      deviceInfo.type = iface;
+      done = cb(deviceId, name, iface);
+      return done;
+    });
+
+    const start = Date.now();
+    while (!done && Date.now() - start < timeout) {
+      await delay(100);
+    };
+    if (!done) {
+      await handler.stopScan();
     }
   }
 
@@ -125,28 +123,27 @@ export class ApiManager {
       console.warn('No interfaces available on platform');
       throw new Error('No interfaces available on platform');
     }
-
   }
 
-  async refreshPreviousDevice(deviceInfo: IDeviceInfo): Promise<boolean> {
+  async refreshPreviousDevice(deviceId: string): Promise<boolean> {
     /**
      * Refresh a single device by ID to check if it is still available
-     * @param deviceInfo Device information
+     * @param deviceId Device ID
      * @returns True if the device is still available
      */
-    const handler = this.getDeviceHandler(deviceInfo.id, deviceInfo);
-    return await handler.refreshPreviousDevice(deviceInfo.id);
+    const handler = this.getDeviceHandler(deviceId);
+    return await handler.refreshPreviousDevice(deviceId);
   }
 
-  async deviceConnect(deviceId: string, deviceInfo: IDeviceInfo, onDisconnect?: (deviceId: string) => void): Promise<void> {
+  async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
     /**
      * Connect to a device
      * @param deviceId Device ID
-     * @param deviceInfo Device information
+     * @param slots Slot configurations
      * @param onDisconnect Callback function to be called when the device is disconnected
      */
-    const handler = this.getDeviceHandler(deviceId, deviceInfo);
-    await handler.deviceConnect(deviceId, deviceInfo, onDisconnect);
+    const handler = this.getDeviceHandler(deviceId);
+    await handler.deviceConnect(deviceId, slots, onDisconnect);
   }
 
   async deviceDisconnect(deviceId: string): Promise<void> {

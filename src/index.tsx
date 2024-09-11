@@ -14,7 +14,7 @@ import App from "./App";
 import "./index.css";
 import "./plugins";
 import { lightTheme, darkTheme } from "./theme/theme";
-import { useMediaQuery } from "@mui/material";
+import { Box, CircularProgress, Dialog, useMediaQuery } from "@mui/material";
 import { observer } from "mobx-react";
 import { useStore } from "./models/store";
 import { ThemeModeType } from "./models/settings";
@@ -29,8 +29,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+const SplashScreen = observer(({ initialized }: { initialized: boolean }) => {
+  return (
+    <Dialog open={!initialized}>
+      <Box sx={{ display: 'flex' }}>
+        <CircularProgress />
+      </Box>
+    </Dialog>
+  )
+});
+
+
 const AppContainer = observer(() => {
-  const { root: { settings: { isDarkMode, themeMode, setTheme } } } = useStore();
+  const { root: { settings: { isDarkMode, themeMode, setTheme }, initialized } } = useStore();
   const systemDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
   const useDarkMode =
     isDarkMode ||
@@ -44,6 +55,7 @@ const AppContainer = observer(() => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <App />
+      <SplashScreen initialized={initialized} />
     </ThemeProvider>
   );
 });

@@ -7,7 +7,7 @@ import persist from '../utils/persist';
 const TIO_STORAGE_KEY = '__tio_store';
 
 const root = Root.create({
-  devices: [],
+  dashboards: [],
   records: [],
   settings: {}
 });
@@ -25,12 +25,11 @@ const storage = new Storage({
 storage.create().then(() => {
   persist('rootStore', root, storage, {
     jsonify: true,
-    whitelist: ['devices', 'records', 'settings']
+    whitelist: ['dashboards', 'records', 'settings']
   }).then(() => {
     store.root.initialize();
   });
 });
-
 
 unprotect(root);
  // @ts-ignore

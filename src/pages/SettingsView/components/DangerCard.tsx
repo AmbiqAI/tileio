@@ -17,7 +17,7 @@ import { useStore } from "../../../models/store";
 
 const DangerCard = () => {
   const {
-    root: { devices, records, removeAllDevices, removeAllRecords },
+    root: { dashboards, records, removeAllDashboards, removeAllRecords },
   } = useStore();
   const [confirmTitle, setConfirmTitle] = useState("");
   const [confirmCount, setConfirmCount] = useState(0);
@@ -50,7 +50,7 @@ const DangerCard = () => {
             alignItems="center"
             mb={2}
           >
-            <Typography> Delete All Devices </Typography>
+            <Typography> Delete All Dashboards </Typography>
             <Button
               size="small"
               variant="outlined"
@@ -59,12 +59,12 @@ const DangerCard = () => {
               startIcon={<DeleteIcon />}
               onClick={() => {
                 setConfirmTitle(
-                  `Are you sure you want to remove all ${devices.length} device(s) ?`
+                  `Are you sure you want to remove all ${dashboards.length} dashboard(s) ?`
                 );
-                setConfirmCount(devices.length);
+                setConfirmCount(dashboards.length);
                 setConfirmOpen(true);
                 setOnConfirm(() => async () => {
-                  await removeAllDevices();
+                  await removeAllDashboards();
                 });
               }}
             >

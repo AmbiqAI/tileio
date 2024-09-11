@@ -21,22 +21,32 @@ export const persist: IArgs = (name, store, storage, options = {}) => {
   const whitelistDict = arrToDict(whitelist);
   const blacklistDict = arrToDict(blacklist);
 
-  onSnapshot(store, async (_snapshot: StrToAnyMap) => {
-    const snapshot = { ..._snapshot };
-    Object.keys(snapshot).forEach((key) => {
-      if (whitelist && !whitelistDict[key]) { delete snapshot[key]; }
-      if (blacklist && blacklistDict[key]) { delete snapshot[key]; }
-    });
-    const data = !jsonify ? snapshot : JSON.stringify(snapshot)
-    await storage.set(name, data);
-  })
+  // onSnapshot(store, async (_snapshot: StrToAnyMap) => {
+  //   const snapshot = { ..._snapshot };
+  //   Object.keys(snapshot).forEach((key) => {
+  //     if (whitelist && !whitelistDict[key]) { delete snapshot[key]; }
+  //     if (blacklist && blacklistDict[key]) { delete snapshot[key]; }
+  //   });
+  //   const data = !jsonify ? snapshot : JSON.stringify(snapshot)
+  //   await storage.set(name, data);
+  // })
 
   return storage.get(name)
     .then((data: object | string) => {
       const snapshot = !isString(data) ? data : JSON.parse(data)
       // don't apply falsey (which will error), leave store in initial state
-      if (!snapshot) { return }
-      applySnapshot(store, snapshot)
+      if (snapshot) {
+        applySnapshot(store, snapshot)
+      }
+      onSnapshot(store, async (_snapshot: StrToAnyMap) => {
+        const snapshot = { ..._snapshot };
+        Object.keys(snapshot).forEach((key) => {
+          if (whitelist && !whitelistDict[key]) { delete snapshot[key]; }
+          if (blacklist && blacklistDict[key]) { delete snapshot[key]; }
+        });
+        const data = !jsonify ? snapshot : JSON.stringify(snapshot)
+        await storage.set(name, data);
+      })
     })
 }
 

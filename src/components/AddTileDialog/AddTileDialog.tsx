@@ -22,7 +22,7 @@ import { useTheme } from "@mui/material";
 import { Form } from "@rjsf/mui";
 import validator from '@rjsf/validator-ajv8';
 import { RegisteredTiles, TileSpec } from "../Tiles/BaseTile";
-import { ITileSnapshot } from "../../models/dashboardSettings";
+import { ITileSnapshot } from "../../models/tile";
 
 interface Props {
   open: boolean;
@@ -47,11 +47,10 @@ const AddTileDialog = ({ open, onSubmit, onClose }: Props) => {
   return (
     <Dialog
       open={open}
+      disableRestoreFocus
       fullWidth
       maxWidth="sm"
-      onClose={() => {
-        onClose();
-      }}
+      onClose={onClose}
     >
       <DialogTitle>
         Add Tile
@@ -77,6 +76,7 @@ const AddTileDialog = ({ open, onSubmit, onClose }: Props) => {
         >
       {activeStep === TILE_SELECT_STEP && (
         <Autocomplete
+          autoFocus
           inputValue={inputValue}
           onInputChange={(event, newInputValue) => {
             setInputValue(newInputValue);
@@ -112,6 +112,7 @@ const AddTileDialog = ({ open, onSubmit, onClose }: Props) => {
             uiSchema={selectedTile.uischema}
             formData={formData}
             validator={validator}
+            liveValidate
             onChange={(e) => setFormData(e.formData)}
             children={true}
           />

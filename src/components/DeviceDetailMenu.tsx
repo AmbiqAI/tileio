@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useHistory } from 'react-router-dom';
 import {
   Divider, Fade, IconButton, ListItemIcon,
   ListItemText, Menu, MenuItem,
@@ -7,28 +6,29 @@ import {
 import MoreIcon from '@mui/icons-material/MoreVert';
 import { observer } from 'mobx-react';
 import RefreshIcon from '@mui/icons-material/RefreshRounded';
-import SettingsIcon from '@mui/icons-material/DashboardCustomizeRounded';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { IDevice } from '../models/device';
 import DeviceStateIcon from './DeviceStateIcon';
-import DashboardSettingsDialog from './DashboardSettingsDialog';
-import { IDashboardSettings } from '../models/dashboardSettings';
-import ConfirmCountDialog from './ConfirmCountDialog';
+import DeviceDialog from './DeviceDialog';
+import { IDevice } from '../models/device';
+import { useStore } from '../models/store';
+import { IDashboard } from '../models/dashboard';
 
 interface Props {
-  device: IDevice;
+  dashboard: IDashboard;
+  device?: IDevice;
 }
 
-const DeviceDetailMenu = ({ device }: Props) => {
-  const history = useHistory();
-  const deviceState = device.state;
-  const [isDeviceSettingsDialogOpen, showDeviceSettingsDialog] = useState(false);
+const DeviceDetailMenu = ({ device, dashboard }: Props) => {
+  const { root: { clearActiveDevice } } = useStore();
   const [moreActionsAnchorEl, setMoreActionsAnchorEl] = useState<null | HTMLElement>(null);
   const openMoreActions = Boolean(moreActionsAnchorEl);
 
+  const [isDeviceDialogOpen, showDeviceDialog] = useState(false);
+
   const handleConnectClick = async () => {
-    if (deviceState.connected) { await device.disconnect(); }
-    else { await device.connect(); }
+    if (device === undefined) { return; }
+    if (device.state.connected) { await device.disconnect(); }
+    else { await device.connect(dashboard); }
     handleCloseMoreActions();
   };
   const handleMoreActionsClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -38,17 +38,14 @@ const DeviceDetailMenu = ({ device }: Props) => {
     setMoreActionsAnchorEl(null);
   };
 
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-
   return (
     <>
-    <IconButton size="large" aria-label="more"
-      color="primary" edge="end"
-      onClick={handleMoreActionsClick}
-    >
-      <MoreIcon />
-    </IconButton>
-
+      <IconButton sx={{margin: "auto"}} size="large" aria-label="more"
+        edge="end"
+        onClick={handleMoreActionsClick}
+      >
+        <MoreIcon />
+      </IconButton>
 
       <Menu
         id="long-menu"
@@ -62,81 +59,60 @@ const DeviceDetailMenu = ({ device }: Props) => {
         onClose={handleCloseMoreActions}
         slotProps={{
           paper: {
-          style: {
+            style: {
               maxHeight: 48 * 5.5,
-              width: '20ch',
+              // width: '20ch',
             },
           }
         }}
       >
 
-        <MenuItem key="connect"
-          disabled={deviceState.connecting || deviceState.disconnecting || !deviceState.online}
-          onClick={handleConnectClick}
-        >
-          <ListItemIcon>
-            <DeviceStateIcon type={device.info.type} online={deviceState.online} connected={deviceState.connecting} />
-          </ListItemIcon>
-          <ListItemText>{deviceState.connected ? "Disconnect" : "Connect"}</ListItemText>
-        </MenuItem>
-
-
-        <MenuItem key="settings" onClick={async () => {
-          showDeviceSettingsDialog(true);
-          handleCloseMoreActions();
-        }}>
-          <ListItemIcon>
-            <SettingsIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Settings</ListItemText>
-        </MenuItem>
+        {!!device && (
+          <MenuItem key="connect"
+            disabled={device.state.connecting || device.state.disconnecting || !device.state.online}
+            onClick={handleConnectClick}
+          >
+            <ListItemIcon>
+              <DeviceStateIcon type={device.type} online={device.state.online} connected={device.state.connecting} />
+            </ListItemIcon>
+            <ListItemText>{device.state.connected ? "Disconnect" : "Connect"}</ListItemText>
+          </MenuItem>
+        )}
 
         <MenuItem key="refresh" onClick={async () => {
-          await device.refresh();
+          showDeviceDialog(true);
           handleCloseMoreActions();
         }}>
           <ListItemIcon>
             <RefreshIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Refresh</ListItemText>
+          <ListItemText>Select Device</ListItemText>
         </MenuItem>
 
-        <Divider />
-
-        <MenuItem key="delete" color='red' onClick={async () => {
-          setDeleteConfirmOpen(true);
-          handleCloseMoreActions();
-        }}>
-          <ListItemIcon sx={{ color: 'error.main' }}>
-            <DeleteIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText sx={{ color: 'error.main' }}>Forget Device</ListItemText>
-        </MenuItem>
+        {!!device && (
+          <div>
+            <Divider />
+            <MenuItem
+              key="delete"
+              color='red'
+              onClick={async () => {
+                await clearActiveDevice();
+                handleCloseMoreActions();
+              }}>
+              <ListItemIcon sx={{ color: 'error.main' }}>
+                <DeleteIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText sx={{ color: 'error.main' }}>Forget Device</ListItemText>
+            </MenuItem>
+          </div>
+        )}
 
       </Menu>
 
-      <DashboardSettingsDialog
-        settings={device.settings}
-        open={isDeviceSettingsDialogOpen}
-        onSubmit={async (settings: IDashboardSettings) => {
-          device.setSettings(settings);
-        }}
-        onClose={() => { showDeviceSettingsDialog(false); }}
-        disabled={false}
-      />
-
-      <ConfirmCountDialog
-        title={"Are you sure you want to forget this device?"}
-        count={1}
-        open={deleteConfirmOpen}
-        setOpen={(open) =>
-          setDeleteConfirmOpen(open)
-        }
-        onConfirm={async () => {
-          await device.delete();
-          setDeleteConfirmOpen(false);
-          history.push('/devices');
-        }}
+      <DeviceDialog
+        dashboard={dashboard}
+        open={isDeviceDialogOpen}
+        close={() => { showDeviceDialog(false); }}
       />
 
     </>

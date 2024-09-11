@@ -21,7 +21,7 @@ interface Props {
   hideLabel?: boolean;
 }
 
-const IoSlider = ({ io, info, state, onChange, disabled, hideLabel }: Props) => {
+const IoSlider = ({ info, state, onChange, disabled }: Props) => {
   const [isDirty, setDirty] = useState(false);
   const [value, setValue] = useState(state);
   const [isSubmitting, setSubmitting] = useState(false);
@@ -63,10 +63,7 @@ const IoControl = ({ io, info, state, onChange, disabled, hideLabel }: Props) =>
   return (
     <>
       {info.ioType === UIOType.Momentary && (
-        <Stack direction="row" alignItems="center">
-          {/* <Typography variant="subtitle2" fontWeight={800} >
-            TEST
-          </Typography> */}
+        <Stack direction="row" alignItems="center" justifyContent="center">
           <Button
             variant="contained"
             color="primary"
@@ -80,7 +77,7 @@ const IoControl = ({ io, info, state, onChange, disabled, hideLabel }: Props) =>
         </Stack>
       )}
       {info.ioType === UIOType.Toggle && (
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" alignItems="center" justifyContent="center">
           <Typography variant="subtitle2" fontWeight={800} >
             {info.off}
           </Typography>
@@ -107,7 +104,7 @@ const IoControl = ({ io, info, state, onChange, disabled, hideLabel }: Props) =>
         />
       )}
       {info.ioType === UIOType.Select && (
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" alignItems="center" justifyContent="center">
           <FormControl sx={{ m: 1, minWidth: 110 }} size="small">
             <Select
               value={state}

@@ -79,7 +79,6 @@ export const BarSlideTileSpec: TileSpec = {
   type: "BAR_SLIDE_TILE",
   name: "Bar Slide Tile",
   description: "Display static bar plots",
-  streamingRequired: false,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',

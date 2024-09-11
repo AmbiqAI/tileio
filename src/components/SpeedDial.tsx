@@ -16,9 +16,9 @@ function SpeedDialNav() {
   const actions = useMemo(() => {
     return [
       {
-        name: "Devices",
+        name: "Dashboards",
         icon: <TileioIcon color="primary" htmlColor={theme.palette.primary.main} sx={{ fontSize: "28px" }} />,
-        onClick: () => { history.push("/devices");}
+        onClick: () => { history.push("/dashboards");}
       },
       {
         name: "Records",

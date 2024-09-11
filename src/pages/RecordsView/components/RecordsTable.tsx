@@ -55,13 +55,7 @@ const columns: GridColDef[] = [
     minWidth: 100,
     type: "number",
   },
-  { field: "deviceName", headerName: "Device", minWidth: 130 },
-  {
-    field: "deviceLocation",
-    headerName: "Location",
-    minWidth: 100,
-    hideable: true,
-  },
+  { field: "dashboard", headerName: "Dashboard", minWidth: 130 },
 ];
 
 function recordToRow(record: IRecord): GridRowModel {
@@ -69,8 +63,7 @@ function recordToRow(record: IRecord): GridRowModel {
     id: record.id,
     date: record.date,
     duration: record.duration,
-    deviceName: record.device.name,
-    deviceLocation: record.device.location
+    dashboard: record.dashboard.name,
   };
 }
 

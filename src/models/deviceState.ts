@@ -32,6 +32,18 @@ const DeviceState = types
   get disconnected() {
     return self.connectionState === DeviceConnectionType.DISCONNECTED;
   },
+  get connectStateName() {
+    switch (self.connectionState) {
+      case DeviceConnectionType.CONNECTING:
+        return 'Connecting';
+      case DeviceConnectionType.CONNECTED:
+        return 'Connected';
+      case DeviceConnectionType.DISCONNECTING:
+        return 'Disconnecting';
+      case DeviceConnectionType.DISCONNECTED:
+        return 'Disconnected';
+    }
+  }
 }))
 .actions(self => ({
   setOnline: function(online: boolean) {

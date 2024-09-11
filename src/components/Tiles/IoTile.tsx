@@ -3,14 +3,12 @@ import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import IoControl from "../IoControl";
-import { delay } from "../../utils";
 import { useMemo } from "react";
 
 export const IoTileSpec: TileSpec = {
   type: "IO_TILE",
   name: "IO Tile",
   description: "Display user I/O",
-  streamingRequired: false,
   sizes: ["sm", "md"],
   schema: {
     type: "object",
@@ -47,11 +45,10 @@ export function parseConfig(config: { [key: string]: any }): IoTileConfig {
 }
 
 
-const UioTile = observer(({ config, uioState, device, pause }: TileProps) => {
+const UioTile = observer(({ config, uioState, dashboard, pause }: TileProps) => {
 
   const configs = useMemo(() => parseConfig(config || {}), [config]);
-
-  const info = device.uio.list[configs.io] || null;
+  const info = dashboard.device.uio.list[configs.io] || null;
   const state = uioState ? uioState.state[configs.io] : 0;
   const onChange = async (state: number) => {
     if (uioState) {
@@ -62,7 +59,7 @@ const UioTile = observer(({ config, uioState, device, pause }: TileProps) => {
   return (
     <GridContainer>
 
-    <GridZStack level={1}>
+      <GridZStack level={1}>
         <Stack
           width="100%"
           height="100%"
@@ -87,18 +84,17 @@ const UioTile = observer(({ config, uioState, device, pause }: TileProps) => {
           alignItems="center"
           p={1}
         >
-            <IoControl
+          <IoControl
             io={configs.io}
             info={info}
             state={state}
             onChange={onChange}
             disabled={!!pause}
-            hideLabel
           />
         </Stack>
       </GridZStack>
 
-      <GridZStack level={1} style={{pointerEvents: "none"}}>
+      <GridZStack level={1} style={{ pointerEvents: "none" }}>
         <Stack
           width="100%"
           height="100%"

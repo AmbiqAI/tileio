@@ -12,7 +12,6 @@ export const MetricsStreamTileSpec: TileSpec =   {
   type: "METRICS_STREAM_TILE",
   name: "Metrics Stream Tile",
   description: "Stream metrics data",
-  streamingRequired: true,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',

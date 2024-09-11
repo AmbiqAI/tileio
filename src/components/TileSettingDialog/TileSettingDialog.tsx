@@ -11,19 +11,19 @@ import {
 } from "@mui/material";
 import { Form } from "@rjsf/mui";
 import validator from '@rjsf/validator-ajv8';
-import { ITile } from "../../models/dashboardSettings";
+import { ITile } from "../../models/tile";
 import { TileSpec } from "../Tiles/BaseTile";
 
 interface Props {
   open: boolean;
-  layout: ITile;
+  tile: ITile;
   spec: TileSpec;
   config: { [key: string]: any };
   onClose: () => void;
   onSubmit: (formData: any) => Promise<void>;
 }
 
-const TileSettingDialog = ({ open, onSubmit, onClose, layout, spec, config }: Props) => {
+const TileSettingDialog = ({ open, onSubmit, onClose, tile, spec, config }: Props) => {
   const [formData, setFormData] = useState(config);
   return (
     <Dialog
@@ -35,7 +35,7 @@ const TileSettingDialog = ({ open, onSubmit, onClose, layout, spec, config }: Pr
       }}
     >
       <DialogTitle>
-        {layout.name}
+        {tile.name}
       </DialogTitle>
 
       <Divider />
@@ -49,6 +49,7 @@ const TileSettingDialog = ({ open, onSubmit, onClose, layout, spec, config }: Pr
           uiSchema={spec.uischema}
           formData={formData}
           validator={validator}
+          liveValidate
           onChange={(e) => setFormData(e.formData)}
           children={true}
         />
@@ -62,7 +63,6 @@ const TileSettingDialog = ({ open, onSubmit, onClose, layout, spec, config }: Pr
           variant="outlined"
           autoFocus
           onClick={() => {
-            // console.debug(formData);
             onSubmit(formData);
           }}>
           Save

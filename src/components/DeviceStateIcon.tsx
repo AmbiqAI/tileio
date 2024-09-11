@@ -6,9 +6,10 @@ import UsbConnectedIcon from "@mui/icons-material/UsbRounded"
 import UsbOffIcon from "@mui/icons-material/UsbOffRounded";
 
 import { SvgIconProps, Tooltip } from "@mui/material";
+import { DeviceInterfaceType } from "../models/types";
 
 interface Props extends SvgIconProps {
-  type: string;
+  type: DeviceInterfaceType;
   connected: boolean;
   online: boolean;
 }
@@ -17,43 +18,31 @@ const DeviceStateIcon = (props: Props) => {
 
   const { type, connected, online, ...cprops } = props;
 
-  if (type === "ble") {
+  if (type === DeviceInterfaceType.ble) {
     if (connected) {
       return (
-        // <Tooltip title="Connected" arrow>
           <BluetoothConnectedIcon {...cprops} />
-        // </Tooltip>
       );
     } else if (online) {
       return (
-        // <Tooltip title="Available" arrow>
           <BluetoothOnIcon {...cprops} />
-        // </Tooltip>
       );
     }
     return (
-      // <Tooltip title="Unavailable" arrow>
         <BluetoothOffIcon {...cprops} />
-      // </Tooltip>
     )
   } else {
     if (connected) {
       return (
-        // <Tooltip title="Connected" arrow>
           <UsbConnectedIcon {...cprops} />
-        // </Tooltip>
       );
     } else if (online) {
       return (
-        // <Tooltip title="Available" arrow>
           <UsbOnIcon {...cprops} />
-        // </Tooltip>
       );
     }
     return (
-      // <Tooltip title="Unavailable" arrow>
         <UsbOffIcon {...cprops} />
-      // </Tooltip>
     )
   }
 };

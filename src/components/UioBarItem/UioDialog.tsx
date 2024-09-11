@@ -5,50 +5,53 @@ import {
   DialogContent,
   Divider,
   Stack,
-  FormGroup,
   CardHeader,
   CardActions,
   IconButton,
   Avatar,
+  Box,
 } from "@mui/material";
 import RefreshIcon from '@mui/icons-material/RefreshRounded';
-import UioIcon from '@mui/icons-material/SettingsInputSvideoRounded';
+import UioIcon from '@mui/icons-material/TuneRounded';
+import CloseIcon from '@mui/icons-material/Close';
 import { IDevice } from "../../models/device";
-import Grid from "@mui/material/Unstable_Grid2/Grid2";
-import IoControl from "../IoControl";
 import { useState } from "react";
+import { IDashboard } from "../../models/dashboard";
+import IoCard from "./IoCard";
+
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  dashboard: IDashboard;
   device: IDevice;
 }
 
-const UioDialog = ({ open, onClose, device }: Props) => {
+const UioDialog = ({ open, onClose, dashboard, device }: Props) => {
 
   const ioItems = [{
-    info: device.info.uio.io0,
+    config: dashboard.device.uio.io0,
     state: device.uioState.io0,
   }, {
-    info: device.info.uio.io1,
+    config: dashboard.device.uio.io1,
     state: device.uioState.io1,
   }, {
-    info: device.info.uio.io2,
+    config: dashboard.device.uio.io2,
     state: device.uioState.io2,
   }, {
-    info: device.info.uio.io3,
+    config: dashboard.device.uio.io3,
     state: device.uioState.io3,
   }, {
-    info: device.info.uio.io4,
+    config: dashboard.device.uio.io4,
     state: device.uioState.io4,
   }, {
-    info: device.info.uio.io5,
+    config: dashboard.device.uio.io5,
     state: device.uioState.io5,
   }, {
-    info: device.info.uio.io6,
+    config: dashboard.device.uio.io6,
     state: device.uioState.io6,
   }, {
-    info: device.info.uio.io7,
+    config: dashboard.device.uio.io7,
     state: device.uioState.io7,
   }];
 
@@ -62,7 +65,8 @@ const UioDialog = ({ open, onClose, device }: Props) => {
       onClose={onClose}
     >
       <DialogTitle sx={{ p: 0 }}>
-      <CardHeader
+        <CardHeader
+          title="User I/O"
           titleTypographyProps={{ variant: "h6" }}
           avatar={
             <Avatar
@@ -70,7 +74,7 @@ const UioDialog = ({ open, onClose, device }: Props) => {
               aria-label="device"
               sx={{ bgcolor: "rgba(0,0,0,0)" }}
             >
-              <UioIcon color="action" fontSize="large"/>
+              <UioIcon color="action" fontSize="large" />
             </Avatar>
           }
           action={
@@ -84,41 +88,48 @@ const UioDialog = ({ open, onClose, device }: Props) => {
                   await device.uioState.fetchState();
                   setSubmitting(false);
                 }}
-
               >
                 <RefreshIcon fontSize="large" />
               </IconButton>
+              <IconButton
+                aria-label="close"
+                onClick={onClose}
+              >
+                <CloseIcon />
+              </IconButton>
             </CardActions>
           }
-          title="User I/O"
-
         />
       </DialogTitle>
       <Divider />
       <DialogContent>
-        <FormGroup>
-          <Grid container spacing={3} width="100%" height="100%" minWidth="480px" pb={4} justifyContent="space-evenly">
+
+        <Stack spacing={1} direction="row" justifyContent="center" height="100%" width="100%">
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              p: 2,
+              flexWrap: "wrap",
+            }}
+          >
+
             {ioItems.map((io, idx) => (
-              io.info.enabled && (
-                <>
-                <Grid xs={6} sm={4} lg={3} key={`io-${io.info.name}-${idx}`} flexGrow={1}>
-                  <Stack direction="column" alignItems="center" width="100%" flexGrow={1}>
-                    <IoControl
-                      io={idx}
-                      info={io.info}
-                      state={io.state}
-                      onChange={async (state: number) => {
-                        await device.uioState.updateIoState(idx, state);
-                      }}
-                      disabled={!device.state.connected} />
-                  </Stack>
-                </Grid>
-                <Divider />
-                </>
-              )
-            ))}
-          </Grid>
-        </FormGroup>
+              io.config.enabled && (
+                <Box key={`io-${idx}`} sx={{ margin: 1 }}>
+                  <IoCard
+                    index={idx}
+                    config={io.config}
+                    io={io.state}
+                    disabled={!device.state.connected}
+                    onChange={async (state: number) => {
+                      await device.uioState.updateIoState(idx, state);
+                    }}
+                  />
+                </Box>
+              )))}
+          </Box>
+        </Stack>
 
       </DialogContent>
     </Dialog>

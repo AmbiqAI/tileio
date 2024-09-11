@@ -1,97 +1,50 @@
 import { flow, Instance, types } from 'mobx-state-tree';
-import Device, { IDevice, IDeviceSnapshot, NewDevice } from './device';
+import Device, { IDevice } from './device';
+import Dashboard, { IDashboard, IDashboardSnapshot } from './dashboard';
 import Record, { IRecord, IRecordSnapshot } from './record';
-import ApiManager, { Notifier } from '../api';
+import { Notifier } from '../api';
 import Settings from './settings';
 import { closeDB, initDB } from '../db';
-import { DeviceInterfaceType } from './types';
+import Backend from './backend';
 
 export const Root = types
 .model('Root', {
   settings: Settings,
-  devices: types.array(Device),
+  dashboards: types.array(Dashboard),
   records: types.array(Record),
+  backend: types.optional(Backend, {}),
+  device: types.maybeNull(Device)
 })
 .volatile(self => ({
-  availableDevices: ([] as IDevice[]),
-  fetching: false,
+  initialized: false,
+  record: (undefined as IRecord|undefined),
 }))
 .views(self => ({
   recordById(targetId: string): IRecord|undefined {
     return self.records.find(({ id }) => id === targetId);
   },
-  deviceById(targetId: string): IDevice|undefined {
-    return self.devices.find(({ id }) => id === targetId);
-  },
-  availableDeviceById(targetId: string): IDevice|undefined {
-    return self.availableDevices.find(({ id }) => id === targetId);
+  dashboardById(targetId: string): IDashboard|undefined {
+    return self.dashboards.find(({ id }) => id === targetId);
   },
 }))
 .actions(self => ({
-  addAvailableDevice(deviceId: string, name: string, type: DeviceInterfaceType) {
-    if (!self.deviceById(deviceId)) {
-      const device = NewDevice(deviceId, {id: deviceId, name: name, type: type});
-      device.setOnline(true);
-      self.availableDevices = [device, ...self.availableDevices];
-    }
+  addDashboard(dashboard: IDashboardSnapshot) {
+      if (!self.dashboardById(dashboard.id!)){
+        const newDashboard = Dashboard.create(dashboard);
+        self.dashboards.push(newDashboard);
+      }
   },
-  removeAvailableDevice: function(deviceId: string) {
-    const dIdx = self.availableDevices.findIndex(d => d.id === deviceId);
-    if (dIdx >= 0) { self.availableDevices.splice(dIdx, 1); }
-  }
-}))
-.actions(self => ({
-  refreshDevices: flow(function *() {
-    if (self.fetching) { return; }
-    try {
-      self.fetching = true;
-      const deviceIds: string[] = [];
-      yield ApiManager.refreshPreviousDevices(self.devices.map(d => d.info), (deviceId: string, _name: string) => {
-        deviceIds.push(deviceId);
-        self.deviceById(deviceId)?.setOnline(true);
-      });
-      // Mark offline those not connected or not discovered
-      self.devices.forEach(device => {
-        device.setOnline(device.state.connected || deviceIds.includes(device.id));
-      });
-    } catch (error) {
-      Notifier.add({ message: `Failed fetching devices (${error})`, options: { variant: 'error' }});
-    } finally {
-      self.fetching = false;
-    }
+  removeDashboard: flow(function*(dasboardId: string) {
+    const dashboard = self.dashboardById(dasboardId);
+    if (dashboard) { yield dashboard.delete(); }
   }),
-  fetchDevices: flow(function*() {
-    if (self.fetching) { return; }
-    try {
-      self.fetching = true;
-      self.availableDevices.splice(0, self.availableDevices.length);
-      yield ApiManager.scan((deviceId: string, name: string, type: DeviceInterfaceType) => {
-        self.addAvailableDevice(deviceId, name, type);
-        return false;
-      }, 5000);
-    } catch (error) {
-      Notifier.add({ message: `Failed fetching devices: (${error})`, options: { variant: 'error' }});
-    } finally {
-      self.fetching = false;
+  removeAllDashboards: flow(function*() {
+    const dashboardIds = self.dashboards.map(d => d.id);
+    for (const dashboardId of dashboardIds) {
+      const dashboard = self.dashboardById(dashboardId);
+      if (dashboard) { yield dashboard.delete(); }
     }
-  }),
-  addDevice(device: IDeviceSnapshot) {
-    if (!self.deviceById(device.id)){
-      self.devices.push(device);
-      self.removeAvailableDevice(device.id);
-    }
-  },
-  removeDevice: flow(function*(deviceId: string) {
-    const device = self.deviceById(deviceId);
-    if (device) { yield device.delete(); }
-  }),
-  removeAllDevices: flow(function*() {
-    const deviceIds = self.devices.map(d => d.id);
-    for (const deviceId of deviceIds) {
-      const device = self.deviceById(deviceId);
-      if (device) { yield device.delete(); }
-    }
-    Notifier.add({ message: 'Removed all devices' });
+    Notifier.add({ message: 'Removed all dashboards' });
   }),
   addRecord(record: IRecordSnapshot) {
     const existingRecord = self.recordById(record.id as string);
@@ -111,18 +64,41 @@ export const Root = types
     }
     Notifier.add({ message: `Removed all records` });
   }),
-  clearRecords() {
-  },
+  setActiveDevice: flow(function*(deviceId: string) {
+    if (self.device) {
+      yield self.device.delete();
+    }
+    self.device = null;
+    const device = self.backend.deviceById(deviceId);
+    if (device) {
+      self.device = device;
+    }
+  }),
+  clearActiveDevice: flow(function*() {
+    try {
+      if (self.device) {
+        yield self.device.delete();
+      }
+    } catch (error) {
+      console.error(`Failed disconnecting from ${self.device?.name}. (${error})`);
+    }
+    self.device = null;
+  })
+
 }))
 .actions(self => ({
   afterCreate() {
+    console.log('root.afterCreate');
     initDB();
   },
   beforeDestroy() {
+    console.log('root.beforeDestroy');
     closeDB();
   },
   initialize: function() {
-    ApiManager.initialize(self.settings.apiMode);
+    console.log('Initializing root store');
+    self.backend.initialize(self.settings.apiMode);
+    self.initialized = true;
   },
 }));
 

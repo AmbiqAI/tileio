@@ -12,7 +12,6 @@ export const SegmentStreamTileSpec: TileSpec =   {
   type: "SEGMENTS_STREAM_TILE",
   name: "Segment Stream Tile",
   description: "Stream segments data",
-  streamingRequired: true,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',

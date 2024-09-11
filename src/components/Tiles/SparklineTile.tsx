@@ -9,7 +9,6 @@ export const SparklineTileSpec: TileSpec = {
   type: "SPARKLINE_TILE",
   name: "Sparkline Tile",
   description: "Display a sparkline of a metric",
-  streamingRequired: false,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',

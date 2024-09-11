@@ -1,4 +1,4 @@
-import { IDeviceInfo } from "../models/deviceInfo";
+import { ISlotConfig } from "../models/slot";
 
 export interface ApiHandler {
     initialize(): Promise<boolean>;
@@ -7,7 +7,7 @@ export interface ApiHandler {
     refreshPreviousDevices(deviceIds: string[], cb: (deviceId: string, name: string) => void): Promise<void>;
     refreshPreviousDevice(deviceId: string): Promise<boolean>;
     getConnectedDevices(): Promise<string[]>;
-    deviceConnect(deviceId: string, deviceInfo: IDeviceInfo, onDisconnect?: (deviceId: string) => void): Promise<void>;
+    deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void>;
     deviceDisconnect(deviceId: string): Promise<void>;
     enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void>;
     disableSlotNotifications(deviceId: string, slot: number): Promise<void>;

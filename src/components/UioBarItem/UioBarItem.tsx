@@ -7,32 +7,38 @@ import NavButton from "../NavButton";
 import UioDialog from "./UioDialog";
 import { useState } from "react";
 import { UIOType } from "../../models/uioState";
+import { IDashboard } from "../../models/dashboard";
 
-const UioBarItem = observer(({ device }: { device: IDevice }) => {
+interface Props {
+  device: IDevice;
+  dashboard: IDashboard;
+}
+
+const UioBarItem = observer(({ device, dashboard }: Props) => {
 
   const ioItems = [{
-    info: device.info.uio.io0,
+    info: dashboard.device.uio.io0,
     state: device.uioState.io0,
   }, {
-    info: device.info.uio.io1,
+    info: dashboard.device.uio.io1,
     state: device.uioState.io1,
   }, {
-    info: device.info.uio.io2,
+    info: dashboard.device.uio.io2,
     state: device.uioState.io2,
   }, {
-    info: device.info.uio.io3,
+    info: dashboard.device.uio.io3,
     state: device.uioState.io3,
   }, {
-    info: device.info.uio.io4,
+    info: dashboard.device.uio.io4,
     state: device.uioState.io4,
   }, {
-    info: device.info.uio.io5,
+    info: dashboard.device.uio.io5,
     state: device.uioState.io5,
   }, {
-    info: device.info.uio.io6,
+    info: dashboard.device.uio.io6,
     state: device.uioState.io6,
   }, {
-    info: device.info.uio.io7,
+    info: dashboard.device.uio.io7,
     state: device.uioState.io7,
   }];
 
@@ -78,6 +84,7 @@ const UioBarItem = observer(({ device }: { device: IDevice }) => {
       open={isDialogOpen}
       onClose={() => { showDialog(false); }}
       device={device}
+      dashboard={dashboard}
     />
     </>
   );

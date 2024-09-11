@@ -2,9 +2,9 @@
 
 import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
 import { delay } from '../utils';
-import { IDeviceInfo } from '../models/deviceInfo';
 import { ApiHandler } from './handler';
 import { isMobile, dataViewToSignalData, dataViewToMetrics } from './utils';
+import { ISlotConfig } from '../models/slot';
 
 const TIO_SVC_UUID = "EECB7DB8-8B2D-402C-B995-825538B49328";
 const TIO_SLOTS_SIG_CHAR_UUIDS = [
@@ -26,19 +26,19 @@ const TIO_BATT_LEVEL_CHAR_UUID = numberToUUID(0x2a19);
 
 export class BleHandler implements ApiHandler {
   initialized: boolean;
-  deviceInfo: Record<string, IDeviceInfo|undefined>;
+  deviceSlots: Record<string, ISlotConfig[]|undefined>;
   callbacks: Record<string, any>;
 
   constructor() {
     this.initialized = false;
-    this.deviceInfo = {};
+    this.deviceSlots = {};
     this.callbacks = {};
   }
 
   static async supportedPlatform(): Promise<boolean> {
     // BLE supported on mobile, chrome browser, and electron
     const mobile = await isMobile();
-    return mobile || !!navigator.bluetooth;
+    return mobile || !!navigator.bluetooth || true;
   }
 
   async initialize(): Promise<boolean> {
@@ -103,16 +103,16 @@ export class BleHandler implements ApiHandler {
     return devices.map(d => d.deviceId);
   }
 
-  async deviceConnect(deviceId: string, deviceInfo: IDeviceInfo, onDisconnect?: (deviceId: string) => void): Promise<void> {
+  async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
     await this.deviceDisconnect(deviceId);
-    this.deviceInfo[deviceId] = deviceInfo;
+    this.deviceSlots[deviceId] = slots;
     await BleClient.connect(deviceId, onDisconnect);
     await delay(100);
     await BleClient.getServices(deviceId);
   }
 
   async deviceDisconnect(deviceId: string): Promise<void> {
-    this.deviceInfo[deviceId] = undefined;
+    this.deviceSlots[deviceId] = undefined;
     await BleClient.disconnect(deviceId);
   }
 
@@ -134,15 +134,16 @@ export class BleHandler implements ApiHandler {
   async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
     try {
       console.log(`enableSlotNotifications ${deviceId} ${slot}`);
-      const deviceInfo = this.deviceInfo[deviceId];
-      if (deviceInfo === undefined || slot >= deviceInfo.slots.length) {
+      const slots = this.deviceSlots[deviceId];
+      if (slots === undefined || slot >= slots.length) {
         throw new Error('Device info not found');
       }
       await BleClient.startNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_SIG_CHAR_UUIDS[slot], async (data: DataView) => {
         try {
-          const numChs = deviceInfo.slots[slot].chs.length;
-          const fs = deviceInfo.slots[slot].fs;
-          const dtype = deviceInfo.slots[slot].dtype;
+          const numChs = slots[slot].chs.length;
+          const fs = slots[slot].fs;
+          const dtype = slots[slot].dtype;
+          console.log(`Data received: ${data.byteLength} ${numChs} ${fs} ${dtype}`);
           const rst = dataViewToSignalData(data, numChs, fs, dtype);
           await cb(slot, rst.signals, rst.mask);
         } catch (error) {
@@ -169,8 +170,8 @@ export class BleHandler implements ApiHandler {
   async enableSlotMetricsNotifications(deviceId: string, slot: number, cb: (slot: number, metrics: number[]) => void): Promise<void> {
     try {
       console.log(`enableSlotMetricsNotifications ${deviceId} ${slot}`);
-      const deviceInfo = this.deviceInfo[deviceId];
-      if (deviceInfo === undefined || slot >= deviceInfo.slots.length) {
+      const slots = this.deviceSlots[deviceId];
+      if (slots === undefined || slot >= slots.length) {
         throw new Error('Device info not found');
       }
       await BleClient.startNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_MET_CHAR_UUIDS[slot], async (data: DataView) => {

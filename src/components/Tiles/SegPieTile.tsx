@@ -11,7 +11,6 @@ export const SegPieTileSpec: TileSpec = {
   type: "SEG_PIE_TILE",
   name: "Seg Pie Tile",
   description: "Segmentation Pie Tile",
-  streamingRequired: true,
   sizes: ["sm", "md"],
   schema: {
     type: 'object',

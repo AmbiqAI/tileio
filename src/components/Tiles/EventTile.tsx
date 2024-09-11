@@ -8,7 +8,6 @@ export const EventTileSpec: TileSpec = {
   type: "EVENT_TILE",
   name: "Event Tile",
   description: "Add event marker",
-  streamingRequired: false,
   sizes: ["sm", "md"],
   schema: {},
 };

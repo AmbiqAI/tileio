@@ -5,7 +5,6 @@ export const PoincarePlotSpec: TileSpec = {
   type: "POINCARE_PLOT",
   name: "Poincare Tile",
   description: "Poincare of fiducials",
-  streamingRequired: false,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
@@ -30,24 +29,36 @@ export const PoincarePlotSpec: TileSpec = {
       },
       fiducial: {
         type: 'integer',
-        title: 'Fiducial mask',
+        title: 'Fiducial Mask',
         minimum: 0,
         maximum: 255,
         default: 0
       },
       primaryColor: {
         type: 'string',
-        title: "Primary color",
+        title: "Primary Color",
         default: ThemeColors.colors.primaryColor,
       },
       min: {
         type: 'number',
-        title: 'Minimum value',
+        title: 'Minimum Value',
       },
       max: {
         type: 'number',
-        title: 'Maximum value',
-      }
+        title: 'Maximum Value',
+      },
+      label: {
+        type: 'string',
+        title: 'Tile Label',
+      },
+      yTitle: {
+        type: 'string',
+        title: 'Y-axis Title',
+      },
+      title: {
+        type: 'string',
+        title: 'Plot Title',
+      },
     }
   },
   uischema: {
@@ -77,6 +88,9 @@ export interface PoincarePlotConfig {
   primaryColor: string;
   min?: number;
   max?: number;
+  label?: string;
+  yTitle?: string;
+  title?: string;
 }
 
 export function parseConfig(config: { [key: string]: any }): PoincarePlotConfig {

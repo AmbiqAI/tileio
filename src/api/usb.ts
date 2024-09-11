@@ -1,8 +1,8 @@
 /// <reference types="w3c-web-usb" />
 
 import { ApiHandler } from "./handler";
-import { IDeviceInfo } from '../models/deviceInfo';
 import { calculateCRC16, dataViewToSignalData, dataViewToMetrics, isMobile } from './utils';
+import { ISlotConfig } from "../models/slot";
 
 enum PacketType {
   Signal = 0,
@@ -11,38 +11,45 @@ enum PacketType {
 }
 
   // A packet includes the following fields:
-  //  START: 1 byte [0x55]
+  //  START: 1 bytes [0x55]
   //  SLOT: 1 byte [0,1,2,3]
   //  TYPE: 1 byte [0,1,2]
-  //  DATA: 242 bytes [...]
+  //  LENGTH: 2 bytes [Length of data]
+  //  DATA: 248 bytes [...]
   //  CRC: 2 bytes [CRC16]
   //  STOP: 1 byte [0xAA]
 
 const TIO_USB_VENDOR_ID = 0xCAFE
 const TIO_USB_PRODUCT_ID = 0x0001;
-const TIO_USB_PACKET_LEN = 248;
+const TIO_USB_PACKET_LEN = 256;
 const TIO_USB_START_IDX = 0;
 const TIO_USB_START_VAL = 0x55;
 const TIO_USB_SLOT_IDX = 1;
 const TIO_USB_TYPE_IDX = 2;
-const TIO_USB_DATA_IDX = 3;
-const TIO_USB_DATA_LEN = 242;
-const TIO_USB_CRC_IDX = 245;
+const TIO_USB_DLEN_IDX = 3;
+const TIO_USB_DLEN_LEN = 2;
+
+const TIO_USB_DATA_IDX = 5;
+const TIO_USB_DATA_LEN = 248;
+const TIO_USB_CRC_IDX = 253;
 const TIO_USB_CRC_LEN = 2;
-const TIO_USB_STOP_IDX = 247;
+const TIO_USB_STOP_IDX = 255;
 const TIO_USB_STOP_VAL = 0xAA;
+
+const TIO_USB_TX_HEADER_VAL = 0x02;
+const TIO_USB_TX_HEADER_LEN = 2;
 
 export class UsbHandler implements ApiHandler {
 
   initialized: boolean;
-  deviceInfo: Record<string, IDeviceInfo|undefined>;
+  deviceSlots: Record<string, ISlotConfig[]|undefined>;
   callbacks: Record<string, any>;
   _devices: USBDevice[];
   deviceFifos: Record<string, Uint8Array>;
 
   constructor() {
     this.initialized = false;
-    this.deviceInfo = {};
+    this.deviceSlots = {};
     this.callbacks = {};
     this._devices = [];
     this.deviceFifos = {};
@@ -93,6 +100,9 @@ export class UsbHandler implements ApiHandler {
     dataView.setUint8(TIO_USB_START_IDX, TIO_USB_START_VAL);
     dataView.setUint8(TIO_USB_SLOT_IDX, slot);
     dataView.setUint8(TIO_USB_TYPE_IDX, ptype);
+    // Set data length
+    dataView.setUint16(TIO_USB_DLEN_IDX, data.length, true);
+    // Fill data
     for (let i = 0; i < data.length; i++) {
       dataView.setUint8(TIO_USB_DATA_IDX + i, data[i]);
     }
@@ -100,7 +110,9 @@ export class UsbHandler implements ApiHandler {
     for (let i = data.length; i < TIO_USB_DATA_LEN; i++) {
       dataView.setUint8(TIO_USB_DATA_IDX + i, 0);
     }
-    const crc = calculateCRC16(Uint8Array.from(data));
+    // const crc = calculateCRC16(Uint8Array.from(data));
+    const crcData = new Uint8Array(dataView.buffer.slice(TIO_USB_DLEN_IDX, TIO_USB_DLEN_IDX + data.length + TIO_USB_DLEN_LEN));
+    const crc = calculateCRC16(crcData);
     dataView.setUint16(TIO_USB_CRC_IDX, crc, true);
     dataView.setUint8(TIO_USB_STOP_IDX, TIO_USB_STOP_VAL);
     return packet;
@@ -116,8 +128,10 @@ export class UsbHandler implements ApiHandler {
     const frameStart = packet.getUint8(TIO_USB_START_IDX);
     const slotIdx = packet.getUint8(TIO_USB_SLOT_IDX);
     const ptype = packet.getUint8(TIO_USB_TYPE_IDX);
+    const dLength = packet.getUint16(TIO_USB_DLEN_IDX, true);
+    // Include data length and data
     const data = new Uint8Array(packet.buffer.slice(
-      TIO_USB_DATA_IDX, TIO_USB_DATA_IDX + TIO_USB_DATA_LEN
+      TIO_USB_DLEN_IDX, TIO_USB_DLEN_IDX + dLength + 2
     ));
     const crc = packet.getUint16(TIO_USB_CRC_IDX, true);
     // Check CRC
@@ -131,21 +145,21 @@ export class UsbHandler implements ApiHandler {
       return null;
     }
 
-    const deviceInfo = this.deviceInfo[deviceId];
+    const slots = this.deviceSlots[deviceId];
 
     // Handle slot signal
     if (ptype == PacketType.Signal) {
       const cb = this.callbacks[`dev${deviceId}.slot${slotIdx}.sig`];
-      if (deviceInfo == undefined || slotIdx >= deviceInfo.slots.length || cb == undefined) {
+      if (slots == undefined || slotIdx >= slots.length || cb == undefined) {
         return null;
       }
-      const slot = deviceInfo.slots[slotIdx];
+      const slot = slots[slotIdx];
       const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.fs, slot.dtype);
       await cb(slotIdx, rst.signals, rst.mask);
 
     } else if (ptype == PacketType.Metrics) {
       const cb = this.callbacks[`dev${deviceId}.slot${slotIdx}.met`];
-      if (deviceInfo == undefined || slotIdx >= deviceInfo.slots.length || cb == undefined) {
+      if (slots == undefined || slotIdx >= slots.length || cb == undefined) {
         return null;
       }
       const rst = dataViewToMetrics(new DataView(data.buffer));
@@ -156,6 +170,10 @@ export class UsbHandler implements ApiHandler {
       if (cb == undefined) {
         return null;
       }
+      if (data.length !== 8) {
+        console.warn(`Invalid UIO state length: ${data.length}`);
+        return null;
+      }
       const state = Array.from(data).slice(0, 8);
       await cb(state);
 
@@ -163,7 +181,6 @@ export class UsbHandler implements ApiHandler {
   }
 
   async enqueueFrame(deviceId: string, frame: DataView): Promise<void> {
-
     // Combine with existing fifo
     this.deviceFifos[deviceId] = new Uint8Array([...this.deviceFifos[deviceId], ...new Uint8Array(frame.buffer)]);
 
@@ -199,14 +216,11 @@ export class UsbHandler implements ApiHandler {
     this._devices = [
       await navigator.usb.requestDevice({ filters: [{vendorId: TIO_USB_VENDOR_ID}] })
     ];
-    console.log(this._devices);
     this._devices.forEach(device => {
-      console.log(device);
       const deviceId = device.serialNumber || `${device.productId}`;
       const deviceName = device.productName || `${device.vendorId}:${device.productId}`;
       done = cb(deviceId, deviceName);
     });
-    console.log('Scan done');
   }
 
   async stopScan(): Promise<void> {
@@ -292,7 +306,7 @@ export class UsbHandler implements ApiHandler {
           try {
             if (!device || device.opened === false) {
               done = true;
-              console.log(`Device ${deviceId} closed`);
+              console.debug(`Device ${deviceId} closed`);
               this.deviceDisconnect(deviceId);
               // Should handle
             } else {
@@ -315,9 +329,9 @@ export class UsbHandler implements ApiHandler {
     this.deviceFifos[deviceId] = new Uint8Array([]);
   }
 
-  async deviceConnect(deviceId: string, deviceInfo: IDeviceInfo, onDisconnect?: (deviceId: string) => void): Promise<void> {
+  async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
 
-    this.deviceInfo[deviceId] = deviceInfo;
+    this.deviceSlots[deviceId] = slots;
     this.callbacks[`dev${deviceId}.disconnect`] = onDisconnect;
 
     let device = await this._getDevice(deviceId);
@@ -341,7 +355,7 @@ export class UsbHandler implements ApiHandler {
     if (!device) {
       return;
     }
-    this.deviceInfo[deviceId] = undefined;
+    this.deviceSlots[deviceId] = undefined;
 
     await this.disableDevicePolling(deviceId);
 
@@ -410,13 +424,15 @@ export class UsbHandler implements ApiHandler {
 
     const packet = this.encodePacket(0, PacketType.Uio, state);
 
-    // NS has some header that it checks for on the first byte of every ff
+    // NS has some header that it checks for on the first byte of every 64 byte frame
     // We need to split the packet into 62 byte chunks and prepend the header
     const buffer = new ArrayBuffer(64);
     const bufferArray = new Uint8Array(buffer);
     const bufferView = new DataView(buffer);
-    bufferView.setUint16(0, 2);
-    for (let i = 0; i < 4; i++) {
+    bufferView.setUint16(0, TIO_USB_TX_HEADER_VAL, false); // Stored as big endian...
+    const numChunks = Math.ceil(packet.byteLength / 62);
+    console.log(`Sending UIO state ${state} in ${numChunks} chunks`);
+    for (let i = 0; i < numChunks; i++) {
       const chunk = packet.slice(i*62, (i+1)*62);
       // Place chunk into buffer
       const chunkArray = new Uint8Array(chunk);

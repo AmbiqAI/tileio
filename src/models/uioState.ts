@@ -1,7 +1,8 @@
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
-import { flow, Instance, SnapshotIn, types } from 'mobx-state-tree';
+import { applySnapshot, flow, Instance, SnapshotIn, types } from 'mobx-state-tree';
 import ApiManager from '../api';
 import { delay } from '../utils';
+import { cloneDeep } from 'lodash';
 
 export enum UIOType {
   Momentary = 'Momentary',
@@ -10,157 +11,165 @@ export enum UIOType {
   Select = 'Select'
 }
 
-export const IoSchema: RJSFSchema = {
-  type: "object",
-  required: ["name", "enabled", "direction", "ioType"],
-  properties: {
-    name: {
-      type: "string",
-      default: "I/O",
-      description: "Display Name",
-    },
-    enabled: {
-      type: "boolean",
-      default: false,
-      description: "Enable I/O",
-    },
-    direction: {
-      "title": "Direction",
-      "enum": [
-        "Input",
-        "Output",
-      ]
-    },
-    ioType: {
-      "title": "I/O Type",
-      "enum": [
-        UIOType.Momentary,
-        UIOType.Toggle,
-        UIOType.Slider,
-        UIOType.Select
-      ]
-    }
-  },
-  allOf: [
-    {
-      if: {
-        properties: {
-          "ioType": {
-            "const": UIOType.Momentary
-          }
-        }
+export const IoConfigSchema: {schema: RJSFSchema, uischema: UiSchema} = {
+  schema: {
+    type: "object",
+    required: ["name", "enabled", "direction", "ioType"],
+    properties: {
+      name: {
+        type: "string",
+        default: "I/O",
+        description: "Display Name",
       },
-      then: {
-        properties: {
-          on: {
-            type: "string",
-            default: "Trigger",
-            description: "Trigger Label",
-          },
-        }
+      enabled: {
+        type: "boolean",
+        default: false,
+        description: "Enable I/O",
+      },
+      direction: {
+        title: "Direction",
+        enum: [
+          "Input",
+          "Output",
+        ],
+        description: "I/O direction"
+      },
+      ioType: {
+        title: "I/O Type",
+        enum: [
+          UIOType.Momentary,
+          UIOType.Toggle,
+          UIOType.Slider,
+          UIOType.Select
+        ]
       }
     },
-    {
-      if: {
-        properties: {
-          "ioType": {
-            "const": UIOType.Toggle
+    allOf: [
+      {
+        if: {
+          properties: {
+            "ioType": {
+              "const": UIOType.Momentary
+            }
           }
-        }
-      },
-      then: {
-        properties: {
-          off: {
-            type: "string",
-            default: "Off",
-            description: "Off Label",
-          },
-          on: {
-            type: "string",
-            default: "On",
-            description: "On Label",
-          },
-        }
-      }
-    },
-    {
-      if: {
-        properties: {
-          "ioType": {
-            "const": UIOType.Slider
-          }
-        }
-      },
-      then: {
-        properties: {
-          min: {
-            type: "integer",
-            minimum: 0,
-            maximum: 255
-          },
-          max: {
-            type: "integer",
-            minimum: 0,
-            maximum: 255
-          },
-          step: {
-            type: "integer",
-            minimum: 0,
-            maximum: 255
-          },
-          defaultValue: {
-            type: "integer",
-            minimum: 0,
-            maximum: 255
-          }
-        }
-      }
-    },
-    {
-      if: {
-        properties: {
-          "ioType": {
-            "const": UIOType.Select
-          }
-        }
-      },
-      then: {
-        properties: {
-          selectInputs: {
-            type: "array",
-            title: "Select Inputs",
-            items: {
+        },
+        then: {
+          properties: {
+            on: {
               type: "string",
+              default: "Trigger",
+              description: "Trigger Label",
             },
-            minItems: 1,
-            maxItems: 255
-          },
+          }
         }
+      },
+      {
+        if: {
+          properties: {
+            "ioType": {
+              "const": UIOType.Toggle
+            }
+          }
+        },
+        then: {
+          properties: {
+            off: {
+              type: "string",
+              default: "Off",
+              description: "Off Label",
+            },
+            on: {
+              type: "string",
+              default: "On",
+              description: "On Label",
+            },
+          }
+        }
+      },
+      {
+        if: {
+          properties: {
+            "ioType": {
+              "const": UIOType.Slider
+            }
+          }
+        },
+        then: {
+          properties: {
+            min: {
+              type: "integer",
+              minimum: 0,
+              maximum: 255
+            },
+            max: {
+              type: "integer",
+              minimum: 0,
+              maximum: 255
+            },
+            step: {
+              type: "integer",
+              minimum: 0,
+              maximum: 255
+            },
+            defaultValue: {
+              type: "integer",
+              minimum: 0,
+              maximum: 255
+            }
+          }
+        }
+      },
+      {
+        if: {
+          properties: {
+            "ioType": {
+              "const": UIOType.Select
+            }
+          }
+        },
+        then: {
+          properties: {
+            selectInputs: {
+              type: "array",
+              title: "Select Inputs",
+              items: {
+                type: "string",
+              },
+              minItems: 1,
+              maxItems: 255
+            },
+          }
+        }
+      },
+      {
+        "required": [
+          "ioType"
+        ]
       }
-    },
-    {
-      "required": [
-        "inputType"
-      ]
-    }
-  ]
+    ]
+  },
+  uischema: {}
 };
 
 
 export const IoConfig = types
-  .model('IoConfig', {
-    name: types.optional(types.string, 'Input'),
-    enabled: types.optional(types.boolean, false),
-    direction: types.optional(types.enumeration(['Input', 'Output']), 'Input'),
-    ioType: types.optional(types.enumeration<UIOType>('UIOType', Object.values(UIOType)), UIOType.Toggle),
-    off: types.optional(types.string, 'Off'),
-    on: types.optional(types.string, 'On'),
-    min: types.optional(types.number, 0),
-    max: types.optional(types.number, 255),
-    step: types.optional(types.number, 1),
-    defaultValue: types.optional(types.number, 0),
-    selectInputs: types.optional(types.array(types.string), []),
-  });
+.model('IoConfig', {
+  name: types.optional(types.string, 'Input'),
+  enabled: types.optional(types.boolean, false),
+  direction: types.optional(types.enumeration(['Input', 'Output']), 'Input'),
+  ioType: types.optional(types.enumeration<UIOType>('UIOType', Object.values(UIOType)), UIOType.Toggle),
+  off: types.optional(types.string, 'Off'),
+  on: types.optional(types.string, 'On'),
+  min: types.optional(types.number, 0),
+  max: types.optional(types.number, 255),
+  step: types.optional(types.number, 1),
+  defaultValue: types.optional(types.number, 0),
+  selectInputs: types.optional(types.array(types.string), []),
+}).actions(self => ({
+  copyFrom: function(other: IIoConfigSnapshot) {
+    applySnapshot(self, cloneDeep(other));
+  }
+}));
 
 export interface IIoConfig extends Instance<typeof IoConfig> { }
 export interface IIoConfigSnapshot extends SnapshotIn<typeof IoConfig> { }
@@ -172,35 +181,35 @@ export const UioConfigSchema: { schema: RJSFSchema, uischema: UiSchema } = {
     required: ["io0", "io1", "io2", "io3", "io4", "io5", "io6", "io7"],
     properties: {
       io0: {
-        ...IoSchema,
+        ...IoConfigSchema,
         title: "I/O 0",
       },
       io1: {
-        ...IoSchema,
+        ...IoConfigSchema,
         title: "I/O 1",
       },
       io2: {
-        ...IoSchema,
+        ...IoConfigSchema,
         title: "I/O 2",
       },
       io3: {
-        ...IoSchema,
+        ...IoConfigSchema,
         title: "I/O 3",
       },
       io4: {
-        ...IoSchema,
+        ...IoConfigSchema,
         title: "I/O 4",
       },
       io5: {
-        ...IoSchema,
+        ...IoConfigSchema,
         title: "I/O 5",
       },
       io6: {
-        ...IoSchema,
+        ...IoConfigSchema,
         title: "I/O 6",
       },
       io7: {
-        ...IoSchema,
+        ...IoConfigSchema,
         title: "I/O 7",
       },
     }
@@ -269,6 +278,10 @@ export const UioState = types
   }))
   .actions(self => ({
     _setState(state: number[]) {
+      if (state.length !== 8) {
+        console.debug(`Invalid state length: ${state.length}`);
+        return;
+      }
       self.io0 = state[0];
       self.io1 = state[1];
       self.io2 = state[2];
@@ -280,15 +293,15 @@ export const UioState = types
     },
   }))
   .actions(self => ({
-    _pushState: flow(function*() {
+    _pushState: flow(function* () {
       try {
-      yield ApiManager.setUioState(self.id, self.state);
-      yield delay(100);
+        yield ApiManager.setUioState(self.id, self.state);
+        yield delay(100);
       } catch (e) {
         console.error(e);
       }
     }),
-    fetchState: flow(function*() {
+    fetchState: flow(function* () {
       try {
         const state = yield ApiManager.getUioState(self.id);
         self._setState(state);
@@ -298,7 +311,7 @@ export const UioState = types
     })
   }))
   .actions(self => ({
-    updateState: flow(function*(state: number[]) {
+    updateState: flow(function* (state: number[]) {
       if (state.length !== 8) {
         console.debug(`Invalid state length: ${state.length}`);
         return;
@@ -313,7 +326,7 @@ export const UioState = types
       self.io7 = state[7];
       self._pushState();
     }),
-    updateIoState: flow(function*(index: number, state: number) {
+    updateIoState: flow(function* (index: number, state: number) {
       switch (index) {
         case 0:
           self.io0 = state;

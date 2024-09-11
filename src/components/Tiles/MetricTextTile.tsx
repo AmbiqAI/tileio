@@ -9,7 +9,6 @@ export const MetricTextTileSpec: TileSpec = {
   type: "METRIC_TEXT_TILE",
   name: "Metric Text",
   description: "Display metric text",
-  streamingRequired: false,
   sizes: ["sm", "md"],
   schema: {
     type: "object",
