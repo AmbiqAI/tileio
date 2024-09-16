@@ -38,7 +38,10 @@ jobs:
         env:
           CI: ""
           PUBLIC_URL: "${{ steps.pages.outputs.base_url }}/"
+          APP_BASE_URL: "${{ steps.pages.outputs.base_path }}"
         run: |
+          echo "PUBLIC_URL=${PUBLIC_URL}"
+          echo "APP_BASE_URL=${APP_BASE_URL}"
           npm install
           npm run build
       - name: Upload artifact

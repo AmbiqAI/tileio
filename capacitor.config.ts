@@ -26,10 +26,10 @@ const config: CapacitorConfig = {
       electronLinuxLocation: "Databases"
     }
   },
-  server: {
-    url: 'http://localhost:5173',
-    cleartext: true
-  }
+  // server: {
+  //   url: 'http://localhost:5173',
+  //   cleartext: true
+  // }
 };
 
 export default config;
