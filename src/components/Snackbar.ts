@@ -4,27 +4,22 @@ import { Theme } from "@mui/material";
 import { SnackbarProvider } from 'notistack';
 
 const Snackbar = styled(SnackbarProvider)(({ theme }: {theme: Theme}) => ({
-  '&.info': {
-    background: theme.palette.info.main,
+
+  '&.notistack-MuiContent-info': {
+    backgroundColor: theme.palette.info.main,
   },
-  '&.error': {
-    background: theme.palette.error.main,
+  '&.notistack-MuiContent-error': {
+    backgroundColor: theme.palette.error.main,
   },
-  '&.success': {
-    background: theme.palette.success.main,
+  '&.notistack-MuiContent-success': {
+    backgroundColor: theme.palette.success.main,
   },
-  '&.warning': {
-    background: theme.palette.warning.main,
+  '&.notistack-MuiContent-warning': {
+    backgroundColor: theme.palette.warning.main,
   }
 }));
 
 Snackbar.defaultProps = {
-  classes: {
-    variantSuccess: 'success',
-    variantError: 'error',
-    variantWarning: 'warning',
-    variantInfo: 'info',
-  },
 };
 
 Snackbar.displayName = 'SnackbarProvider';

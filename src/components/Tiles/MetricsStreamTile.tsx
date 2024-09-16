@@ -6,13 +6,12 @@ import { binarySearch, GridContainer, GridZStack } from "./utils";
 import { ThemeColors } from "../../theme/theme";
 import { getPlotDurationMs } from "../constants";
 import { alpha, useTheme } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 
 export const MetricsStreamTileSpec: TileSpec =   {
   type: "METRICS_STREAM_TILE",
   name: "Metrics Stream Tile",
   description: "Stream metrics data",
-  streamingRequired: true,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',

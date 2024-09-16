@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tileio</string>
+    <string name="title_activity_main">Tileio</string>
+    <string name="package_name">ai.ambiq.physiokit</string>
+    <string name="custom_url_scheme">ai.ambiq.physiokit</string>
+</resources>

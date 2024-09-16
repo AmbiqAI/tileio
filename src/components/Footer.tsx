@@ -1,5 +1,6 @@
 import React from "react";
-import { AppBar } from "@mui/material";
+import { AppBar, Theme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Box } from "@mui/system";
 
 interface Props {
@@ -14,6 +15,8 @@ function Footer({ children }: Props) {
         color="inherit"
         sx={{
           position: "fixed",
+          backgroundColor: (theme: Theme) => alpha(theme.palette.background.default, 0.65),
+          backdropFilter: "blur(8px)",
           pb: `env(safe-area-inset-bottom)`,
           top: "auto",
           bottom: 0,

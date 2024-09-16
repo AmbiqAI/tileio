@@ -9,14 +9,13 @@ import 'swiper/css/navigation';
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import { JeepSqlite } from "jeep-sqlite/dist/components/jeep-sqlite";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import reportWebVitals from "./reportWebVitals";
 import App from "./App";
 import "./index.css";
 import "./plugins";
 import { lightTheme, darkTheme } from "./theme/theme";
-import { useMediaQuery } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { Box, CircularProgress, Dialog, useMediaQuery } from "@mui/material";
+import { observer } from "mobx-react";
 import { useStore } from "./models/store";
 import { ThemeModeType } from "./models/settings";
 
@@ -30,8 +29,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+const SplashScreen = observer(({ initialized }: { initialized: boolean }) => {
+  return (
+    <Dialog open={!initialized}>
+      <Box sx={{ display: 'flex' }}>
+        <CircularProgress />
+      </Box>
+    </Dialog>
+  )
+});
+
+
 const AppContainer = observer(() => {
-  const { root: { settings: { isDarkMode, themeMode, setTheme } } } = useStore();
+  const { root: { settings: { isDarkMode, themeMode, setTheme }, initialized } } = useStore();
   const systemDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
   const useDarkMode =
     isDarkMode ||
@@ -45,6 +55,7 @@ const AppContainer = observer(() => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <App />
+      <SplashScreen initialized={initialized} />
     </ThemeProvider>
   );
 });
@@ -57,11 +68,6 @@ root.render(
     <AppContainer />
   </React.StrictMode>
 );
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://cra.link/PWA
-serviceWorkerRegistration.unregister();
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

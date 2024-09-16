@@ -1,6 +1,6 @@
-import { IDeviceInfo } from '../models/deviceInfo';
+import { ISlotConfig } from '../models/slot';
 import { delay } from '../utils';
-import { ApiManager } from './api';
+import { ApiHandler } from './handler';
 
 const devices: {id: string, name: string}[] = [
   {
@@ -70,15 +70,15 @@ function generateDummySlotMetrics(slot: number, numMetrics: number): number[] {
   return metrics;
 }
 
-class EmulatorManager implements ApiManager {
+export class EmulatorHandler implements ApiHandler {
 
   initialized: boolean;
-  deviceInfo: Record<string, IDeviceInfo|undefined>;
+  deviceSlots: Record<string, ISlotConfig[]|undefined>;
   callbacks: Record<string, any>;
 
   constructor() {
     this.initialized = false;
-    this.deviceInfo = {};
+    this.deviceSlots = {};
     this.callbacks = {};
   }
 
@@ -127,15 +127,15 @@ class EmulatorManager implements ApiManager {
     return [];
   }
 
-  async deviceConnect(deviceId: string, deviceInfo: IDeviceInfo, onDisconnect?: (deviceId: string) => void): Promise<void> {
-    this.deviceInfo[deviceId] = deviceInfo;
+  async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
+    this.deviceSlots[deviceId] = slots;
     this.callbacks[`${deviceId}.disconnect`] = onDisconnect;
     await delay(500);
   }
 
   async deviceDisconnect(deviceId: string): Promise<void> {
     await delay(500);
-    this.deviceInfo[deviceId] = undefined;
+    this.deviceSlots[deviceId] = undefined;
     const cb = this.callbacks[`${deviceId}.disconnect`];
     if (cb) { cb(deviceId); }
     this.callbacks[`${deviceId}.disconnect`] = undefined;
@@ -144,12 +144,16 @@ class EmulatorManager implements ApiManager {
   async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
     console.log(`enableSlotNotifications ${deviceId} ${slot}`);
     await this.disableSlotNotifications(deviceId, slot);
-    const deviceInfo = this.deviceInfo[deviceId];
-    if (deviceInfo === undefined || slot >= deviceInfo.slots.length) {
-      throw new Error('Device info not found');
+    const slots = this.deviceSlots[deviceId];
+    if (slots === undefined) {
+      throw new Error('Device info not found!!!');
     }
-    const numChs = deviceInfo.slots[slot].chs.length;
-    const fs = deviceInfo.slots[slot].fs;
+    if (slot >= slots.length) {
+      console.warn(`Slot ${slot} not found`);
+      return;
+    }
+    const numChs = slots[slot].chs.length;
+    const fs = slots[slot].fs;
     const maxSlotsPerPacket = Math.floor(120/(numChs+1));
     const numPackets = Math.ceil(fs/maxSlotsPerPacket);
     const ts = 1000/numPackets;
@@ -176,11 +180,15 @@ class EmulatorManager implements ApiManager {
   async enableSlotMetricsNotifications(deviceId: string, slot: number, cb: (slot: number, metrics: number[]) => void): Promise<void> {
     console.log(`enableSlotMetricsNotifications ${deviceId} ${slot}`);
     await this.disableSlotMetricsNotifications(deviceId, slot);
-    const deviceInfo = this.deviceInfo[deviceId];
-    if (deviceInfo === undefined || slot >= deviceInfo.slots.length) {
+    const slots = this.deviceSlots[deviceId];
+    if (slots === undefined) {
       throw new Error('Device info not found');
     }
-    const numMetrics = deviceInfo.slots[slot].metrics.length;
+    if (slot >= slots.length) {
+      console.warn(`Slot ${slot} not found`);
+      return;
+    }
+    const numMetrics = slots[slot].metrics.length;
     const ts = 1000;
     const intervalcb = setInterval(() => {
         const metrics = generateDummySlotMetrics(slot, numMetrics);
@@ -191,6 +199,24 @@ class EmulatorManager implements ApiManager {
 
   async disableSlotMetricsNotifications(deviceId: string, slot: number): Promise<void> {
     const intervalcb = this.callbacks[`dev${deviceId}.slot${slot}.met`];
+    if (intervalcb) {
+      clearInterval(intervalcb);
+    }
+  }
+
+  async enableUioNotifications(deviceId: string, cb: (state: number[]) => void): Promise<void> {
+    console.log(`enableUioNotifications ${deviceId}.`);
+    await this.disableUioNotifications(deviceId);
+    const ts = 5000;
+    const intervalcb = setInterval(async () => {
+      const state = await this.getUioState(deviceId);
+      cb(state);
+    }, ts);
+    this.callbacks[`dev${deviceId}.uio`] = intervalcb;
+  }
+
+  async disableUioNotifications(deviceId: string): Promise<void> {
+    const intervalcb = this.callbacks[`dev${deviceId}.uio`];
     if (intervalcb) {
       clearInterval(intervalcb);
     }
@@ -210,7 +236,9 @@ class EmulatorManager implements ApiManager {
   }
 
   async getUioState(deviceId: string): Promise<number[]> {
-    return new Array(8).fill(0).map(() => randomInt(0, 2));
+    const state = new Array(8).fill(0).map(() => randomInt(0, 2));
+    // console.log(`UIO state: ${state}`);
+    return state;
   }
 
   async setUioState(deviceId: string, state: number[]): Promise<void> {
@@ -218,6 +246,6 @@ class EmulatorManager implements ApiManager {
 
 }
 
-const defaultManager = new EmulatorManager();
+const defaultHandler = new EmulatorHandler();
 
-export default defaultManager;
+export default defaultHandler;

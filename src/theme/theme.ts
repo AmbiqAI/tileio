@@ -13,6 +13,10 @@ export const lightTheme = createTheme({
   },
   palette: {
     mode: 'light',
+    // background: {
+    //   default: '#ffffff',
+    //   paper: '#f5f5f5',
+    // },
     primary: {
       main: '#9737FD',
       light: '#ce6cff',

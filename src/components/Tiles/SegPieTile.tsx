@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { Chart, ChartData, ChartOptions } from "chart.js";
 import { Stack, Typography, useTheme } from "@mui/material";
 import { GridContainer, GridZStack } from "./utils";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import { ThemeColors } from "../../theme/theme";
 
@@ -11,7 +11,6 @@ export const SegPieTileSpec: TileSpec = {
   type: "SEG_PIE_TILE",
   name: "Seg Pie Tile",
   description: "Segmentation Pie Tile",
-  streamingRequired: true,
   sizes: ["sm", "md"],
   schema: {
     type: 'object',
@@ -103,7 +102,7 @@ export function parseConfig(config: { [key: string]: any }): SegPieTileConfig {
 }
 
 
-const SegPieTile = observer(({ slots, config }: TileProps) => {
+const SegPieTile = observer(({ slots, config, size }: TileProps) => {
 
   const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
@@ -139,8 +138,9 @@ const SegPieTile = observer(({ slots, config }: TileProps) => {
           display: true,
           position: "right",
           labels: {
+            boxWidth: size === "sm" ? 20 : 40,
             font: {
-              size: 14,
+              size: 12,
               weight: "bold",
             },
             color: theme.palette.text.primary
@@ -230,7 +230,7 @@ const SegPieTile = observer(({ slots, config }: TileProps) => {
             WebkitUserSelect: "none",
             textAlign: "end",
             pointerEvents: "none",
-            pr: 0.5,
+            pr: 1.0,
             pb: 0.5,
           }}
         >

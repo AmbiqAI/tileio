@@ -1,8 +1,8 @@
 import { createHashHistory } from 'history';
 import { Router, Route, Redirect, Switch } from 'react-router-dom';
-import DevicesView from './pages/DevicesView';
+import DashboardsView from './pages/DashboardsView';
 import RecordsView from './pages/RecordsView';
-import DeviceDetailView from './pages/DeviceDetailView';
+import DashboardDetailView from './pages/DashboardDetailView';
 import SettingsView from './pages/SettingsView';
 import SpeedDialNav from './components/SpeedDial';
 import RecordDetailView from './pages/RecordDetailView';
@@ -23,11 +23,11 @@ export default function App() {
         >
           <Switch>
             <Route exact path="/settings" component={SettingsView} />
-            <Route exact path="/devices" component={DevicesView} />
+            <Route exact path="/dashboards" component={DashboardsView} />
             <Route exact path="/records" component={RecordsView} />
             <Route path="/records/:id" component={RecordDetailView} />
-            <Route path="/devices/:id" component={DeviceDetailView} />
-            <Redirect from="/" exact to="/devices" />
+            <Route path="/dashboards/:id" component={DashboardDetailView} />
+            <Redirect from="/" exact to="/dashboards" />
           </Switch>
           <Notifications />
         </Snackbar>

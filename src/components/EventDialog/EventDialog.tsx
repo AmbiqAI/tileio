@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { clone } from "mobx-state-tree";
 import {
   Avatar,
@@ -49,8 +49,8 @@ const EventDialog = ({ open, record, onSubmit, onClose }: Props) => {
       open={open}
       fullWidth
       maxWidth="sm"
-      onBackdropClick={() => {
-        if (isEditing) {
+      onClose={(_: Event, reason: string) => {
+        if (isEditing && reason === "backdropClick") {
           return;
         }
         onClose();

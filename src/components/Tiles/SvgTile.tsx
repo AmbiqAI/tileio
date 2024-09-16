@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { TileProps } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import { Stack } from "@mui/material";
@@ -10,7 +10,6 @@ export const SvgTileSpec: TileSpec = {
   type: "SVG_TILE",
   name: "SVG Tile",
   description: "Render svg content",
-  streamingRequired: false,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
@@ -24,7 +23,7 @@ export const SvgTileSpec: TileSpec = {
       content: {
         type: 'string',
         default: '',
-        title: 'svg content'
+        title: 'SVG Content'
       }
     }
   },

@@ -1,38 +1,35 @@
-import { flow } from 'mobx';
-import { matchPath } from 'react-router';
-import { applySnapshot, cast, clone, destroy, getParentOfType, Instance, SnapshotIn, typecheck, types } from 'mobx-state-tree';
+import { flow, hasParentOfType } from 'mobx-state-tree';
+import { cast, clone, destroy, getParentOfType, Instance, SnapshotIn, types } from 'mobx-state-tree';
 import { Link as RouterLink } from 'react-router-dom';
 import { IconButton } from '@mui/material';
 import ViewRecordIcon from '@mui/icons-material/LaunchRounded';
-import DeviceInfo, { DefaultDeviceInfo, IDeviceInfo, IDeviceInfoSnapshot } from './deviceInfo';
-import { Notifier, getApi } from '../api';
+import ApiManager, { Notifier } from '../api';
 import Record, { IRecord } from './record';
 import { delay } from '../utils';
 import { IRoot, Root } from './root';
 import DeviceState, { DeviceConnectionType } from './deviceState';
-import DashboardSettings, { IDashboardSettings, IDashboardSettingsSnapshot } from './dashboardSettings';
 import { Slot } from './slot';
 import { UioState } from './uioState';
-import { cloneDeep } from 'lodash';
+import { IDashboard } from './dashboard';
+import { NUM_SLOTS } from '../components/constants';
+import { DeviceInterface, DeviceInterfaceType } from './types';
 
 const Device = types
 .model('Device', {
   id: types.string,
-  info: DeviceInfo,
-  settings: types.optional(DashboardSettings, {}),
+  name: types.optional(types.string, 'Device'),
+  type: types.optional(DeviceInterface, DeviceInterfaceType.ble),
   state: types.optional(DeviceState, {}),
   slots: types.optional(types.array(Slot), [{}, {}, {}, {}]),
-  uioState: types.optional(UioState, {}),
+  uioState: types.optional(UioState, {id: 'uioState'}),
 })
 .volatile(self => ({
   record: undefined as (undefined | IRecord),
   notifications: false,
   polling: undefined as (undefined | NodeJS.Timeout),
+  dashboard: undefined as (undefined | IDashboard),
 }))
 .views(self => ({
-  get path() {
-    return `/devices/${encodeURIComponent(self.id)}`;
-  },
   get shortId() {
     return self.id.substring(0, 7);
   },
@@ -41,14 +38,13 @@ const Device = types
   },
   get recordDurationStr(): string {
     return self.record ? self.record.durationHMS : '--:--';
-  },
-  get seenDate(): Date|undefined {
-    return self.info.lastSeenDate;
   }
 }))
 .actions(self => ({
   pruneData: function() {
-    const oldestTs = Date.now() - 1000*(5+self.settings.duration);
+    if (self.dashboard === undefined) { return; }
+
+    const oldestTs = Date.now() - 1000*(5+self.dashboard.duration);
     self.slots.forEach(slot => slot.prune(oldestTs));
   },
   receivedSlotData: flow(function*(slot: number, signals: number[][], mask: number[][]) {
@@ -67,16 +63,14 @@ const Device = types
   }),
   setOnline: function(online: boolean) {
     self.state.setOnline(online);
-    if (online) {
-      self.info.lastSeenDate = new Date();
-    }
   }
 }))
 .actions(self => ({
   fetchSignalStrength: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.state.setSignalStrength(yield getApi().getDeviceStrength(self.id));
+      const strength = yield ApiManager.getDeviceStrength(self.id);
+      self.state.setSignalStrength(strength);
     } catch(error) {
       console.error(`Failed fetching RSSI: ${error}`);
     }
@@ -84,7 +78,8 @@ const Device = types
   fetchBatterylevel: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.state.setBatteryLevel(yield getApi().getDeviceBatteryLevel(self.id));
+      const level = yield ApiManager.getDeviceBatteryLevel(self.id);
+      self.state.setBatteryLevel(level);
     } catch(error) {
       console.error(`Failed reading battery level: ${error}`);
     }
@@ -92,44 +87,19 @@ const Device = types
   fetchUioState: flow(function*() {
     try {
       if (!self.state.connected) { return; }
-      self.uioState.setState(yield getApi().getUioState(self.id));
+      yield self.uioState.fetchState();
     } catch(error) {
       console.error(`Failed reading UIO state: ${error}`);
     }
   }),
-  setUioButton: flow(function*(button: number, state: boolean) {
+  setIoState: flow(function*(io: number, state: number) {
     if (self.state.disconnected) { return; }
-    self.uioState.setButtonState(button, state);
-    yield getApi().setUioState(self.id, self.uioState.state);
+    yield self.uioState.updateIoState(io, state);
   }),
   fetchInfo: flow(function*() {
     yield delay(1);
   }),
-  setInfo: function(info: IDeviceInfo) {
-    try {
-      typecheck(DeviceInfo, info);
-      applySnapshot(self.info, cloneDeep(info));
-      self.info.id = self.id;
-    } catch(error) {
-      console.error(error);
-      Notifier.add({
-        message: `Failed applying device info. (${error})`,
-        options: { variant: 'error' },
-      });
-    }
-  },
-  setSettings: function(settings: IDashboardSettings|IDashboardSettingsSnapshot) {
-    try {
-      typecheck(DashboardSettings, settings);
-      applySnapshot(self.settings, cloneDeep(settings));
-    } catch(error) {
-      console.error(error);
-      Notifier.add({
-        message: `Failed applying settings. (${error})`,
-        options: { variant: 'error' },
-      });
-    }
-  }
+
 }))
 .actions(self => ({
   fetchUpdates: flow(function*() {
@@ -144,18 +114,12 @@ const Device = types
       clearInterval(self.polling);
       self.polling = undefined;
     }
-    for (let slot = 0; slot < self.info.slots.length; slot++) {
-      yield getApi().enableSlotMetricsNotifications(self.id, slot, self.receivedSlotMetrics);
-    }
     self.polling = setInterval(self.fetchUpdates, 2500);
   }),
   stopPolling: flow(function*(){
     if (self.polling) {
       clearInterval(self.polling);
       self.polling = undefined;
-    }
-    for (let slot = 0; slot < self.info.slots.length; slot++) {
-      yield getApi().disableSlotMetricsNotifications(self.id, slot);
     }
   }),
 }))
@@ -167,21 +131,32 @@ const Device = types
     if (self.state.disconnected) {
       return;
     }
-    for (let slot = 0; slot < self.info.slots.length; slot++) {
+    for (let slot = 0; slot < NUM_SLOTS; slot++) {
       if (enable) {
-        yield getApi().enableSlotNotifications(self.id, slot, self.receivedSlotData);
+        yield ApiManager.enableSlotNotifications(self.id, slot, self.receivedSlotData);
+        yield ApiManager.enableSlotMetricsNotifications(self.id, slot, self.receivedSlotMetrics);
       } else {
-        yield getApi().disableSlotNotifications(self.id, slot);
+        yield ApiManager.disableSlotNotifications(self.id, slot);
+        yield ApiManager.disableSlotMetricsNotifications(self.id, slot);
+      }
+      if (enable) {
+        yield ApiManager.enableUioNotifications(self.id, self.uioState.updateState);
+      } else {
+        yield ApiManager.disableUioNotifications(self.id);
       }
     }
     self.notifications = enable;
   }),
   startRecording: flow(function*() {
     if (self.recording) { return; }
+    if (!hasParentOfType(self, Root)) { return; }
+    if (self.dashboard === undefined) {
+      console.error('No dashboard set');
+      return;
+    }
     const record = Record.create({
-      device: clone(self.info),
+      dashboard: clone(self.dashboard),
       slots: self.slots.map(slot => ({})),
-      settings: clone(self.settings),
     });
     yield record.startRecording();
     const parent = getParentOfType(self, Root) as IRoot;
@@ -222,18 +197,15 @@ const Device = types
   },
 }))
 .actions(self => ({
-  connect: flow(function*() {
+  connect: flow(function*(dashboard: IDashboard) {
     try {
-      self.notifications = false;
+      self.dashboard = dashboard;
       self.slots.forEach(slot => slot.clear());
       self.state.setConnectionState(DeviceConnectionType.CONNECTING);
-      yield getApi().deviceConnect(self.id, self.info, self.onDisconnected);
+      yield ApiManager.deviceConnect(self.id, self.dashboard.device.slots, self.onDisconnected);
       self.state.setConnectionState(DeviceConnectionType.CONNECTED);
+      yield self.setNotifications(true);
       yield self.startPolling();
-      yield delay(500);
-      yield self.fetchUioState();
-      yield self.fetchInfo();
-      yield self.setNotifications(self.settings.streaming);
     } catch (error) {
       console.error(error);
       Notifier.add({
@@ -241,28 +213,21 @@ const Device = types
         options: { variant: 'error' },
       });
       self.state.setConnectionState(DeviceConnectionType.DISCONNECTED);
-    }
-  }),
-  refresh: flow(function*() {
-    try {
-      // If not connected, refresh online state
-      if (self.state.disconnected && !self.state.online) {
-        const available = yield getApi().refreshPreviousDevice(self.id);
-        self.setOnline(available);
-      // If connected, refresh device info
-      } else if (self.state.connected) {
-        yield self.fetchInfo();
-      }
-    } catch (error) {
+      self.state.setOnline(false);
     }
   }),
   disconnect: flow(function*() {
-    if (self.state.connected) {
-      self.state.setConnectionState(DeviceConnectionType.DISCONNECTING);
-      yield self.setNotifications(false);
-      yield self.stopPolling();
-      yield self.stopRecording();
-      yield getApi().deviceDisconnect(self.id);
+    try {
+      if (self.state.connected) {
+        self.state.setConnectionState(DeviceConnectionType.DISCONNECTING);
+        yield self.setNotifications(false);
+        yield self.stopPolling();
+        yield self.stopRecording();
+        yield ApiManager.deviceDisconnect(self.id);
+        self.state.setConnectionState(DeviceConnectionType.DISCONNECTED);
+      }
+    } catch (error) {
+      console.error(`Failed disconnecting from ${self.shortId}. (${error})`);
       self.state.setConnectionState(DeviceConnectionType.DISCONNECTED);
     }
   }),
@@ -282,29 +247,16 @@ const Device = types
     }
   }),
 }))
-.views(self => ({
-  isViewing(pathname: string) {
-    return (matchPath(pathname, { path: self.path}) != null);
-  }
-}))
 .actions(self => ({
   afterCreate: function() {
-    self.slots = cast(self.info.slots.map((slot, idx) => Slot.create({
+    self.slots = cast(Array.from({length: NUM_SLOTS}, (_, idx) => Slot.create({
     })));
+    self.uioState.id = self.id;
   }
 }));
 
 export const NotFoundDevice = (id: string) => Device.create({
   id: id,
-  info: DefaultDeviceInfo(id),
-});
-
-export const NewDevice = (id: string, info?: IDeviceInfoSnapshot) => Device.create({
-  id: id,
-  info: {
-    ...(info ? info : {}),
-    id: id,
-  },
 });
 
 export default Device;

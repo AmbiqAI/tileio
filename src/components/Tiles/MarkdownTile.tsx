@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { TileProps } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import { Box, Stack } from "@mui/material";
@@ -6,12 +6,12 @@ import Markdown from 'react-markdown';
 // import { MuiMarkdown } from 'mui-markdown';
 import { TileSpec } from "./BaseTile";
 import { useMemo } from "react";
+import StyledMarkDown from "../StyledMarkDown";
 
 export const MarkdownTileSpec: TileSpec = {
   type: "MARKDOWN_TILE",
   name: "Markdown Tile",
   description: "Render markdown",
-  streamingRequired: false,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
@@ -68,7 +68,7 @@ const MarkdownTile = ({ config }: TileProps) => {
               overflowY: "scroll"
             }}
           >
-            <Markdown>{configs.markdown || ''}</Markdown>
+            <StyledMarkDown>{configs.markdown || ''}</StyledMarkDown>
           </Box>
         </Stack>
       </GridZStack>

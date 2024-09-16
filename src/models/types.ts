@@ -1,5 +1,13 @@
 import { types } from 'mobx-state-tree';
 
+export enum DeviceInterfaceType {
+  ble = 'ble',
+  usb = 'usb',
+}
+export const DeviceInterface = types.enumeration<DeviceInterfaceType>(
+  'DeviceInterfaceType', Object.values(DeviceInterfaceType)
+);
+
 export enum LayoutSizeType {
   sm = 'sm',
   md = 'md',

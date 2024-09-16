@@ -27,10 +27,14 @@ import PoincarePlot, { PoincarePlotSpec } from "./components/Tiles/PoincarePlot"
 import SparklineTile, { SparklineTileSpec } from "./components/Tiles/SparklineTile";
 import BarSlideTile, { BarSlideTileSpec } from "./components/Tiles/BarSlideTile";
 import StreamPlotTile, { StreamPlotTileSpec } from "./components/Tiles/StreamPlotTile";
+import SignalPlotTile, { SignalPlotTileSpec } from "./components/Tiles/SignalPlotTile";
 import SegmentStreamTile, { SegmentStreamTileSpec } from "./components/Tiles/SegmentStreamTile";
 import SegPieTile, { SegPieTileSpec } from "./components/Tiles/SegPieTile";
 import FidPieTile, { FidPieTileSpec } from "./components/Tiles/FidPieTile";
 import UioTile, { UioTileSpec} from "./components/Tiles/UioTile";
+import IoTile, { IoTileSpec} from "./components/Tiles/IoTile";
+import MetricTextTile, { MetricTextTileSpec } from "./components/Tiles/MetricTextTile";
+
 import SvgTile, { SvgTileSpec } from "./components/Tiles/SvgTile";
 
 // Register tile plugins and chartjs plugins
@@ -41,13 +45,16 @@ registerTile(EventTileSpec.type, EventTileSpec, EventTile);
 registerTile(PoincarePlotSpec.type, PoincarePlotSpec, PoincarePlot);
 registerTile(SparklineTileSpec.type, SparklineTileSpec, SparklineTile);
 registerTile(BarSlideTileSpec.type, BarSlideTileSpec, BarSlideTile);
+registerTile(SignalPlotTileSpec.type, SignalPlotTileSpec, SignalPlotTile);
 registerTile(StreamPlotTileSpec.type, StreamPlotTileSpec, StreamPlotTile);
 registerTile(MetricsStreamTileSpec.type, MetricsStreamTileSpec, MetricsStreamTile);
 registerTile(SegmentStreamTileSpec.type, SegmentStreamTileSpec, SegmentStreamTile);
 registerTile(SegPieTileSpec.type, SegPieTileSpec, SegPieTile);
 registerTile(FidPieTileSpec.type, FidPieTileSpec, FidPieTile);
 registerTile(UioTileSpec.type, UioTileSpec, UioTile);
+registerTile(IoTileSpec.type, IoTileSpec, IoTile);
 registerTile(SvgTileSpec.type, SvgTileSpec, SvgTile);
+registerTile(MetricTextTileSpec.type, MetricTextTileSpec, MetricTextTile);
 
 Chart.register(
   LineController,

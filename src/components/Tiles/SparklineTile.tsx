@@ -1,5 +1,5 @@
 import { alpha } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import MetricPlotTile from "./MetricPlotTile";
 import { ThemeColors } from "../../theme/theme";
@@ -9,11 +9,10 @@ export const SparklineTileSpec: TileSpec = {
   type: "SPARKLINE_TILE",
   name: "Sparkline Tile",
   description: "Display a sparkline of a metric",
-  streamingRequired: false,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
-    required: ['name', 'slot', 'metric', 'units', 'color'],
+    required: ['name', 'slot', 'metric', 'units'],
     properties: {
       name: {
         type: 'string',
@@ -36,6 +35,13 @@ export const SparklineTileSpec: TileSpec = {
         type: 'string',
         default: '',
         description: 'Units',
+      },
+      precision: {
+        type: 'integer',
+        default: 0,
+        minimum: 0,
+        maximum: 2,
+        description: 'Decimal places'
       },
       primaryColor: {
         type: 'string',
@@ -80,6 +86,7 @@ export interface SparklineTileConfig {
   slot: number;
   metric: number;
   units: string;
+  precision?: number;
   primaryColor: string;
   secondaryColor: string;
   min: number;
@@ -92,6 +99,7 @@ export function parseConfig(config: { [key: string]: any }): SparklineTileConfig
     slot: 0,
     metric: 0,
     units: '',
+    precision: 0,
     ...config
   } as SparklineTileConfig;
   return configs;
@@ -112,6 +120,7 @@ const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
       secondaryColor={configs.secondaryColor}
       min={configs.min}
       max={configs.max}
+      precision={configs.precision}
       duration={duration}
     />
   );

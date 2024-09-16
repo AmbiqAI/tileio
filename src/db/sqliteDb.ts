@@ -1,12 +1,12 @@
 import { unparse } from 'papaparse';
 import { Filesystem, Directory, Encoding, ReadFileOptions } from '@capacitor/filesystem';
 import { CapacitorSQLite, capSQLiteSet, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { IDeviceInfo, IDeviceInfoSnapshot } from '../models/deviceInfo';
 import { RecordFormat } from '../models/record';
 import { IEventMarkerSnapshot } from '../models/event';
 import { RecordData } from './record';
 import { Capacitor } from '@capacitor/core';
 import { openDB } from 'idb';
+import { ISlotConfig } from '../models/slot';
 
 function sqlSlotSignalsTableStr(slot: number, chs: number) {
   return [
@@ -41,15 +41,6 @@ function sqlEventsTableStr() {
   'CREATE TABLE IF NOT EXISTS events (',
   '  ts INTEGER NOT NULL PRIMARY KEY,',
   '  name TEXT',
-  ');',
-  ].join('\n');
-}
-
-function sqlDeviceTableStr() {
-  return [
-  'CREATE TABLE IF NOT EXISTS device (',
-  '  name TEXT',
-  '  location TEXT',
   ');',
   ].join('\n');
 }
@@ -123,11 +114,11 @@ export async function deleteSqlRecordData(name: string): Promise<void> {
 export class SqlRecordData implements RecordData {
   name: string
   _db?: SQLiteDBConnection
-  deviceInfo: IDeviceInfo;
+  slots: ISlotConfig[];
 
-  constructor(name: string, deviceInfo: IDeviceInfo) {
+  constructor(name: string, slots: ISlotConfig[]) {
     this.name = name;
-    this.deviceInfo = deviceInfo;
+    this.slots = slots;
   }
 
   async db(): Promise<SQLiteDBConnection> {
@@ -146,14 +137,13 @@ export class SqlRecordData implements RecordData {
 
   async initialize() {
     const db = await this.db();
-    for (let i = 0; i < this.deviceInfo.slots.length; i++) {
-      const slot = this.deviceInfo.slots[i];
+    for (let i = 0; i < this.slots.length; i++) {
+      const slot = this.slots[i];
       await db.execute(sqlSlotSignalsTableStr(i, slot.chs.length));
       await db.execute(sqlSlotMaskTableStr(i));
       await db.execute(sqlSlotMetricsTableStr(i, slot.metrics.length));
     }
     await db.execute(sqlEventsTableStr());
-    await db.execute(sqlDeviceTableStr());
   }
 
   async close() {
@@ -175,18 +165,8 @@ export class SqlRecordData implements RecordData {
     }
   }
 
-  async setDeviceInfo(device: IDeviceInfoSnapshot): Promise<void> {
-    const db = await this.db();
-    await db.run("DELETE FROM device;");
-    await db.run(
-      "INSERT INTO device VALUES (?, ?);",
-      [device.name, device.location]
-    );
-    await this._save();
-  }
-
   async addSlotSignals(slot: number, signals: number[][]): Promise<void> {
-    const numCols = this.deviceInfo.slots[slot].chs.length + 1; // ts + chs
+    const numCols = this.slots[slot].chs.length + 1; // ts + chs
     const db = await this.db();
     const dbSet: capSQLiteSet[] = signals.map((row) => ({
       statement: `INSERT INTO signals${slot} VALUES (${Array(numCols).fill('?').join(', ')});`,
@@ -213,7 +193,7 @@ export class SqlRecordData implements RecordData {
   }
 
   async addSlotMetrics(slot: number, metrics: number[][]): Promise<void> {
-    const numCols = this.deviceInfo.slots[slot].metrics.length + 1; // ts + chs
+    const numCols = this.slots[slot].metrics.length + 1; // ts + chs
     const db = await this.db();
     const dbSet: capSQLiteSet[] = metrics.map((row) => ({
       statement: `INSERT INTO metrics${slot} VALUES (${Array(numCols).fill('?').join(', ')});`,
@@ -291,12 +271,6 @@ export class SqlRecordData implements RecordData {
     return await this._getTableCount('events');
   }
 
-  async getDeviceInfo(): Promise<IDeviceInfoSnapshot> {
-    const devices = (await this._getTableRows('device', 0, 1)) as IDeviceInfoSnapshot[];
-    if (devices.length === 0) { throw Error('No device found in record table'); }
-    return devices[0];
-  }
-
   async getSlotSignals(slot: number, start?: number, stop?: number): Promise<number[][]> {
     const rst = await this._getTableRowsForTsRange<{[key: string]: number}>(`signals${slot}`, start, stop);
     return rst.map(row => Object.values(row));
@@ -354,7 +328,7 @@ export class SqlRecordData implements RecordData {
       });
     }
   };
-  async generateUri(date: Date, duration: number, device: IDeviceInfoSnapshot, format: RecordFormat): Promise<string> {
+  async generateUri(date: Date, duration: number, format: RecordFormat): Promise<string> {
 
     const platform = Capacitor.getPlatform();
 
@@ -397,15 +371,12 @@ export class SqlRecordData implements RecordData {
     const recordRow = {record: this.name, startDate: date.toLocaleDateString(), startTime: date.toLocaleTimeString(), duration: duration};
     await this.tableToCsv(async () => [recordRow], Object.keys(recordRow), 1, fileOptions);
 
-    // Device: name, location
-    // await this.tableToCsv(async () => [await this.getDeviceInfo.bind(this)()], ['name', 'location'], 1, fileOptions);
-    await this.tableToCsv(async () => [{name: device.name, location: device.location}], ['name', 'location'], 1, fileOptions);
     // // Events
     // await this.tableToCsv(this.getEventsRows.bind(this), ['ts', 'name'], await this.getEventsLength(), fileOptions);
 
     // Slots
-    for (let i = 0; i < this.deviceInfo.slots.length; i++) {
-      const slot = this.deviceInfo.slots[i];
+    for (let i = 0; i < this.slots.length; i++) {
+      const slot = this.slots[i];
       const signalsHeader = ['ts'].concat(slot.chs);
       const maskheader = ['ts', 'mask'];
       const metricsheader = ['ts'].concat(slot.metrics);

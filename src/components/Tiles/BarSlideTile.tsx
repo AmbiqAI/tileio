@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
 import { TileProps, TileSpec } from "./BaseTile";
@@ -79,7 +79,6 @@ export const BarSlideTileSpec: TileSpec = {
   type: "BAR_SLIDE_TILE",
   name: "Bar Slide Tile",
   description: "Display static bar plots",
-  streamingRequired: false,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
@@ -343,7 +342,7 @@ const BarSlideTile = observer(({ size, config }: TileProps) => {
           userSelect: "none",
           WebkitUserSelect: "none",
           textAlign: "end",
-          pr: 0.5,
+          pr: 1.0,
           pb: 0.5,
         }}
       >

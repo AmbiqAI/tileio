@@ -1,5 +1,7 @@
 import { TileSize } from "./Tiles/BaseTile";
 
+export const NUM_SLOTS = 4;
+
 export const plotDurationLimitsMs = { sm: 10000, md: 20000, lg: 30000 };
 
 export function getPlotDurationMs(duration: number|undefined, size: TileSize) {

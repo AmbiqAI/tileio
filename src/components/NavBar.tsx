@@ -1,4 +1,4 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { matchPath } from "react-router";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
@@ -10,13 +10,13 @@ function getActiveTab(path: string) {
   if (matchPath(path, { path: "/settings" }) != null) {
     return "/settings";
   }
-  if (matchPath(path, { path: "/devices" }) != null) {
-    return "/devices";
+  if (matchPath(path, { path: "/dashboards" }) != null) {
+    return "/dashboards";
   }
   if (matchPath(path, { path: "/records" }) != null) {
     return "/records";
   }
-  return "/devices";
+  return "/dashboards";
 }
 
 function NavBar() {
@@ -29,8 +29,8 @@ function NavBar() {
     >
       <BottomNavigation value={activeTab} showLabels>
         <BottomNavigationAction
-          label="Devices"
-          value="/devices"
+          label="Dashboards"
+          value="/dashboards"
           icon={<TileioIcon />}
           component={RouterLink}
           to={"/devices"}

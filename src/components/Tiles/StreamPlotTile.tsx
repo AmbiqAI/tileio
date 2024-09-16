@@ -5,14 +5,13 @@ import { TileProps, TileSpec } from "./BaseTile";
 import { binarySearch, GridContainer, GridZStack } from "./utils";
 import { alpha, useTheme } from "@mui/material";
 import { getPlotDurationMs } from "../constants";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import { ThemeColors } from "../../theme/theme";
 
 export const StreamPlotTileSpec: TileSpec =   {
   type: "STREAM_PLOT_TILE",
   name: "Signal Stream Plot",
   description: "Stream signal data",
-  streamingRequired: true,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
@@ -31,11 +30,13 @@ export const StreamPlotTileSpec: TileSpec =   {
       chs: {
         type: 'array',
         "title": "Channels",
-        "items": {
+        minItems: 1,
+        maxItems: 4,
+        items: {
           "type": "integer",
           "enum": [ 0, 1, 2, 3 ]
         },
-        "uniqueItems": true
+        uniqueItems: true
       },
       fiducial: {
         type: 'integer',
@@ -66,9 +67,17 @@ export const StreamPlotTileSpec: TileSpec =   {
         type: 'number',
         title: 'Stream Delay',
         default: 500,
-        minimum: 0,
+        minimum: -2000,
         maximum: 2000,
         description: 'Stream delay (ms)'
+      },
+      streamGap: {
+        type: 'number',
+        title: 'Stream Gap',
+        default: 500,
+        minimum: 0,
+        maximum: 1000,
+        description: 'Stream gap (ms)'
       },
       fps: {
         type: 'number',
@@ -119,6 +128,7 @@ function parseConfig(config: { [key: string]: any}) {
     tertiaryColor: ThemeColors.colors.tertiaryColor,
     quaternaryColor: ThemeColors.colors.quaternaryColor,
     streamDelay: 500,
+    streamGap: 500,
     fps: 15,
     ...config
   } as StreamPlotTileConfig;
@@ -135,11 +145,12 @@ export interface StreamPlotTileConfig {
   tertiaryColor: string;
   quaternaryColor: string;
   streamDelay: number;
+  streamGap: number;
   fps: number;
 }
 
 
-const StreamPlotTile = observer(({ size, slots, pause, duration, config, device }: TileProps) => {
+const StreamPlotTile = observer(({ size, slots, pause, duration, config, dashboard }: TileProps) => {
   const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
   const latestTs = configs.slot < slots.length ? slots[configs.slot].signals.latestTs : 0;
@@ -148,12 +159,11 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
   const options = useMemo<ChartOptions<"line">>(() => {
     const showAxis = size === "lg";
     const durationMs = getPlotDurationMs(duration, size);
-
     return {
       responsive: true,
       maintainAspectRatio: false,
       cubicInterpolationMode: "monotone",
-      spanGaps: 2*configs.streamDelay,
+      spanGaps: configs.streamGap,
       elements: {
         point: { radius: 1 },
       },
@@ -172,7 +182,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
         },
         tooltip: { enabled: false },
         legend: {
-          display: configs.chs.length > 1,
+          display: true, // configs.chs.length > 1,
           fullSize: true,
           position: "top",
           align: "center",
@@ -225,7 +235,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
   }, [pause, configs, theme, duration, size]);
 
   const data = useMemo<ChartData<"line">>(() => {
-    const chNames = configs.chs.map(ch => configs.slot < device.slots.length && ch < device.slots[configs.slot].chs.length ? device.slots[configs.slot].chs[ch] : `CH${ch}`);
+    const chNames = configs.chs.map(ch => configs.slot < dashboard.device.slots.length && ch < dashboard.device.slots[configs.slot].chs.length ? dashboard.device.slots[configs.slot].chs[ch] : `CH${ch}`);
     const colors = [configs.primaryColor, configs.secondaryColor, configs.tertiaryColor, configs.quaternaryColor];
     return {
       datasets: chNames.map((ch, i) => ({
@@ -236,7 +246,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, device 
           data: [],
       })),
     };
-  }, [configs, device.slots]);
+  }, [configs, dashboard.device.slots]);
 
   useEffect(() => {
     const chart = chartEl.current;

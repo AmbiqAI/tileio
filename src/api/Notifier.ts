@@ -1,5 +1,14 @@
 import { EventEmitter } from 'events';
 
+export interface NotifierMessage {
+  message: string,
+  options?: {
+    variant?: 'default' | 'error' | 'success' | 'warning' | 'info',
+    preventDuplicate?: boolean,
+    [key: string|number]: any;
+  }
+}
+
 class Notifier extends EventEmitter {
   finished: boolean = false
   notifications: Array<any> = []
@@ -8,7 +17,7 @@ class Notifier extends EventEmitter {
     this.finished = false;
   }
 
-  add = (notification: {message: string, options?: {}}, dismissable?: boolean) => new Promise(resolve => {
+  add = (notification: NotifierMessage, dismissable?: boolean) => new Promise(resolve => {
     if (this.finished) return;
     this.emit('NEW', {
       ...notification,

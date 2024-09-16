@@ -6,7 +6,7 @@ import { TileProps } from "../BaseTile";
 import { Stack, Typography } from "@mui/material";
 import { GridContainer, GridZStack } from "../utils";
 import { ThemeColors } from "../../../theme/theme";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 
 import { parseConfig } from "./types";
 
@@ -58,8 +58,8 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
       },
       plugins: {
         title: {
-          text: configs.name,
-          display: true,
+          text: configs.title,
+          display: !!configs.title,
           color: theme.palette.text.primary,
           font: {
             size: 16,
@@ -91,8 +91,8 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
             color: theme.palette.divider
           },
           title: {
-            display: true,
-            text: configs.name || undefined,
+            display: !!configs.yTitle,
+            text: configs.yTitle || undefined,
             color: theme.palette.text.primary,
           },
           position: "top",
@@ -114,7 +114,7 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
     }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [configs.min, configs.max, configs.name, theme.palette.divider, theme.palette.text.primary]
+    [configs.min, configs.max, configs.name, configs.yTitle, configs.title, theme.palette.divider, theme.palette.text.primary]
   );
 
   useEffect(() => {
@@ -136,7 +136,6 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
     <GridContainer>
       <GridZStack level={0} style={{ padding: "8px", paddingTop: "0px" }}>
         <Scatter
-          style={{ maxHeight: "400px" }}
           ref={chartEl}
           data={data}
           options={options}
@@ -149,9 +148,10 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
           justifyContent="flex-end"
           alignItems="flex-end"
           padding={0}
-          sx={{ textAlign: "end", pr: 0.5, pb: 0.5 }}
+          sx={{ textAlign: "end", pr: 1.0, pb: 0.5 }}
         >
-          <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
+          <Typography color={ThemeColors.colors.secondaryColor} fontWeight={700} variant="h6" sx={{ lineHeight: 1 }}>
+            {configs.label}
           </Typography>
         </Stack>
       </GridZStack>

@@ -6,13 +6,12 @@ import { GridContainer, GridZStack } from "./utils";
 import { ThemeColors } from "../../theme/theme";
 import { getPlotDurationMs } from "../constants";
 import { alpha, useTheme } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 
 export const SegmentStreamTileSpec: TileSpec =   {
   type: "SEGMENTS_STREAM_TILE",
   name: "Segment Stream Tile",
   description: "Stream segments data",
-  streamingRequired: true,
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',

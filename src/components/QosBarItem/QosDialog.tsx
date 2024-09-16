@@ -1,82 +1,82 @@
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import {
   DialogTitle,
   Dialog,
   DialogContent,
-  Typography,
   Divider,
   Stack,
-  FormGroup,
+  Box,
+  CardHeader,
+  Avatar,
+  CardActions,
+  IconButton,
 } from "@mui/material";
-import { IDevice } from "../../models/device";
-import Grid from "@mui/material/Unstable_Grid2/Grid2";
-import { ThemeColors } from "../../theme/theme";
-import { getQoSName } from "../../models/slot";
-import { QosIcon } from "./QosBarItem";
+import QosIcon from '@mui/icons-material/SensorsRounded';
+import CloseIcon from '@mui/icons-material/Close';
+import { ISlot } from "../../models/slot";
+import { IDashboard } from "../../models/dashboard";
+import SlotQosCard from "./SlotQosCard";
+
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  device: IDevice;
+  dashboard: IDashboard;
+  slots: ISlot[];
 }
 
-const QosDialog =  ({ open, onClose, device }: Props) => {
-
-  const colors = ThemeColors.colors.slots;
-
-  const slotStates = device.info.slots.map((slot, idx) => ({
-    enabled: device.state.connected && idx < device.slots.length,
-    state: idx < device.slots.length ? device.slots[idx].mask.qosState : 0,
-    color: colors[idx % colors.length],
-    name: slot.name.substring(0, 12)
-  }));
-
-
+const QosDialog = ({ open, onClose, dashboard, slots }: Props) => {
   return (
     <Dialog
       open={open}
+      maxWidth="sm"
+      fullWidth
       onClose={onClose}
     >
-      <DialogTitle>
-        QoS State
+      <DialogTitle sx={{ p: 0 }}>
+      <CardHeader
+          title="QoS State"
+          titleTypographyProps={{ variant: "h6" }}
+          avatar={
+            <Avatar
+              variant="rounded"
+              aria-label="device"
+              sx={{ bgcolor: "rgba(0,0,0,0)" }}
+            >
+              <QosIcon color="action" fontSize="large" />
+            </Avatar>
+          }
+          action={
+            <CardActions>
+              <IconButton
+                aria-label="close"
+                onClick={onClose}
+              >
+                <CloseIcon />
+              </IconButton>
+            </CardActions>
+          }
+        />
       </DialogTitle>
       <Divider />
       <DialogContent>
 
-      <FormGroup>
-        <Grid alignItems="center" container spacing={4}  height="100%">
-          {slotStates.map((state, idx) => (
-            <Grid xs={6} key={`state-${idx}`}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                spacing={1}
-              >
-                <div
-                  style={{
-                    borderLeftStyle: "solid",
-                    borderLeftWidth: "4px",
-                    borderLeftColor: state.color,
-                    paddingLeft: "8px",
-                  }}
-                >
-                  <Typography variant="h6" fontWeight={800} pr="8px">
-                    {state.name}
-                  </Typography>
-                </div>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="subtitle2" fontWeight={800} pr="8px">
-                    {getQoSName(state.enabled, state.state)}
-                  </Typography>
-                  <QosIcon connected={state.enabled} state={state.state} fontSize="medium" />
-                </Stack>
-              </Stack>
-            </Grid>
-          ))}
-        </Grid>
-
-      </FormGroup>
+        <Stack spacing={1} direction="row" justifyContent="center" height="100%" width="100%">
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              p: 2,
+              flexWrap: "wrap",
+            }}
+          >
+            {slots.map((slot, index) => (
+              <Box key={`slot-${index}`} sx={{ margin: 1 }}>
+                <SlotQosCard qos={slot.mask.qosState} config={dashboard.device.slots[index]} index={index} />
+              </Box>
+            ))}
+          </Box>
+        </Stack>
 
       </DialogContent>
     </Dialog>

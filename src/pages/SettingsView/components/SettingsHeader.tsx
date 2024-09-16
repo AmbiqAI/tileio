@@ -1,6 +1,6 @@
 import Typography from "@mui/material/Typography";
 import { IconButton, Toolbar } from "@mui/material";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Header from "../../../components/Header";
 

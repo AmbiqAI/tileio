@@ -1,6 +1,6 @@
 import { Box, Fade, Stack } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
-import { observer } from "mobx-react-lite";
+import { observer } from "mobx-react";
 import DangerCard from "./components/DangerCard";
 import UserPreferenceCard from "./components/UserPreferenceCard";
 import SettingsHeader from "./components/SettingsHeader";

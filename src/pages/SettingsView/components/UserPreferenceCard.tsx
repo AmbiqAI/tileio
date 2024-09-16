@@ -16,10 +16,10 @@ import SystemModeIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import DarkModeIcon from "@mui/icons-material/DarkModeRounded";
 import BleIcon from '@mui/icons-material/BluetoothConnectedRounded';
 import EmulateIcon from '@mui/icons-material/BugReportRounded';
-import { observer } from "mobx-react-lite";
-import { ApiModeType } from "../../../api";
+import { observer } from "mobx-react";
 import { ThemeModeType } from "../../../models/settings";
 import { useStore } from "../../../models/store";
+import { ApiModeType } from "../../../api/types";
 
 const UserPreferenceCard = () => {
   const {
@@ -28,19 +28,19 @@ const UserPreferenceCard = () => {
 
   const handleThemeChange = (
     event: React.MouseEvent<HTMLElement>,
-    newViewMode: ThemeModeType | null
+    newThemeMode: ThemeModeType | null
   ) => {
-    if (newViewMode !== null) {
-      settings.setThemeMode(newViewMode);
+    if (newThemeMode !== null) {
+      settings.setThemeMode(newThemeMode);
     }
   };
 
   const handleApiChange = (
     event: React.MouseEvent<HTMLElement>,
-    newViewMode: ApiModeType | null
+    newApiMode: ApiModeType | null
   ) => {
-    if (newViewMode !== null) {
-      settings.setApiMode(newViewMode);
+    if (newApiMode !== null) {
+      settings.setApiMode(newApiMode);
     }
   };
   return (
@@ -101,7 +101,7 @@ const UserPreferenceCard = () => {
 
         </FormGroup>
 
-        <FormGroup title="API Mode">
+        <FormGroup>
         <Typography sx={{ mb: 1 }}> API Mode </Typography>
         <ToggleButtonGroup
             value={settings.apiMode}
@@ -112,17 +112,20 @@ const UserPreferenceCard = () => {
           >
             <ToggleButton
               size="small"
-              value={ApiModeType.ble}
-              aria-label="BLE"
+              value={ApiModeType.live}
+              aria-label="Live"
             >
-              <BleIcon sx={{ mr: 1 }} /> BLE
+              <BleIcon sx={{ mr: 1 }} />
+              Live
             </ToggleButton>
+
             <ToggleButton
               size="small"
               value={ApiModeType.emulate}
               aria-label="Emulate"
             >
-              <EmulateIcon sx={{ mr: 1 }} /> Emulate
+              <EmulateIcon sx={{ mr: 1 }} />
+              Emulate
             </ToggleButton>
 
           </ToggleButtonGroup>
