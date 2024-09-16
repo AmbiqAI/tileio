@@ -43,7 +43,7 @@ jobs:
           echo "PUBLIC_URL=${PUBLIC_URL}"
           echo "APP_BASE_URL=${APP_BASE_URL}"
           npm install
-          npm run build
+          npm run build-web
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
