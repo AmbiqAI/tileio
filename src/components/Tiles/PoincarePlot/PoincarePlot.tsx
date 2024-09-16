@@ -148,9 +148,9 @@ const PoincarePlot = observer(({ slots, pause, config }: TileProps) => {
           justifyContent="flex-end"
           alignItems="flex-end"
           padding={0}
-          sx={{ textAlign: "end", pr: 0.5, pb: 0.5 }}
+          sx={{ textAlign: "end", pr: 1.0, pb: 0.5 }}
         >
-          <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
+          <Typography color={ThemeColors.colors.secondaryColor} fontWeight={700} variant="h6" sx={{ lineHeight: 1 }}>
             {configs.label}
           </Typography>
         </Stack>

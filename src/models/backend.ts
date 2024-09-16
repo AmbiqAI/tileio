@@ -42,20 +42,19 @@ const Backend = types
     if (parent.device){ return; }
     if (self.interface === interfaceType) { return; }
     self.interface = interfaceType;
-    console.log(`Setting interface to ${interfaceType}`);
     self.clearAvailableDevices();
   },
   setAvailableInterfaces: function(interfaces: DeviceInterfaceType[]) {
     self.availableInterfaces.splice(0, self.availableInterfaces.length);
     self.availableInterfaces.push(...interfaces);
   },
-  fetchDevices: flow(function*(backend: DeviceInterfaceType = DeviceInterfaceType.ble) {
+  fetchDevices: flow(function*() {
     /* Fetch online devices from the backend */
     if (self.fetching) { return; }
     try {
       self.fetching = true;
       self.availableDevices.splice(0, self.availableDevices.length);
-      yield ApiManager.scan(backend, (deviceId: string, name: string, type: DeviceInterfaceType) => {
+      yield ApiManager.scan(self.interface, (deviceId: string, name: string, type: DeviceInterfaceType) => {
         self.addAvailableDevice(deviceId, name, type);
         return false;
       }, 5000);

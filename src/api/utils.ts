@@ -17,7 +17,7 @@ function getDataByteLength(dtype: string): number {
   return 0;
 }
 
-export function dataViewToSignalData(data: DataView, numChs: number, fs: number, dtype: string): {signals: number[][], mask: number[][]} {
+export function dataViewToSignalData(data: DataView, numChs: number, fs: number, dtype: string, lastTs: number): {signals: number[][], mask: number[][], ts: number} {
   const ts = 1000/fs;
   const byteLen = getDataByteLength(dtype);
   const signalLen = data.getUint16(0, true) / (numChs * byteLen + 2);
@@ -25,6 +25,9 @@ export function dataViewToSignalData(data: DataView, numChs: number, fs: number,
   const mask: number[][] = [];
   let offset = 2;
   let refDate = Date.now() - ts*signalLen;
+  if (refDate < lastTs) {
+    refDate = lastTs;
+  }
   for (let i = 0; i < signalLen; i++) {
     mask.push([refDate, data.getUint16(offset, true)]);
     offset += 2;
@@ -50,7 +53,7 @@ export function dataViewToSignalData(data: DataView, numChs: number, fs: number,
     signals.push(row);
     refDate += ts;
   };
-  return {signals, mask};
+  return {signals, mask, ts: refDate};
 }
 
 export function dataViewToMetrics(data: DataView): number[] {

@@ -55,13 +55,13 @@ export class ApiManager {
      * @param deviceId Device ID
      * @returns Handler for the device
      */
-    let deviceInfoSnapshot = this.devices[deviceId];
-    if (!deviceInfoSnapshot || !deviceInfoSnapshot.type) {
+    let deviceInfo = this.devices[deviceId];
+    if (!deviceInfo || !deviceInfo.type) {
       throw new Error(`Device ${deviceId} not found`);
     }
-    const handler = this.handlers[deviceInfoSnapshot.type];
+    const handler = this.handlers[deviceInfo.type];
     if (handler === undefined) {
-      throw new Error(`Handler ${deviceInfoSnapshot.type} not available`);
+      throw new Error(`Handler ${deviceInfo.type} not available`);
     }
     return handler;
   }

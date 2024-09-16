@@ -67,9 +67,17 @@ export const StreamPlotTileSpec: TileSpec =   {
         type: 'number',
         title: 'Stream Delay',
         default: 500,
-        minimum: 0,
+        minimum: -2000,
         maximum: 2000,
         description: 'Stream delay (ms)'
+      },
+      streamGap: {
+        type: 'number',
+        title: 'Stream Gap',
+        default: 500,
+        minimum: 0,
+        maximum: 1000,
+        description: 'Stream gap (ms)'
       },
       fps: {
         type: 'number',
@@ -120,6 +128,7 @@ function parseConfig(config: { [key: string]: any}) {
     tertiaryColor: ThemeColors.colors.tertiaryColor,
     quaternaryColor: ThemeColors.colors.quaternaryColor,
     streamDelay: 500,
+    streamGap: 500,
     fps: 15,
     ...config
   } as StreamPlotTileConfig;
@@ -136,6 +145,7 @@ export interface StreamPlotTileConfig {
   tertiaryColor: string;
   quaternaryColor: string;
   streamDelay: number;
+  streamGap: number;
   fps: number;
 }
 
@@ -153,7 +163,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, dashboa
       responsive: true,
       maintainAspectRatio: false,
       cubicInterpolationMode: "monotone",
-      spanGaps: 2*configs.streamDelay,
+      spanGaps: configs.streamGap,
       elements: {
         point: { radius: 1 },
       },

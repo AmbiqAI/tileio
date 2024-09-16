@@ -1,11 +1,11 @@
 import BluetoothOnIcon from "@mui/icons-material/BluetoothOutlined";
 import BluetoothConnectedIcon from "@mui/icons-material/BluetoothConnectedRounded";
 import BluetoothOffIcon from "@mui/icons-material/BluetoothDisabledRounded";
+import UsbAvailableIcon from '@mui/icons-material/CableRounded';
 import UsbOnIcon from "@mui/icons-material/UsbOutlined";
-import UsbConnectedIcon from "@mui/icons-material/UsbRounded"
 import UsbOffIcon from "@mui/icons-material/UsbOffRounded";
 
-import { SvgIconProps, Tooltip } from "@mui/material";
+import { SvgIconProps } from "@mui/material";
 import { DeviceInterfaceType } from "../models/types";
 
 interface Props extends SvgIconProps {
@@ -34,15 +34,15 @@ const DeviceStateIcon = (props: Props) => {
   } else {
     if (connected) {
       return (
-          <UsbConnectedIcon {...cprops} />
+          <UsbOnIcon {...cprops} />
       );
     } else if (online) {
       return (
-          <UsbOnIcon {...cprops} />
+          <UsbAvailableIcon {...cprops} />
       );
     }
     return (
-        <UsbOffIcon {...cprops} />
+        <UsbOffIcon />
     )
   }
 };

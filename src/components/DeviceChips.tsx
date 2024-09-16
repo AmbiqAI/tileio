@@ -16,13 +16,13 @@ interface Props {
 const DeviceChips = ({ device, size, color  }: Props) => {
   return (
     <Stack spacing={1} direction="row" justifyContent="start">
-    {!device.state.connected && (
+    {((device.type === DeviceInterfaceType.usb) || !device.state.connected) && (
       <Chip
-        icon={<DeviceStateIcon type={device.type} online={device.state.online} connected={device.state.connected}/>}
-        size="small"
-        variant="outlined"
-        color={device.state.disconnected ? "error" : color}
-        label={device.state.connectionState}
+          icon={<DeviceStateIcon type={device.type} online={device.state.online} connected={device.state.connected}/>}
+          size="small"
+          variant="outlined"
+          color={device.state.disconnected ? "error" : color}
+          label={device.state.connectionState}
       />
     )}
     {(device.type === DeviceInterfaceType.ble) && device.state.connected && (

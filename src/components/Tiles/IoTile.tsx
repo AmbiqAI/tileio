@@ -4,6 +4,8 @@ import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import IoControl from "../IoControl";
 import { useMemo } from "react";
+import TileCornerLabel from "./TileCornerLabel";
+import { ThemeColors } from "../../theme/theme";
 
 export const IoTileSpec: TileSpec = {
   type: "IO_TILE",
@@ -93,27 +95,10 @@ const UioTile = observer(({ config, uioState, dashboard, pause }: TileProps) => 
           />
         </Stack>
       </GridZStack>
-
-      <GridZStack level={1} style={{ pointerEvents: "none" }}>
-        <Stack
-          width="100%"
-          height="100%"
-          alignItems="flex-end"
-          justifyContent="flex-end"
-          padding={0}
-          sx={{
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            textAlign: "end",
-            pr: 0.5,
-            pb: 0.5,
-          }}
-        >
-          <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-            I/O
-          </Typography>
-        </Stack>
-      </GridZStack>
+      <TileCornerLabel
+        subheader={"I/O"}
+        subheaderColor={ThemeColors.colors.secondaryColor}
+      />
 
     </GridContainer>
   );

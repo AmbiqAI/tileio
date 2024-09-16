@@ -6,7 +6,6 @@ import { saveAs } from 'file-saver';
 
 
 export async function shareJsonData(json: any, title?: string, filename?: string): Promise<void> {
-  console.log(json);
   const info = await Device.getInfo();
   const isMobile = isPlatform("ios") || isPlatform("android") || info.platform === 'ios';
   const canShare = (await Share.canShare()).value;

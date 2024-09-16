@@ -230,7 +230,7 @@ const SegPieTile = observer(({ slots, config, size }: TileProps) => {
             WebkitUserSelect: "none",
             textAlign: "end",
             pointerEvents: "none",
-            pr: 0.5,
+            pr: 1.0,
             pb: 0.5,
           }}
         >

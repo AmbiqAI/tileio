@@ -145,7 +145,6 @@ export class EmulatorHandler implements ApiHandler {
     console.log(`enableSlotNotifications ${deviceId} ${slot}`);
     await this.disableSlotNotifications(deviceId, slot);
     const slots = this.deviceSlots[deviceId];
-    console.log(slots, deviceId, slot);
     if (slots === undefined) {
       throw new Error('Device info not found!!!');
     }
@@ -182,7 +181,6 @@ export class EmulatorHandler implements ApiHandler {
     console.log(`enableSlotMetricsNotifications ${deviceId} ${slot}`);
     await this.disableSlotMetricsNotifications(deviceId, slot);
     const slots = this.deviceSlots[deviceId];
-    console.log(slots, deviceId, slot);
     if (slots === undefined) {
       throw new Error('Device info not found');
     }
@@ -207,9 +205,9 @@ export class EmulatorHandler implements ApiHandler {
   }
 
   async enableUioNotifications(deviceId: string, cb: (state: number[]) => void): Promise<void> {
-    console.log(`enableUioNotifications ${deviceId}`);
+    console.log(`enableUioNotifications ${deviceId}.`);
     await this.disableUioNotifications(deviceId);
-    const ts = 1000;
+    const ts = 5000;
     const intervalcb = setInterval(async () => {
       const state = await this.getUioState(deviceId);
       cb(state);

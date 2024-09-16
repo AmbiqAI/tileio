@@ -8,6 +8,7 @@ import { styled } from "@mui/system";
 import { getQoSName } from "../../models/slot";
 import { useMemo } from "react";
 import QosIcon from "../QosBarItem/QosIcon";
+import TileCornerLabel from "./TileCornerLabel";
 
 type ColoredDivProps = {
   animated?: boolean;
@@ -94,27 +95,6 @@ const QosTile = ({ pause, slots, dashboard, config }: TileProps) => {
   return (
     <GridContainer>
 
-      <GridZStack level={1}>
-        <Stack
-          width="100%"
-          height="100%"
-          alignItems="flex-end"
-          justifyContent="flex-end"
-          padding={0}
-          sx={{
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            textAlign: "end",
-            pr: 0.5,
-            pb: 0.5,
-          }}
-        >
-          <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-            QoS
-          </Typography>
-        </Stack>
-      </GridZStack>
-
       <GridZStack level={1} style={{marginBottom: "20px"}}>
           <Grid alignItems="center" container spacing={1} padding={2} height="100%">
             {configs.slots.map((slotIdx) => {
@@ -155,6 +135,11 @@ const QosTile = ({ pause, slots, dashboard, config }: TileProps) => {
           })}
           </Grid>
       </GridZStack>
+
+      <TileCornerLabel
+        subheader="QoS"
+        subheaderColor={ThemeColors.colors.secondaryColor}
+      />
     </GridContainer>
   );
 };

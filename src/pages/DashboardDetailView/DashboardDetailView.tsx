@@ -56,7 +56,7 @@ const NoDashboardView = ({ id }: { id: string }) => {
 
 const DashboardDetailGrid = observer(({ dashboard, device }: { dashboard: IDashboard, device: IDevice }) => {
   return (
-    <Fade in>
+    // <Fade in>
       <Grid
         container
         px={1}
@@ -83,7 +83,7 @@ const DashboardDetailGrid = observer(({ dashboard, device }: { dashboard: IDashb
           )
         })}
       </Grid>
-    </Fade>
+    // </Fade>
   )
 });
 

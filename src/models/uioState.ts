@@ -295,6 +295,7 @@ export const UioState = types
   .actions(self => ({
     _pushState: flow(function* () {
       try {
+        console.log(`Pushing UIO state: ${self.state}`);
         yield ApiManager.setUioState(self.id, self.state);
         yield delay(100);
       } catch (e) {
@@ -312,6 +313,7 @@ export const UioState = types
   }))
   .actions(self => ({
     updateState: flow(function* (state: number[]) {
+      console.log(`Updating UIO state: ${state}`);
       if (state.length !== 8) {
         console.debug(`Invalid state length: ${state.length}`);
         return;
@@ -324,9 +326,17 @@ export const UioState = types
       self.io5 = state[5];
       self.io6 = state[6];
       self.io7 = state[7];
-      self._pushState();
+      // self._pushState();
     }),
     updateIoState: flow(function* (index: number, state: number) {
+      let didChange = false;
+      if (index < 0 || index > 7) {
+        console.debug(`Invalid index: ${index}`);
+        return;
+      }
+      if (self.state[index] == state) {
+        return;
+      }
       switch (index) {
         case 0:
           self.io0 = state;

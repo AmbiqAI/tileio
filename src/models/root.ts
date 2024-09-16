@@ -88,15 +88,15 @@ export const Root = types
 }))
 .actions(self => ({
   afterCreate() {
-    console.log('root.afterCreate');
+    console.debug('root.afterCreate');
     initDB();
   },
   beforeDestroy() {
-    console.log('root.beforeDestroy');
+    console.debug('root.beforeDestroy');
     closeDB();
   },
   initialize: function() {
-    console.log('Initializing root store');
+    console.debug('Initializing root store');
     self.backend.initialize(self.settings.apiMode);
     self.initialized = true;
   },

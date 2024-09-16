@@ -1,9 +1,11 @@
-import { Stack, Typography } from "@mui/material";
+import { Stack } from "@mui/material";
 import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import { useMemo } from "react";
 import { ThemeColors } from "../../theme/theme";
+import TileCornerLabel from "./TileCornerLabel";
+import StyledMarkDown from "../StyledMarkDown";
 
 export const MetricTextTileSpec: TileSpec = {
   type: "METRIC_TEXT_TILE",
@@ -57,18 +59,26 @@ export const MetricTextTileSpec: TileSpec = {
     }
   },
   uischema: {
-    "slot": {
+    slot: {
       "ui:widget": "radio",
       "ui:options": {
         "inline": true
       }
     },
-    "metric": {
+    metric: {
     },
-    "primaryColor": {
+    values: {
+      items: {
+        "ui:widget": "textarea"
+      }
+    },
+    placeholder: {
+      "ui:widget": "textarea"
+    },
+    primaryColor: {
       "ui:widget": "color"
     },
-    "secondaryColor": {
+    secondaryColor: {
       "ui:widget": "color"
     }
   }
@@ -117,32 +127,17 @@ const MetricTextTile = observer(({ slots, config }: TileProps) => {
           alignItems="center"
           p={1}
         >
-          <Typography color={configs.primaryColor ?? ThemeColors.colors.primaryColor} variant="h4" sx={{ lineHeight: 1 }}>
+          <StyledMarkDown>
             {text}
-          </Typography>
+          </StyledMarkDown>
+
         </Stack>
       </GridZStack>
 
-      <GridZStack level={1} style={{pointerEvents: "none"}}>
-        <Stack
-          width="100%"
-          height="100%"
-          alignItems="flex-end"
-          justifyContent="flex-end"
-          padding={0}
-          sx={{
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            textAlign: "end",
-            pr: 0.5,
-            pb: 0.5,
-          }}
-        >
-          <Typography color={configs.secondaryColor ?? ThemeColors.colors.secondaryColor} fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-          {configs.name}
-          </Typography>
-        </Stack>
-      </GridZStack>
+      <TileCornerLabel
+        subheader={configs.name}
+        subheaderColor={configs.secondaryColor ?? ThemeColors.colors.secondaryColor}
+      />
 
     </GridContainer>
   );

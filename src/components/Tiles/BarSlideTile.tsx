@@ -342,7 +342,7 @@ const BarSlideTile = observer(({ size, config }: TileProps) => {
           userSelect: "none",
           WebkitUserSelect: "none",
           textAlign: "end",
-          pr: 0.5,
+          pr: 1.0,
           pb: 0.5,
         }}
       >

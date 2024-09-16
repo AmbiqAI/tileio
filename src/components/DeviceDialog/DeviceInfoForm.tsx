@@ -28,19 +28,19 @@ const DeviceInfoForm = ({ device, dashboard }: Props) => {
     <Box m={1} px={1}>
       <Stack direction="column" justifyContent="space-between">
         <Stack direction="column" justifyContent="start">
-          <Typography variant="h6">
+          <Typography variant="subtitle1">
             <span style={{ color: theme.palette.primary.main }}> Name: &nbsp;</span> {device.name}
           </Typography>
 
-          <Typography variant="h6">
+          <Typography variant="subtitle1">
             <span style={{ color: theme.palette.primary.main }}> ID: &nbsp;</span> {device.shortId}
           </Typography>
 
-          <Typography variant="h6">
+          <Typography variant="subtitle1">
             <span style={{ color: theme.palette.primary.main }}> Type: &nbsp;</span> {device.type}
           </Typography>
 
-          <Typography variant="h6">
+          <Typography variant="subtitle1">
             <span style={{ color: theme.palette.primary.main }}> Status: &nbsp;</span> {device.state.connectStateName}
           </Typography>
 
@@ -48,7 +48,7 @@ const DeviceInfoForm = ({ device, dashboard }: Props) => {
           <Divider sx={{ py: 1 }} />
         </Stack>
 
-        <Stack direction="row" spacing={1} justifyContent="space-between" mt={2}>
+        <Stack direction="row" spacing={1} justifyContent="end" mt={2}>
           <LoadingButton
             disabled={device.state.connecting || device.state.disconnecting}
             // loading={device.state.connecting || device.state.disconnecting}
@@ -63,7 +63,7 @@ const DeviceInfoForm = ({ device, dashboard }: Props) => {
             Forget Device
           </LoadingButton>
 
-          <LoadingButton
+          {/* <LoadingButton
             disabled={!device.state.connected}
             // loading={device.state.connecting || device.state.disconnecting}
             loadingPosition="start"
@@ -78,7 +78,7 @@ const DeviceInfoForm = ({ device, dashboard }: Props) => {
               }
             }}
           >
-          </LoadingButton>
+          </LoadingButton> */}
 
           <LoadingButton
             disabled={device.state.connecting || device.state.disconnecting}

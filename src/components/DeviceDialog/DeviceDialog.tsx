@@ -8,6 +8,8 @@ import {
   CardHeader,
   Divider,
   IconButton,
+  Stack,
+  Typography,
 } from "@mui/material";
 import { DeviceIcon } from "../../assets/icons";
 import CloseIcon from '@mui/icons-material/Close';
@@ -38,8 +40,36 @@ const DeviceDialog = ({ dashboard, open, close }: Props) => {
       }}
     >
       <DialogTitle sx={{ p: 0 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" px={1} py={1}>
+          <Stack direction="row" justifyContent="start" alignItems="center">
+            <Avatar
 
-        <CardHeader
+              variant="rounded"
+              aria-label="settings"
+              sx={{ bgcolor: "rgba(0,0,0,0)",
+                width: 56, height: 56
+               }}
+            >
+              <DeviceIcon color="action" fontSize="large" />
+            </Avatar>
+            <Stack direction="column" justifyContent="start">
+              <Typography variant="h6">
+                Device Settings
+              </Typography>
+              {!!device && (
+                  <DeviceChips device={device} size="small" color="primary" />
+              )}
+              </Stack>
+          </Stack>
+            <IconButton
+              aria-label="close"
+              onClick={close}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+
+        {/* <CardHeader
           titleTypographyProps={{ variant: "h6" }}
           avatar={
             <Avatar
@@ -64,7 +94,7 @@ const DeviceDialog = ({ dashboard, open, close }: Props) => {
             </CardActions>
           }
           title="Device Settings"
-        />
+        /> */}
 
       </DialogTitle>
 

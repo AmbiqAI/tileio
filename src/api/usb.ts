@@ -3,6 +3,7 @@
 import { ApiHandler } from "./handler";
 import { calculateCRC16, dataViewToSignalData, dataViewToMetrics, isMobile } from './utils';
 import { ISlotConfig } from "../models/slot";
+import { delay } from "../utils";
 
 enum PacketType {
   Signal = 0,
@@ -46,6 +47,7 @@ export class UsbHandler implements ApiHandler {
   callbacks: Record<string, any>;
   _devices: USBDevice[];
   deviceFifos: Record<string, Uint8Array>;
+  deviceSlotStates: Record<string, number[]>;
 
   constructor() {
     this.initialized = false;
@@ -53,16 +55,17 @@ export class UsbHandler implements ApiHandler {
     this.callbacks = {};
     this._devices = [];
     this.deviceFifos = {};
+    this.deviceSlotStates = {};
   }
 
   _disconnectCallback(event: USBConnectionEvent) {
-    console.log(event);
+    console.log('IDDQD', event);
   }
 
   static async supportedPlatform(): Promise<boolean> {
-    // USB only supported on Desktop browser or electron
-    const mobile = await isMobile();
-    return !mobile && !!navigator.usb;
+    // USB only supported on some browsers (e.g. Chrome)
+    // const mobile = await isMobile();
+    return !!navigator.usb;
   }
 
   async initialize(): Promise<boolean> {
@@ -121,7 +124,7 @@ export class UsbHandler implements ApiHandler {
   async decodePacket(deviceId: string, packet: DataView) {
 
     if (packet.byteLength !== TIO_USB_PACKET_LEN) {
-      console.log(`Invalid packet length ${packet.byteLength}`);
+      console.warn(`Invalid packet length ${packet.byteLength}`);
       return null;
     }
 
@@ -138,10 +141,10 @@ export class UsbHandler implements ApiHandler {
     const actualCrc = calculateCRC16(data);
     const frameStop = packet.getUint8(TIO_USB_STOP_IDX);
     if (crc !== actualCrc) {
-      console.log(`CRC error ${crc} ${actualCrc}`);
+      console.warn(`CRC error ${crc} ${actualCrc}`);
     }
     if (frameStart !== 0x55 || frameStop !== 0xAA) {
-      console.log(`Frame error start: ${frameStart} stop: ${frameStop}`);
+      console.warn(`Frame error start: ${frameStart} stop: ${frameStop}`);
       return null;
     }
 
@@ -154,7 +157,9 @@ export class UsbHandler implements ApiHandler {
         return null;
       }
       const slot = slots[slotIdx];
-      const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.fs, slot.dtype);
+      const lastTs = this.deviceSlotStates[deviceId][slotIdx];
+      const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.fs, slot.dtype, lastTs);
+      this.deviceSlotStates[deviceId][slotIdx] = rst.ts;
       await cb(slotIdx, rst.signals, rst.mask);
 
     } else if (ptype == PacketType.Metrics) {
@@ -170,11 +175,11 @@ export class UsbHandler implements ApiHandler {
       if (cb == undefined) {
         return null;
       }
-      if (data.length !== 8) {
+      if (data.length !== 10) {
         console.warn(`Invalid UIO state length: ${data.length}`);
         return null;
       }
-      const state = Array.from(data).slice(0, 8);
+      const state = Array.from(data).slice(2, 10);
       await cb(state);
 
     }
@@ -203,9 +208,9 @@ export class UsbHandler implements ApiHandler {
 
   /**
    * Start scanning for available devices.
-   * On web, user will be promted and can only select one device.
+   * On web, user will be prompted and can only select one device.
    * On electron, provide a list of cached devices.
-   * On android|ios, usb is not supported.
+   * On ios/ipados, usb is not supported.
    * @param cb Callback function that will be called for each device found.
    */
   async startScan(cb: (deviceId: string, name: string) => boolean): Promise<void> {
@@ -229,15 +234,8 @@ export class UsbHandler implements ApiHandler {
 
   async refreshPreviousDevices(deviceIds: string[], cb: (deviceId: string, name: string) => void): Promise<void> {
     await this.initialize();
-    // this._devices = await navigator.usb.getDevices();
-    // Iterate through deviceIds
     deviceIds.forEach(async deviceId => {
       cb(deviceId, deviceId);
-      // const device = await navigator.usb.requestDevice({ filters: [{ serialNumber: deviceId }] });
-      // Add to this._devices if not already present
-      // await this._addDevice(device);
-      // console.log(device);
-      // cb(deviceId, device.productName || `${device.vendorId}:${device.productId}`);
     });
   }
 
@@ -308,16 +306,15 @@ export class UsbHandler implements ApiHandler {
               done = true;
               console.debug(`Device ${deviceId} closed`);
               this.deviceDisconnect(deviceId);
-              // Should handle
             } else {
               const rst = await device.transferIn(endpointIn, 64);
               if (rst.status === 'ok' && rst.data) {
                 await this.enqueueFrame(deviceId, rst.data);
               }
-              // Perhaps delay
             }
           } catch (error) {
             console.error(error);
+            await delay(100);
           }
         }
       }, 100);
@@ -326,6 +323,11 @@ export class UsbHandler implements ApiHandler {
   }
 
   async disableDevicePolling(deviceId: string): Promise<void> {
+    const timeout = this.callbacks[`dev${deviceId}.poll`];
+    if (timeout) {
+      clearTimeout(timeout);
+      this.callbacks[`dev${deviceId}.poll`] = undefined;
+    }
     this.deviceFifos[deviceId] = new Uint8Array([]);
   }
 
@@ -333,6 +335,7 @@ export class UsbHandler implements ApiHandler {
 
     this.deviceSlots[deviceId] = slots;
     this.callbacks[`dev${deviceId}.disconnect`] = onDisconnect;
+    this.deviceSlotStates[deviceId] = slots.map(s => 0);
 
     let device = await this._getDevice(deviceId);
     if (!device) {
@@ -356,6 +359,7 @@ export class UsbHandler implements ApiHandler {
       return;
     }
     this.deviceSlots[deviceId] = undefined;
+    this.deviceSlotStates[deviceId] = [];
 
     await this.disableDevicePolling(deviceId);
 

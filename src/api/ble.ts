@@ -28,17 +28,19 @@ export class BleHandler implements ApiHandler {
   initialized: boolean;
   deviceSlots: Record<string, ISlotConfig[]|undefined>;
   callbacks: Record<string, any>;
+  deviceSlotStates: Record<string, number[]>;
 
   constructor() {
     this.initialized = false;
     this.deviceSlots = {};
     this.callbacks = {};
+    this.deviceSlotStates = {};
   }
 
   static async supportedPlatform(): Promise<boolean> {
     // BLE supported on mobile, chrome browser, and electron
     const mobile = await isMobile();
-    return mobile || !!navigator.bluetooth || true;
+    return mobile || !!navigator.bluetooth;
   }
 
   async initialize(): Promise<boolean> {
@@ -106,6 +108,7 @@ export class BleHandler implements ApiHandler {
   async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
     await this.deviceDisconnect(deviceId);
     this.deviceSlots[deviceId] = slots;
+    this.deviceSlotStates[deviceId] = slots.map(s => 0);
     await BleClient.connect(deviceId, onDisconnect);
     await delay(100);
     await BleClient.getServices(deviceId);
@@ -113,6 +116,7 @@ export class BleHandler implements ApiHandler {
 
   async deviceDisconnect(deviceId: string): Promise<void> {
     this.deviceSlots[deviceId] = undefined;
+    this.deviceSlotStates[deviceId] = [];
     await BleClient.disconnect(deviceId);
   }
 
@@ -123,7 +127,7 @@ export class BleHandler implements ApiHandler {
     } catch (error) {
       const err_msg = (error as Error).message;
       if (err_msg.includes('Unlikely error') || err_msg.includes('unknown reason')) {
-        console.debug('TODO: Known write bug error code 14- Unlikely error');
+        console.debug('Known write bug error code 14- Unlikely error');
       } else {
         console.error(error);
         throw error;
@@ -140,12 +144,13 @@ export class BleHandler implements ApiHandler {
       }
       await BleClient.startNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_SIG_CHAR_UUIDS[slot], async (data: DataView) => {
         try {
+          const lastTs = this.deviceSlotStates[deviceId][slot];
           const numChs = slots[slot].chs.length;
           const fs = slots[slot].fs;
           const dtype = slots[slot].dtype;
-          console.log(`Data received: ${data.byteLength} ${numChs} ${fs} ${dtype}`);
-          const rst = dataViewToSignalData(data, numChs, fs, dtype);
+          const rst = dataViewToSignalData(data, numChs, fs, dtype, lastTs);
           await cb(slot, rst.signals, rst.mask);
+          this.deviceSlotStates[deviceId][slot] = rst.ts;
         } catch (error) {
           console.error(`Failed with notifications ${error}`);
         }

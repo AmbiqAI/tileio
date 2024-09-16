@@ -63,7 +63,6 @@ const SlotConfigEditDialog = ({ open, onSubmit, onClose, index, slot }: Props) =
           variant="outlined"
           disabled={formRef.current?.state.errors.length > 0}
           onClick={() => {
-            console.log('iddqd', formRef.current.state.errors);
             console.debug(formData);
             onSubmit(formData);
           }}>

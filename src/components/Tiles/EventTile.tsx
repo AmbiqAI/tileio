@@ -3,6 +3,8 @@ import { observer } from "mobx-react";
 import EventIcon from "@mui/icons-material/AddLocation";
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack, useDebounce } from "./utils";
+import TileCornerLabel from "./TileCornerLabel";
+import { ThemeColors } from "../../theme/theme";
 
 export const EventTileSpec: TileSpec = {
   type: "EVENT_TILE",
@@ -51,26 +53,14 @@ const EventTile = observer(({ record }: TileProps) => {
         </Stack>
       </GridZStack>
 
-      <GridZStack level={1} style={{pointerEvents: "none"}}>
-        <Stack
-          width="100%"
-          height="100%"
-          alignItems="flex-end"
-          justifyContent="flex-end"
-          padding={0}
-          sx={{
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            textAlign: "end",
-            pr: 0.5,
-            pb: 0.5,
-          }}
-        >
-          <Typography fontWeight={800} variant="h6" sx={{ lineHeight: 1 }}>
+      <TileCornerLabel
+        subheader={
+          <span>
             ADD<br></br>Marker
-          </Typography>
-        </Stack>
-      </GridZStack>
+          </span>
+        }
+        subheaderColor={ThemeColors.colors.secondaryColor}
+      />
 
     </GridContainer>
   );

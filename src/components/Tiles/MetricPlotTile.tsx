@@ -5,11 +5,12 @@ import { alpha } from "@mui/system";
 import { Stack, Typography } from "@mui/material";
 import { GridContainer, GridZStack } from "./utils";
 import { observer } from "mobx-react";
+import TileCornerLabel from "./TileCornerLabel";
 
 type Props = {
   name: string;
   latestTs: number;
-  data: { ts: number; [key: string]: number; }[];
+  data: { ts: number;[key: string]: number; }[];
   units: string;
   primaryColor: string;
   secondaryColor: string;
@@ -95,7 +96,7 @@ const MetricPlotTile = observer(({
         },
       },
       parsing: {
-        xAxisKey:  "ts",
+        xAxisKey: "ts",
         yAxisKey: yAxisId ?? "y",
       }
     }),
@@ -134,7 +135,7 @@ const MetricPlotTile = observer(({
     chart.data.datasets[0].data = data;
     if (duration && ts) {
       chart.options.scales!.x!.max = ts;
-      chart.options.scales!.x!.min = ts - duration*1000;
+      chart.options.scales!.x!.min = ts - duration * 1000;
     }
     chart.update("none");
   }, [data, latestTs, duration, ts]);
@@ -168,29 +169,11 @@ const MetricPlotTile = observer(({
           options={options}
         />
       </GridZStack>
-      <GridZStack level={1}>
-        <Stack
-          width="100%"
-          height="100%"
-          alignItems="flex-end"
-          justifyContent="flex-end"
-          padding={0}
-          sx={{
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            textAlign: "end",
-            pr: 0.5,
-            pb: 0.5,
-          }}
-        >
-          <Typography fontWeight={900} variant="h3" sx={{ lineHeight: 1 }}>
-            {value}
-          </Typography>
-          <Typography color={secondaryColor} fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-            {units}
-          </Typography>
-        </Stack>
-      </GridZStack>
+      <TileCornerLabel
+        header={value}
+        subheader={units}
+        subheaderColor={secondaryColor}
+      />
     </GridContainer>
   );
 });

@@ -5,6 +5,8 @@ import { GridContainer, GridZStack } from "./utils";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import { useMemo } from "react";
 import IoControl from "../IoControl";
+import { ThemeColors } from "../../theme/theme";
+import TileCornerLabel from "./TileCornerLabel";
 
 export const UioTileSpec: TileSpec = {
   type: "UIO_TILE",
@@ -64,7 +66,7 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
       await uioState.updateIoState(io, state);
     }
   }
-  const gridSize = size === "lg" ? 4 : size === "md" ? 6 : 12;
+  const gridSize = size === "lg" ? 3 : size === "md" ? 6 : 12;
   return (
     <GridContainer>
       <GridZStack level={0}>
@@ -73,7 +75,7 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
           height="100%"
           justifyContent="center"
           alignItems="center"
-          p={1}
+          p={0}
         >
           <Grid
             container
@@ -112,27 +114,10 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
         </Stack>
       </GridZStack>
 
-      <GridZStack level={1} style={{ pointerEvents: "none" }}>
-        <Stack
-          width="100%"
-          height="100%"
-          alignItems="flex-end"
-          justifyContent="flex-end"
-          padding={0}
-          sx={{
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            textAlign: "end",
-            pr: 0.5,
-            pb: 0.5,
-          }}
-        >
-          <Typography fontWeight={700} variant="h5" sx={{ lineHeight: 1 }}>
-            I/O
-          </Typography>
-        </Stack>
-      </GridZStack>
-
+      <TileCornerLabel
+        subheader={configs.name}
+        subheaderColor={ThemeColors.colors.secondaryColor}
+      />
     </GridContainer>
   );
 });

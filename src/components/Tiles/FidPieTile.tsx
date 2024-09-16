@@ -6,6 +6,7 @@ import { GridContainer, GridZStack } from "./utils";
 import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import { ThemeColors } from "../../theme/theme";
+import TileCornerLabel from "./TileCornerLabel";
 
 export const FidPieTileSpec: TileSpec = {
   type: "FID_PIE_TILE",
@@ -86,7 +87,7 @@ export interface FidPieTileConfig {
   units: string,
   slot: number;
   fiducialMask: number;
-  fiducials: {name: string, value: number, color: string}[];
+  fiducials: { name: string, value: number, color: string }[];
 }
 
 export function parseConfig(config: { [key: string]: any }): FidPieTileConfig {
@@ -147,8 +148,8 @@ const FidPieTile = observer(({ slots, config }: TileProps) => {
         },
       }
     };
-    },
-  [theme]);
+  },
+    [theme]);
 
   useEffect(() => {
     const chart = chartEl.current;
@@ -161,7 +162,7 @@ const FidPieTile = observer(({ slots, config }: TileProps) => {
     if (chart.legend) {
       const total = Object.values(data).reduce((a, b) => a + b, 0) || 1;
       chart.legend.legendItems = configs.fiducials.map((fiducial, i) => ({
-        text: `${fiducial.name}: ${(100*data[i]/total).toFixed(0)}%`,
+        text: `${fiducial.name}: ${(100 * data[i] / total).toFixed(0)}%`,
         fillStyle: fiducial.color || ThemeColors.colors.primaryColor,
       }));
     }
@@ -215,27 +216,10 @@ const FidPieTile = observer(({ slots, config }: TileProps) => {
           />
         </Stack>
       </GridZStack>
-      <GridZStack level={1}>
-        <Stack
-          width="100%"
-          height="100%"
-          alignItems="flex-end"
-          justifyContent="flex-end"
-          padding={0}
-          sx={{
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            textAlign: "end",
-            pointerEvents: "none",
-            pr: 0.5,
-            pb: 0.5,
-          }}
-        >
-          <Typography color={ThemeColors.colors.secondaryColor} fontWeight={700} variant="h6" sx={{ lineHeight: 1 }}>
-            {configs.units}
-          </Typography>
-        </Stack>
-      </GridZStack>
+      <TileCornerLabel
+        subheader={configs.units}
+        subheaderColor={ThemeColors.colors.secondaryColor}
+      />
     </GridContainer>
   );
 });

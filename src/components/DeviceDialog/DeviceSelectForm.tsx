@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import {
   Button,
@@ -18,6 +18,7 @@ import { useStore } from "../../models/store";
 import { ScanButton } from "../ScanButton";
 import DeviceStateIcon from "../DeviceStateIcon";
 import { DeviceInterfaceType } from "../../models/types";
+import { IDeviceInfoSnapshot } from "../../models/deviceInfo";
 
 interface Props {
 }
@@ -29,7 +30,12 @@ const DeviceSelectForm = ({ }: Props) => {
     await backend.fetchDevices();
   };
   const [inputValue, setInputValue] = useState("");
-  const [selectedId, setSelectedId] = useState<{ id: string, name: string, type: DeviceInterfaceType } | null>(null);
+  const [options, setOptions] = useState<IDeviceInfoSnapshot[]>([]);
+  const [selectedId, setSelectedId] = useState<IDeviceInfoSnapshot | null>(null);
+
+  useMemo(() => {
+    setOptions(backend.availableDevices);
+  }, [backend.availableDevices]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -54,7 +60,7 @@ const DeviceSelectForm = ({ }: Props) => {
             setInputValue(newInputValue);
           }}
           noOptionsText="No devices found"
-          options={backend.availableDevices.map(d => ({ id: d.id, name: d.name, type: d.type }))}
+          options={options}
           autoHighlight
           getOptionLabel={(option) => `${option.name} (${option.id.substring(0, 7)})`}
           isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -68,7 +74,7 @@ const DeviceSelectForm = ({ }: Props) => {
               <Typography width="100%" >
                 {`${option.name} (${option.id.substring(0, 7)})`}
               </Typography>
-              <DeviceStateIcon connected={true} online={true} type={option.type} />
+              <DeviceStateIcon connected={true} online={true} type={option.type!} />
             </Stack>
           )}
           renderInput={(params) => (

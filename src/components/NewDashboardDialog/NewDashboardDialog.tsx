@@ -36,7 +36,6 @@ const NewDashboardDialog = ({ open, close }: Props) => {
 
   const onCreate = async (snapshot: IDashboardSnapshot) => {
     try {
-      console.log(snapshot);
       snapshot.id = uuid4();
       root.addDashboard(snapshot);
       Notifier.add({

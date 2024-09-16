@@ -53,7 +53,7 @@ const DeviceInfoBarItem = ({ dashboard }: Props) => {
               onClick={() => { showDeviceDialog(true); }}
             >
               <Stack direction="column" justifyContent="end" alignSelf="end">
-                <Stack direction="row" justifyContent="end" alignItems="center">
+                <Stack direction="row" justifyContent="start" alignItems="center">
                   {/* <DeviceIcon /> */}
                   <Typography variant="h6" fontWeight={700} ml={1}>{device.name}</Typography>
                 </Stack>

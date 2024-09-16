@@ -12,7 +12,7 @@ export const SparklineTileSpec: TileSpec = {
   sizes: ["sm", "md", "lg"],
   schema: {
     type: 'object',
-    required: ['name', 'slot', 'metric', 'units', 'color'],
+    required: ['name', 'slot', 'metric', 'units'],
     properties: {
       name: {
         type: 'string',
