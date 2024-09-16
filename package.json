@@ -3,6 +3,7 @@
   "description": "Tileio",
   "version": "1.1.0",
   "private": true,
+  "homepage": "https://ambiqai.github.io/tileio/",
   "dependencies": {
     "@ambiqai/chartjs-plugin-streaming": "^3.1.1",
     "@capacitor-community/bluetooth-le": "^3.1.4",
