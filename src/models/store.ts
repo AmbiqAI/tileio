@@ -4,7 +4,7 @@ import { Storage, Drivers } from '@ionic/storage';
 import { Root, IRoot } from './root';
 import persist from '../utils/persist';
 
-const TIO_STORAGE_KEY = '__tio_store_dbg';
+const TIO_STORAGE_KEY = '__tio_store';
 
 const root = Root.create({
   dashboards: [],
