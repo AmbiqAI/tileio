@@ -205,7 +205,7 @@ const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: Ti
     return {
       datasets: configs.metrics.map((met) => ({
           label: `MET${met}`,
-          backgroundColor: alpha(colors[met%colors.length], 0.3),
+          backgroundColor: alpha(colors[met%colors.length], 0.7),
           borderColor: colors[met%colors.length],
           yAxisID: "y",
           data: [],

@@ -143,7 +143,7 @@ const DashboardSettingsForm = ({ dashboard }: Props) => {
           <Grid
             m={0}
             container
-            spacing={1.5}
+            rowSpacing={1.0} columnSpacing={1.0}
             justifyContent="flex-start"
             alignContent="flex-start"
             alignItems="flex-start"

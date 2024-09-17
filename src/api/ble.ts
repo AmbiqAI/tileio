@@ -5,7 +5,6 @@ import { delay } from '../utils';
 import { ApiHandler } from './handler';
 import { isMobile, dataViewToSignalData, dataViewToMetrics } from './utils';
 import { ISlotConfig } from '../models/slot';
-
 const TIO_SVC_UUID = "EECB7DB8-8B2D-402C-B995-825538B49328";
 const TIO_SLOTS_SIG_CHAR_UUIDS = [
   "5BCA2754-AC7E-4A27-A127-0F328791057A",

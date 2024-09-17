@@ -98,7 +98,7 @@ export const BarSlideTileSpec: TileSpec = {
       slides: {
         type: 'array',
         minItems: 1,
-        maxItems: 5,
+        maxItems: 10,
         items: ChartSlideSchema
       }
     }

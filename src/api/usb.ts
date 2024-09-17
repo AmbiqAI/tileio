@@ -127,7 +127,7 @@ export class UsbHandler implements ApiHandler {
       console.warn(`Invalid packet length ${packet.byteLength}`);
       return null;
     }
-
+    console.log(`Decoding packet ${packet.byteLength} bytes`);
     const frameStart = packet.getUint8(TIO_USB_START_IDX);
     const slotIdx = packet.getUint8(TIO_USB_SLOT_IDX);
     const ptype = packet.getUint8(TIO_USB_TYPE_IDX);
@@ -193,7 +193,6 @@ export class UsbHandler implements ApiHandler {
 
     let offset = 0;
     while (fifo.length - offset >= TIO_USB_PACKET_LEN) {
-      // Check if frame is complete
       const packet = new DataView(fifo.buffer.slice(offset, offset + TIO_USB_PACKET_LEN));
       // Check if frame is complete
       if (packet.getUint8(TIO_USB_START_IDX) !== TIO_USB_START_VAL || packet.getUint8(TIO_USB_STOP_IDX) !== TIO_USB_STOP_VAL) {
@@ -309,6 +308,7 @@ export class UsbHandler implements ApiHandler {
             } else {
               const rst = await device.transferIn(endpointIn, 64);
               if (rst.status === 'ok' && rst.data) {
+                console.log(`Received ${rst.data.byteLength} bytes`);
                 await this.enqueueFrame(deviceId, rst.data);
               }
             }

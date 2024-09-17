@@ -14,7 +14,7 @@ export const ApiMode = types.enumeration<ApiModeType>('ApiMode', Object.values(A
 
 const Settings = types
 .model('Settings', {
-  themeMode: types.optional(ThemeMode, ThemeModeType.system),
+  themeMode: types.optional(ThemeMode, ThemeModeType.dark),
   apiMode: types.optional(ApiMode, ApiModeType.live)
 })
 .views( self => ({

@@ -12,10 +12,45 @@ import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } 
 unhandled();
 
 // Define our menu templates (these are optional)
+const isDarwn = process.platform === 'darwin';
 const trayMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [new MenuItem({ label: 'Quit App', role: 'quit' })];
 const appMenuBarMenuTemplate: (MenuItemConstructorOptions | MenuItem)[] = [
-  { role: process.platform === 'darwin' ? 'appMenu' : 'fileMenu' },
+  { role: isDarwn ? 'appMenu' : 'fileMenu' },
   { role: 'viewMenu' },
+  {
+    role: 'editMenu',
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'selectAll' },
+    ]
+  },
+  {
+    role: 'windowMenu',
+    label: 'Window',
+    submenu: [
+      { role: 'minimize' },
+      { role: 'zoom' },
+    ]
+  },
+  {
+    role: 'help',
+    submenu: [
+      {
+        label: 'Learn More',
+        click: async () => {
+          const { shell } = require('electron')
+          await shell.openExternal('https://github.com/AmbiqAI/tileio')
+        }
+      }
+    ]
+  }
+
 ];
 
 // Get Config options from capacitor.config

@@ -1,4 +1,4 @@
-import { Stack, Typography } from "@mui/material";
+import { Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
@@ -66,7 +66,7 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
       await uioState.updateIoState(io, state);
     }
   }
-  const gridSize = size === "lg" ? 3 : size === "md" ? 6 : 12;
+  let gridSize = size === "lg" ? 3 : size === "md" ? 6 : 12;
   return (
     <GridContainer>
       <GridZStack level={0}>
@@ -96,6 +96,7 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
                 <Grid xs={gridSize}
                   key={`io-${io}`}
                   display="flex"
+                  padding={0}
                   justifyContent="center"
                   alignItems="center"
                   flexDirection="column"

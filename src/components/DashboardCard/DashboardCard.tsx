@@ -55,7 +55,7 @@ const DashboardCard = ({ dashboard, device }: Props) => {
             </Avatar>
           }
           title={dashboard.name}
-          titleTypographyProps={{ variant: "h6" }}
+          titleTypographyProps={{ variant: "h6", lineHeight: "normal" }}
         />
 
         <Divider />

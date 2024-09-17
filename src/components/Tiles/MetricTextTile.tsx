@@ -1,4 +1,4 @@
-import { Stack } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
@@ -113,24 +113,35 @@ const MetricTextTile = observer(({ slots, config }: TileProps) => {
   const metrics = configs.slot < slots.length ? slots[configs.slot].metrics : undefined;
   const latestTs = metrics ? metrics.latestTs : 0;
   let data = metrics && metrics.data.length ? metrics.data[metrics.data.length - 1] : [];
-  const value = configs.metric+1 < data.length ? Math.round(data[configs.metric+1]) : 0;
-  const text = value < configs.values.length ? configs.values[value] : configs.placeholder;
+
+  const value = configs.metric + 1 < data.length ? Math.round(data[configs.metric + 1]) : undefined;
+  const text = ((value !== undefined) && (value < configs.values.length)) ? configs.values[value] : configs.placeholder;
 
   return (
     <GridContainer>
 
-      <GridZStack level={2}>
+      <GridZStack level={0}>
         <Stack
           width="100%"
           height="100%"
           justifyContent="center"
           alignItems="center"
-          p={1}
+          p={0}
         >
-          <StyledMarkDown>
-            {text}
-          </StyledMarkDown>
-
+          <Box
+            px={1}
+            pt={-2}
+            m={0}
+            height="100%"
+            width="100%"
+            sx={{
+              overflowY: "scroll"
+            }}
+          >
+            <StyledMarkDown>
+              {text}
+            </StyledMarkDown>
+          </Box>
         </Stack>
       </GridZStack>
 
