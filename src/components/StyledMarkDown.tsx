@@ -16,7 +16,7 @@ const StyledMarkDown = ({ children }: Props) => {
         h4: ({ children }) => <h4 style={{ color: theme.palette.primary.main, margin: 4, fontSize: '1.4rem' }}>{children}</h4>,
         h5: ({ children }) => <h5 style={{ color: theme.palette.primary.main, margin: 4, fontSize: '1.2rem' }}>{children}</h5>,
         h6: ({ children }) => <h6 style={{ color: theme.palette.primary.main, margin: 4, fontSize: '1.0rem' }}>{children}</h6>,
-        p: ({ children }) => <p style={{ margin: 2, fontSize: '0.9rem' }}>{children}</p>,
+        p: ({ children }) => <p style={{ margin: 4, fontSize: '0.9rem' }}>{children}</p>,
       }}
     >
       {children}

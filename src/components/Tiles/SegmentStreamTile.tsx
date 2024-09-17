@@ -206,7 +206,7 @@ const SegmentStreamTile = observer(({ size, slots, pause, duration, config }: Ti
       datasets: configs.segments.map((seg) => ({
           label: seg.name.substring(0, 12),
           fill: true,
-          backgroundColor: alpha(seg.color, 0.3),
+          backgroundColor: alpha(seg.color, 0.7),
           borderColor: seg.color,
           yAxisID: "y",
           data: [],

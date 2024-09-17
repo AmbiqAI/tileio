@@ -14,7 +14,7 @@ function Footer({ children }: Props) {
         position="fixed"
         color="inherit"
         sx={{
-          position: "fixed",
+          // position: "fixed",
           backgroundColor: (theme: Theme) => alpha(theme.palette.background.default, 0.65),
           backdropFilter: "blur(8px)",
           pb: `env(safe-area-inset-bottom)`,

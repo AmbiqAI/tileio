@@ -5,10 +5,10 @@ export const lightTheme = createTheme({
   breakpoints: {
     values: {
       xs: 0,
-      sm: 620,
-      md: 900,
+      sm: 640,
+      md: 960,
       lg: 1200,
-      xl: 1536
+      xl: 1520
     },
   },
   palette: {
@@ -47,10 +47,10 @@ export const darkTheme = createTheme({
   breakpoints: {
     values: {
       xs: 0,
-      sm: 620,
-      md: 900,
+      sm: 640,
+      md: 960,
       lg: 1200,
-      xl: 1536
+      xl: 1520
     },
   },
   palette: {
