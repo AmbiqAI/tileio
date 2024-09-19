@@ -13,10 +13,11 @@ export const Root = types
   dashboards: types.array(Dashboard),
   records: types.array(Record),
   backend: types.optional(Backend, {}),
-  device: types.maybeNull(Device)
+  // device: types.maybeNull(Device)
 })
 .volatile(self => ({
   initialized: false,
+  device: (null as IDevice|null),
   record: (undefined as IRecord|undefined),
 }))
 .views(self => ({

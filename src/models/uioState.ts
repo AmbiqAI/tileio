@@ -313,7 +313,6 @@ export const UioState = types
   }))
   .actions(self => ({
     updateState: flow(function* (state: number[]) {
-      console.log(`Updating UIO state: ${state}`);
       if (state.length !== 8) {
         console.debug(`Invalid state length: ${state.length}`);
         return;

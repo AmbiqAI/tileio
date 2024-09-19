@@ -40,7 +40,7 @@ const DeviceChips = ({ device, size, color  }: Props) => {
         size={size}
         variant="outlined"
         color={color}
-        label={`${device.state.signalStrength} dBm`}
+        label={`${device.state.signalStrength.toFixed(0)} dBm`}
       />
     )}
   </Stack>

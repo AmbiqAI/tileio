@@ -317,7 +317,7 @@ export class UsbHandler implements ApiHandler {
             await delay(100);
           }
         }
-      }, 100);
+      }, 1);
       this.callbacks[`dev${deviceId}.poll`] = intervalcb;
     }
   }
@@ -329,6 +329,7 @@ export class UsbHandler implements ApiHandler {
       this.callbacks[`dev${deviceId}.poll`] = undefined;
     }
     this.deviceFifos[deviceId] = new Uint8Array([]);
+
   }
 
   async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
@@ -374,6 +375,13 @@ export class UsbHandler implements ApiHandler {
       this.callbacks[`dev${deviceId}.disconnect`] = undefined;
     }
     if (device.opened) {
+      // await device.controlTransferOut({
+      //   'requestType' : 'class',
+      //   'recipient' : 'interface',
+      //   'request' : 0x22,
+      //   'value' : 0x00,
+      //   'index' : ifaceNumber
+      // });
       await device.close();
     }
   }

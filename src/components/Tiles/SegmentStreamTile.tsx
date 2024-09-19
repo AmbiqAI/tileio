@@ -63,7 +63,7 @@ export const SegmentStreamTileSpec: TileSpec =   {
         title: 'Stream Delay',
         default: 500,
         minimum: 0,
-        maximum: 2000,
+        maximum: 5000,
         description: 'Stream delay (ms)'
       },
       fps: {
