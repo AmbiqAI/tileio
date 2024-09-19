@@ -139,11 +139,11 @@ const Device = types
         yield ApiManager.disableSlotNotifications(self.id, slot);
         yield ApiManager.disableSlotMetricsNotifications(self.id, slot);
       }
-      if (enable) {
-        yield ApiManager.enableUioNotifications(self.id, self.uioState.updateState);
-      } else {
-        yield ApiManager.disableUioNotifications(self.id);
-      }
+    }
+    if (enable) {
+      yield ApiManager.enableUioNotifications(self.id, self.uioState.updateState);
+    } else {
+      yield ApiManager.disableUioNotifications(self.id);
     }
     self.notifications = enable;
   }),

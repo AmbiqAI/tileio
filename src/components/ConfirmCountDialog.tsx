@@ -48,7 +48,7 @@ const ConfirmCountDialog = ({
           fullWidth
           autoComplete="off"
           type="number"
-          value={inputCount}
+          value={inputCount || ""}
           onChange={(event) => {
             if (event.target.value.length) {
               setInputCount(parseInt(event.target.value));

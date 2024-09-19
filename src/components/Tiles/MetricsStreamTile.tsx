@@ -63,6 +63,14 @@ export const MetricsStreamTileSpec: TileSpec =   {
         maximum: 2000,
         description: 'Stream delay (ms)'
       },
+      streamGap: {
+        type: 'number',
+        title: 'Stream Gap',
+        default: 500,
+        minimum: 0,
+        maximum: 5000,
+        description: 'Stream gap (ms)'
+      },
       fps: {
         type: 'number',
         title: 'FPS',
@@ -100,6 +108,7 @@ function parseConfig(config: { [key: string]: any}) {
     primaryColor: ThemeColors.colors.primaryColor,
     secondaryColor: ThemeColors.colors.secondaryColor,
     streamDelay: 500,
+    streamGap: 500,
     fps: 15,
     ...config
   } as MetricsStreamTileConfig;
@@ -114,6 +123,7 @@ export interface MetricsStreamTileConfig {
   primaryColor: string;
   secondaryColor: string;
   streamDelay: number;
+  streamGap: number;
   fps: number;
 }
 
@@ -131,7 +141,7 @@ const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: Ti
       responsive: true,
       maintainAspectRatio: false,
       cubicInterpolationMode: "monotone",
-      spanGaps: 4*configs.streamDelay,
+      spanGaps: configs.streamGap,
       elements: {
         point: { radius: 1 },
       },

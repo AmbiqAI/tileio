@@ -67,8 +67,8 @@ export const StreamPlotTileSpec: TileSpec =   {
         type: 'number',
         title: 'Stream Delay',
         default: 500,
-        minimum: -2000,
-        maximum: 2000,
+        minimum: -5000,
+        maximum: 5000,
         description: 'Stream delay (ms)'
       },
       streamGap: {
@@ -76,7 +76,7 @@ export const StreamPlotTileSpec: TileSpec =   {
         title: 'Stream Gap',
         default: 500,
         minimum: 0,
-        maximum: 1000,
+        maximum: 5000,
         description: 'Stream gap (ms)'
       },
       fps: {

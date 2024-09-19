@@ -14,7 +14,7 @@ import App from "./App";
 import "./index.css";
 import "./plugins";
 import { lightTheme, darkTheme } from "./theme/theme";
-import { Box, CircularProgress, Dialog, useMediaQuery } from "@mui/material";
+import { Box, CircularProgress, Dialog, DialogContent, Stack, Typography, useMediaQuery } from "@mui/material";
 import { observer } from "mobx-react";
 import { useStore } from "./models/store";
 import { ThemeModeType } from "./models/settings";
@@ -29,12 +29,21 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-const SplashScreen = observer(({ initialized }: { initialized: boolean }) => {
+const SplashScreen = observer(({ initialized, error }: { initialized: boolean, error?: string }) => {
   return (
-    <Dialog open={!initialized}>
-      <Box sx={{ display: 'flex' }}>
+    <Dialog
+      open={!initialized || !!error}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogContent>
+      <Stack spacing={2} direction="column" alignItems="center" justifyContent="center">
+        <Typography color="primary" variant="h4" sx={{ flexGrow: 1, textAlign: 'center' }}>
+          Loading Tileio
+        </Typography>
         <CircularProgress />
-      </Box>
+      </Stack>
+      </DialogContent>
     </Dialog>
   )
 });
@@ -54,8 +63,8 @@ const AppContainer = observer(() => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App />
       <SplashScreen initialized={initialized} />
+      <App />
     </ThemeProvider>
   );
 });

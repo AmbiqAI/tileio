@@ -28,6 +28,7 @@ export default function App() {
             <Route path="/records/:id" component={RecordDetailView} />
             <Route path="/dashboards/:id" component={DashboardDetailView} />
             <Redirect from="/" exact to="/dashboards" />
+            <Redirect from="*" to="/dashboards" />
           </Switch>
           <Notifications />
         </Snackbar>

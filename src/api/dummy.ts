@@ -27,9 +27,6 @@ function getRandomFloat(min: number, max: number) {
   return Math.random()*(max - min) + min;
 }
 
-// function roundf(value: number): number {
-//   return Math.round((value + Number.EPSILON) * 100) / 100;
-// }
 
 function generateDummySlotSignals(slot: number, numSignals: number, numChs: number, fs: number): {signals: number[][], mask: number[][]} {
   const signals: number[][] = [];
@@ -158,7 +155,6 @@ export class EmulatorHandler implements ApiHandler {
     const numPackets = Math.ceil(fs/maxSlotsPerPacket);
     const ts = 1000/numPackets;
     const numSignals = fs/numPackets;
-    console.debug(`${numChs} ${fs} ${numPackets} ${ts} ${numSignals}`);
     const intervalcb = setInterval(() => {
       const rst = generateDummySlotSignals(slot, numSignals, numChs, fs);
       cb(slot, rst.signals, rst.mask);
