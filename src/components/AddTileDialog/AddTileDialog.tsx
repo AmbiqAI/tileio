@@ -41,7 +41,7 @@ const AddTileDialog = ({ open, onSubmit, onClose }: Props) => {
   const [selectedTileName, setSelectedTileName] = useState<string|null>(null);
   const [selectedTile, setSelectedTile] = useState<TileSpec|null>();
   const [formData, setFormData] = useState({});
-  const steps = ['Select Tile', 'Configure Tile', 'Review'];
+  const steps = ['Select Tile', 'Setup Tile', 'Review'];
   const [activeStep, setActiveStep] = useState(0);
   const jsonTheme = theme.palette.mode === 'dark' ? darkTheme : lightTheme;
   return (

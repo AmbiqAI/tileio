@@ -59,11 +59,10 @@ const QosDialog = ({ open, onClose, dashboard, slots }: Props) => {
         />
       </DialogTitle>
       <Divider />
-      <DialogContent>
-
-        <Stack spacing={1} direction="row" justifyContent="center" height="100%" width="100%">
+      <DialogContent style={{padding: 0}}>
           <Box
             sx={{
+              m: 0,
               display: "flex",
               justifyContent: "center",
               p: 2,
@@ -76,7 +75,6 @@ const QosDialog = ({ open, onClose, dashboard, slots }: Props) => {
               </Box>
             ))}
           </Box>
-        </Stack>
 
       </DialogContent>
     </Dialog>

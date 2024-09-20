@@ -59,7 +59,7 @@ export class UsbHandler implements ApiHandler {
   }
 
   _disconnectCallback(event: USBConnectionEvent) {
-    console.log('IDDQD', event);
+    console.debug('USB Disconnect CB', event);
   }
 
   static async supportedPlatform(): Promise<boolean> {

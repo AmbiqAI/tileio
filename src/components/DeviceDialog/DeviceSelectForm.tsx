@@ -21,9 +21,11 @@ import { DeviceInterfaceType } from "../../models/types";
 import { IDeviceInfoSnapshot } from "../../models/deviceInfo";
 
 interface Props {
+  size?: "small" | "medium";
 }
 
-const DeviceSelectForm = ({ }: Props) => {
+const DeviceSelectForm = ({ size }: Props) => {
+  const isSmall = size === "small";
   const { root: { backend, device, setActiveDevice } } = useStore();
 
   const performScan = async () => {
@@ -38,10 +40,18 @@ const DeviceSelectForm = ({ }: Props) => {
   }, [backend.availableDevices]);
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack width="100%" direction="row" alignItems="center" justifyContent="center" my={2} spacing={1}>
-        <FormControl sx={{ m: 1, minWidth: 110 }} size="small">
+    <Box sx={{ p: 2, width: "100%" }}>
+      <Stack
+        width="100%"
+        direction={isSmall ? "column" : "row"}
+        alignItems="stretch"
+        justifyContent="center"
+        my={2} spacing={1}
+        padding={1}
+      >
+        <FormControl sx={{ m: 1, minWidth: "80px" }} size="small">
           <Select
+            autoWidth
             disabled={backend.fetching}
             value={backend.interface}
             onChange={async (e) => {
@@ -126,6 +136,10 @@ const DeviceSelectForm = ({ }: Props) => {
     </Box>
 
   );
+};
+
+DeviceSelectForm.defaultProps = {
+  size: "medium",
 };
 
 export default observer(DeviceSelectForm);

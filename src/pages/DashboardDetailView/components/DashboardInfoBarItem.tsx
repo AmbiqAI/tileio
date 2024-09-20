@@ -10,9 +10,10 @@ import DashboardChips from '../../../components/DashboardChips';
 
 interface Props {
   dashboard: IDashboard;
+  size? : "small" | "medium";
 }
 
-const DashboardInfoBarItem = ({ dashboard }: Props) => {
+const DashboardInfoBarItem = ({ dashboard, size }: Props) => {
 
   const [isDashboardConfigDialogOpen, showDashboardConfigDialog] = useState(false);
 
@@ -32,7 +33,20 @@ const DashboardInfoBarItem = ({ dashboard }: Props) => {
         <Stack direction="column" justifyContent="start" alignSelf="end">
           <Stack direction="row" justifyContent="start" alignItems="center">
             {/* <DashboardRoundedIcon /> */}
-            <Typography variant="h6">{dashboard.name}</Typography>
+            <Typography
+              variant="h6"
+              style={{
+                lineHeight: "1.0",
+                textAlign: "left",
+                display: "-webkit-box",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: 2,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {dashboard.name}
+            </Typography>
           </Stack>
 
           <DashboardChips dashboard={dashboard} size="small" color="secondary" />

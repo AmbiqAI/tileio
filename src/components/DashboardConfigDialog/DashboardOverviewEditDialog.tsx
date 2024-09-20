@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import { observer } from "mobx-react";
 import {
   DialogTitle,
@@ -13,11 +12,13 @@ import {
   Slider,
   Box,
 } from "@mui/material";
-import { IDashboard } from "../../models/dashboard";
+import { useState } from "react";
+
 
 interface Props {
-  dashboard: IDashboard;
-  onClose: () => void;
+  info: {name: string, description: string, duration: number };
+  onCancel: () => void;
+  onSubmit: (info: {name: string, description: string, duration: number }) => void;
   open: boolean;
 }
 
@@ -27,14 +28,19 @@ const durationOptions = [
   { label: "60 sec", value: 60 },
 ];
 
-const DashboardOverviewEditDialog = ({ open, dashboard, onClose }: Props) => {
-  const formRef = useRef<any>();
+const DashboardOverviewEditDialog = ({ open, info, onCancel, onSubmit }: Props) => {
+
+  const [newInfo, setNewInfo] = useState(info);
+  const handleCancel = () => {
+    setNewInfo(info);
+    onCancel();
+  }
   return (
     <Dialog
       open={open}
       fullWidth
       maxWidth="sm"
-      onClose={onClose}
+      onClose={handleCancel}
     >
       <DialogTitle>
         Edit Dashboard Overview
@@ -52,9 +58,9 @@ const DashboardOverviewEditDialog = ({ open, dashboard, onClose }: Props) => {
           <TextField
             fullWidth
             variant="outlined"
-            value={dashboard.name}
+            value={newInfo.name}
             onChange={(event) => {
-              dashboard.setName(event.target.value);
+              setNewInfo({ ...newInfo, name: event.target.value });
             }}
           />
         </FormGroup>
@@ -70,9 +76,9 @@ const DashboardOverviewEditDialog = ({ open, dashboard, onClose }: Props) => {
             variant="outlined"
             multiline
             placeholder="Add markdown description here..."
-            value={dashboard.description}
+            value={newInfo.description}
             onChange={(event) => {
-              dashboard.setDescription(event.target.value);
+              setNewInfo({ ...newInfo, description: event.target.value });
             }}
           />
         </FormGroup>
@@ -86,14 +92,14 @@ const DashboardOverviewEditDialog = ({ open, dashboard, onClose }: Props) => {
               size="medium"
               color="secondary"
               valueLabelDisplay="auto"
-              value={dashboard.duration}
+              value={newInfo.duration}
               step={5}
               min={5}
               max={60}
               marks={durationOptions}
               onChange={(event, newValue, activeThumb) => {
                 if (typeof newValue === "number") {
-                  dashboard.setDuration(newValue);
+                  setNewInfo({ ...newInfo, duration: newValue });
                 }
               }}
             />
@@ -107,9 +113,16 @@ const DashboardOverviewEditDialog = ({ open, dashboard, onClose }: Props) => {
 
         <Button
           variant="outlined"
-          disabled={formRef.current?.state.errors.length > 0}
-          onClick={onClose}>
-          Close
+          onClick={handleCancel}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => {
+            onSubmit(newInfo);
+          }}
+        >
+          Save
         </Button>
       </DialogActions>
     </Dialog>

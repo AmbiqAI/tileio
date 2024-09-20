@@ -1,5 +1,5 @@
 import Typography from "@mui/material/Typography";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import { observer } from "mobx-react";
 import { IDevice } from "../../models/device";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
@@ -12,9 +12,10 @@ import { IDashboard } from "../../models/dashboard";
 interface Props {
   device: IDevice;
   dashboard: IDashboard;
+  size?: "small" | "medium";
 }
 
-const UioBarItem = observer(({ device, dashboard }: Props) => {
+const UioBarItem = observer(({ device, dashboard, size }: Props) => {
 
   const ioItems = [{
     info: dashboard.device.uio.io0,
@@ -50,42 +51,48 @@ const UioBarItem = observer(({ device, dashboard }: Props) => {
 
   return (
     <>
-    <NavButton onClick={() => { showDialog(true); }} >
-        <Grid container alignItems="center" rowSpacing={0.5} columnSpacing={1} minWidth="120px" maxWidth="200px">
-          {ioItems.filter(btn => btn.info.enabled).map((io, idx) => (
-            <Grid xs={itemSize} key={`btn-${io.info.name}-${idx}`} minWidth="40px">
-              <Box alignItems="center">
-              {(io.info.ioType === UIOType.Momentary) && (
-                  <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
-                  {io.state ? io.info.on : io.info.off}
-                  </Typography>
-                )}
-                {(io.info.ioType === UIOType.Toggle) && (
-                  <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
-                  {io.state ? io.info.on : io.info.off}
-                  </Typography>
-                )}
-                {(io.info.ioType === UIOType.Slider) && (
-                  <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
-                  {io.state}
-                  </Typography>
-                )}
-                {(io.info.ioType === UIOType.Select) && (
-                  <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
-                  {io.info.selectInputs[io.state] || io.state}
-                  </Typography>
-                )}
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-    </NavButton>
-    <UioDialog
-      open={isDialogOpen}
-      onClose={() => { showDialog(false); }}
-      device={device}
-      dashboard={dashboard}
-    />
+      <NavButton onClick={() => { showDialog(true); }} >
+        {size === "small" ? (
+          <Typography variant="subtitle2" fontWeight={500} px={2}>
+            I/O
+          </Typography>
+        ) : (
+          <Grid container alignItems="center" rowSpacing={0.5} columnSpacing={1} minWidth="120px" maxWidth="240px">
+            {ioItems.filter(io => io.info.enabled).map((io, idx) => (
+              <Grid xs={itemSize} key={`btn-${io.info.name}-${idx}`} minWidth="40px">
+                <Box alignItems="center">
+                  {(io.info.ioType === UIOType.Momentary) && (
+                    <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
+                      {io.state ? io.info.on : io.info.off}
+                    </Typography>
+                  )}
+                  {(io.info.ioType === UIOType.Toggle) && (
+                    <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
+                      {io.state ? io.info.on : io.info.off}
+                    </Typography>
+                  )}
+                  {(io.info.ioType === UIOType.Slider) && (
+                    <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
+                      {io.state}
+                    </Typography>
+                  )}
+                  {(io.info.ioType === UIOType.Select) && (
+                    <Typography width="100%" noWrap variant="subtitle2" fontWeight={500} >
+                      {io.info.selectInputs[io.state] || io.state}
+                    </Typography>
+                  )}
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </NavButton>
+      <UioDialog
+        open={isDialogOpen}
+        onClose={() => { showDialog(false); }}
+        device={device}
+        dashboard={dashboard}
+      />
     </>
   );
 });

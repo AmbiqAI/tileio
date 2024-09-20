@@ -233,7 +233,6 @@ export class EmulatorHandler implements ApiHandler {
 
   async getUioState(deviceId: string): Promise<number[]> {
     const state = new Array(8).fill(0).map(() => randomInt(0, 2));
-    // console.log(`UIO state: ${state}`);
     return state;
   }
 

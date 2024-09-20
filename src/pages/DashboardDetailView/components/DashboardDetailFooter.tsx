@@ -1,4 +1,4 @@
-import { Divider, Stack, Toolbar } from "@mui/material";
+import { Divider, Stack, Toolbar, useMediaQuery, useTheme } from "@mui/material";
 import { observer } from "mobx-react";
 import { IDevice } from "../../../models/device";
 import Footer from "../../../components/Footer";
@@ -12,6 +12,9 @@ interface Props {
 }
 
 const DashboardDetailFooter = ({ dashboard, device }: Props) => {
+  const theme = useTheme();
+  const size = useMediaQuery(theme.breakpoints.down('sm')) ? "small" : "medium"
+
   return (
     <>
       <Footer>
@@ -27,7 +30,7 @@ const DashboardDetailFooter = ({ dashboard, device }: Props) => {
 
             <Divider orientation="vertical" flexItem />
 
-            <UioBarItem device={device} dashboard={dashboard} />
+            <UioBarItem device={device} dashboard={dashboard} size={size} />
 
             <Divider orientation="vertical" flexItem />
 

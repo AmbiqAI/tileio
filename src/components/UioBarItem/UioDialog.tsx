@@ -61,7 +61,7 @@ const UioDialog = ({ open, onClose, dashboard, device }: Props) => {
     <Dialog
       open={open}
       fullWidth
-      maxWidth="md"
+      maxWidth="sm"
       onClose={onClose}
     >
       <DialogTitle sx={{ p: 0 }}>
@@ -102,7 +102,7 @@ const UioDialog = ({ open, onClose, dashboard, device }: Props) => {
         />
       </DialogTitle>
       <Divider />
-      <DialogContent>
+      <DialogContent style={{padding: 0}}>
 
         <Stack spacing={1} direction="row" justifyContent="center" height="100%" width="100%">
           <Box

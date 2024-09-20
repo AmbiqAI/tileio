@@ -48,7 +48,7 @@ const DeviceInfoForm = ({ device, dashboard }: Props) => {
           <Divider sx={{ py: 1 }} />
         </Stack>
 
-        <Stack direction="row" spacing={1} justifyContent="end" mt={2}>
+        <Stack direction="row" spacing={1} justifyContent="end" mt={2} useFlexGap flexWrap="wrap">
           <LoadingButton
             disabled={device.state.connecting || device.state.disconnecting}
             // loading={device.state.connecting || device.state.disconnecting}

@@ -6,6 +6,7 @@ import { useStore } from "../../models/store";
 import DashboardsHeader from "./components/DashboardsHeader";
 import DashboardCard from "../../components/DashboardCard";
 import AddDashboardCard from "./components/AddDashboardCard";
+import { HeaderOffset } from "../../components/Header";
 
 
 const EmpyDashboardsView = () => {
@@ -28,10 +29,9 @@ const DashboardsView = () => {
   const { root: { dashboards, device } } = useStore();
 
   return (
-    <Box
-      sx={{ pb: 8, pt: "calc(1em + env(safe-area-inset-top))", width: "100%" }}
-    >
+    <Box sx={{ pb: 8, width: "100%" }}>
       <DashboardsHeader />
+      <HeaderOffset />
       {dashboards.length === 0 && <EmpyDashboardsView />}
       <Stack direction="row" justifyContent="center" height="100%" width="100%">
         <Box

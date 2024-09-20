@@ -21,16 +21,6 @@ export const persist: IArgs = (name, store, storage, options = {}) => {
   const whitelistDict = arrToDict(whitelist);
   const blacklistDict = arrToDict(blacklist);
 
-  // onSnapshot(store, async (_snapshot: StrToAnyMap) => {
-  //   const snapshot = { ..._snapshot };
-  //   Object.keys(snapshot).forEach((key) => {
-  //     if (whitelist && !whitelistDict[key]) { delete snapshot[key]; }
-  //     if (blacklist && blacklistDict[key]) { delete snapshot[key]; }
-  //   });
-  //   const data = !jsonify ? snapshot : JSON.stringify(snapshot)
-  //   await storage.set(name, data);
-  // })
-
   return storage.get(name)
     .then((data: object | string) => {
       const snapshot = !isString(data) ? data : JSON.parse(data)
@@ -47,6 +37,10 @@ export const persist: IArgs = (name, store, storage, options = {}) => {
         const data = !jsonify ? snapshot : JSON.stringify(snapshot)
         await storage.set(name, data);
       })
+    }).catch((err) => {
+      console.error('persist: error restoring snapshot!:', err);
+      storage.remove(name);
+      throw err;
     })
 }
 

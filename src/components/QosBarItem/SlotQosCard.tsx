@@ -27,7 +27,7 @@ const SlotQosCard = ({ index, config, qos }: Props) => {
       sx={{
         m: 0,
         borderRadius: 4,
-        width: 200,
+        width: 180,
         bgcolor: (theme: Theme) =>
           theme.palette.mode === "dark"
             ? `rgba(0,0,0,${config.enabled ? 0.8 : 0.3})`

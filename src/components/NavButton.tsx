@@ -3,7 +3,7 @@ import { styled } from "@mui/material/styles";
 import { alpha } from "@mui/system";
 
 const NavButton = styled(ButtonBase)(({ theme }: { theme: Theme }) => ({
-  borderWidth: "0px 2px 0px 2px",
+  borderWidth: "2px 2px 2px 2px",
   borderStyle: "solid",
   padding: "2px 3px",
   borderColor: "#0000",

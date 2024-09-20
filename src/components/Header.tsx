@@ -1,5 +1,5 @@
 import React from "react";
-import { AppBar, Theme, useScrollTrigger } from "@mui/material";
+import { AppBar, styled, Theme, useScrollTrigger } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Box } from "@mui/system";
 
@@ -32,7 +32,6 @@ interface Props {
 
 function Header({ children }: Props) {
   return (
-    <Box sx={{ flexGrow: 1, mb: 5 }}>
       <ElevationScroll>
         <AppBar
           position="fixed"
@@ -49,7 +48,23 @@ function Header({ children }: Props) {
           {children}
         </AppBar>
       </ElevationScroll>
-    </Box>
+  );
+}
+
+export const Offset = styled('div')(({ theme }) => theme.mixins.toolbar);
+
+export const HeaderOffset = () => {
+  return (
+    <div>
+    <Offset />
+    <div
+      style={{
+        height: "calc(env(safe-area-inset-top, 1em))",
+        width: "100%",
+      }}
+    >
+    </div>
+    </div>
   );
 }
 

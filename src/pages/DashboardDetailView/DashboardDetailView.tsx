@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
-import { Fade, Stack, Typography } from '@mui/material';
+import { Fade, Stack, styled, Typography } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import { observer } from 'mobx-react';
 import Device, { IDevice } from '../../models/device';
@@ -9,6 +9,7 @@ import DashboardDetailHeader from './components/DashboardDetailHeader';
 import DashboardDetailFooter from './components/DashboardDetailFooter';
 import TileCard from './components/TileCard';
 import Dashboard, { IDashboard } from '../../models/dashboard';
+import { HeaderOffset } from '../../components/Header';
 
 
 type DeviceParams = {
@@ -87,16 +88,12 @@ const DashboardDetailGrid = observer(({ dashboard, device }: { dashboard: IDashb
   )
 });
 
-
 const DashboardDetailView = () => {
+
   const { id } = useParams<DeviceParams>();
   const { root: { dashboardById, device, clearActiveDevice } } = useStore();
   const dashboard = dashboardById(decodeURIComponent(id));
   let dDevice = device;
-  // if (!!dDevice && dDevice.dashboard && dDevice.dashboard?.id !== id) {
-  //   clearActiveDevice();
-  //   dDevice = null;
-  // }
   if (dDevice == null) {
     dDevice = Device.create({ id: "0", name: "Unknown" });
   }
@@ -109,8 +106,7 @@ const DashboardDetailView = () => {
   return (
     <Box
       sx={{
-        pb: 8,
-        pt: 'calc(1.5em + env(safe-area-inset-top))',
+        pb: 6,
         height: "100%",
         width: "100%",
         maxWidth: "1600px",
@@ -118,6 +114,7 @@ const DashboardDetailView = () => {
       }}
     >
       <DashboardDetailHeader dashboard={dashboard} device={dDevice} />
+      <HeaderOffset />
       {dashboard.tiles.length === 0 && <EmpyTileView />}
       <DashboardDetailGrid dashboard={dashboard} device={dDevice}/>
       <DashboardDetailFooter dashboard={dashboard} device={dDevice} />

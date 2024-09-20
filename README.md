@@ -21,7 +21,6 @@ Tileio is a powerful application to create highly customizable dashboards for st
 
 ## Overview
 
-
 Tileio discovers and communicates to devices (e.g. Apollo4 Blue EVB) via **webBLE** or **webUSB**. A device streams data to Tileio through designated **slots**. At a high-level a **slot** consists of a set of similar signals (e.g. accelerometer) captured at the same sampling rate (e.g. 100 Hz). More specifically, a **slot** consists of two components: (1) a set of **channels** (e.g. X, Y, Z) along with a **mask** and (2) a set of **metrics**. A device can have up to 4 slots with each slot having up to 4 channels and up to 60 metrics.
 
-Beyond streaming data, Tileio also provides a generic UIO (user input/output) interface that can be used to interact with the device. The UIO interface consists of 8 configurable I/O elements that be configured as a button, toggle switch, slider, or select box.
+Beyond streaming data, Tileio also provides a generic I/O (input/output) control interface that can be used to interact with the device. The interface consists of 8 configurable I/O elements that be configured as buttons, toggle switches, sliders, and select boxes.

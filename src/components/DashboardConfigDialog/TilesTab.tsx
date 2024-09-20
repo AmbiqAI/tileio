@@ -25,7 +25,7 @@ const TilesTab = ({ dashboard }: Props) => {
         alignItems="center"
         // p={2}
       >
-        <Typography variant="h6">Tile Configuration</Typography>
+        <Typography variant="h6">Tile Setup</Typography>
         <Stack
           direction="row"
           justifyContent="flex-end"

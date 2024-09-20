@@ -59,14 +59,19 @@ export function parseConfig(config: { [key: string]: any }): UioTileConfig {
 }
 
 const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProps) => {
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
   const configs = useMemo(() => parseConfig(config || {}), [config]);
   const onChange = async (io: number, state: number) => {
     if (uioState) {
-      console.log("Setting I/O", io, "to", state);
+      console.debug("Setting I/O", io, "to", state);
       await uioState.updateIoState(io, state);
     }
   }
   let gridSize = size === "lg" ? 3 : size === "md" ? 6 : 12;
+  if (isSmall) {
+    gridSize = size === "lg" ? 6 : size === "md" ? 6 : 12;
+  }
   return (
     <GridContainer>
       <GridZStack level={0}>
@@ -85,6 +90,7 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
             m={1}
             overflow="scroll"
             flexDirection="row"
+            flexWrap="wrap"
             justifyContent="center"
             alignContent="center"
             alignItems="center"
