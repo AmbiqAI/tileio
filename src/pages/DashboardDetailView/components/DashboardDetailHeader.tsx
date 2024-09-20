@@ -17,14 +17,13 @@ interface Props {
 
 const DasboardDetailHeader = ({ dashboard, device }: Props) => {
   const theme = useTheme();
-  const isSmall = useMediaQuery(theme.breakpoints.down(500));
+  const size = useMediaQuery(theme.breakpoints.down('sm')) ? "small" : "medium"
   const history = useHistory();
-
   return (
     <Header>
       <Toolbar disableGutters sx={{alignItems: "stretch"}}>
         <IconButton
-          size="large" edge="start"
+          size={size} edge="start"
           color="inherit"
           aria-label="menu"
           sx={{ mx: 0.5, my: "auto" }}
@@ -38,8 +37,8 @@ const DasboardDetailHeader = ({ dashboard, device }: Props) => {
           alignItems="stretch"
           width="100%"
           >
-          <DashboardInfoBarItem dashboard={dashboard} />
-          <DeviceInfoBarItem dashboard={dashboard} />
+          <DashboardInfoBarItem dashboard={dashboard} size={size} />
+          <DeviceInfoBarItem dashboard={dashboard} size={size} />
         </Stack>
       </Toolbar>
 

@@ -15,20 +15,13 @@ interface Props {
   slots: ISlot[];
   dashboard: IDashboard;
   disabled?: boolean;
+  size? : "small" | "medium";
 }
 
-const QosBarItem = ({ slots, dashboard, disabled }: Props) => {
+const QosBarItem = ({ slots, dashboard, disabled, size }: Props) => {
 
   const [isDialogOpen, showDialog] = useState(false);
-
   const colors = ThemeColors.colors.slots;
-
-  const slotStates = dashboard.device.slots.map((config, idx) => ({
-    enabled: config.enabled,
-    state: idx < slots.length ? slots[idx].mask.qosState : 0,
-    color: colors[idx % colors.length],
-    name: `SLOT${idx + 1}`,
-  }));
 
   return (
     <>
@@ -72,6 +65,10 @@ const QosBarItem = ({ slots, dashboard, disabled }: Props) => {
     </>
 
   );
+};
+
+QosBarItem.defaultProps = {
+  size: "medium",
 };
 
 export default observer(QosBarItem);

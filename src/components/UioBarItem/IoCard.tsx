@@ -24,7 +24,7 @@ const IoCard = ({ index, config, io, disabled, onChange }: Props) => {
       sx={{
         m: 0,
         borderRadius: 4,
-        width: 200,
+        width: 180,
         bgcolor: (theme: Theme) =>
           theme.palette.mode === "dark"
             ? `rgba(0,0,0,${config.enabled ? 0.8 : 0.3})`
@@ -34,6 +34,8 @@ const IoCard = ({ index, config, io, disabled, onChange }: Props) => {
       <CardHeader
         title={`I/O ${index + 1}`}
         subheader={config.name}
+        titleTypographyProps={{ variant: "h6" }}
+        subheaderTypographyProps={{ variant: "subtitle2" }}
         sx={{ p: 1.5 }}
       />
 

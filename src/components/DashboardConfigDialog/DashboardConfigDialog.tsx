@@ -94,7 +94,7 @@ const DashboardConfigDialog = ({
     >
       <DialogTitle sx={{ p: 0 }}>
         <CardHeader
-          titleTypographyProps={{ variant: "h6" }}
+          titleTypographyProps={{ variant: "h6", lineHeight: "1.0" }}
           avatar={
             <Avatar
               variant="rounded"
@@ -106,19 +106,8 @@ const DashboardConfigDialog = ({
           }
           action={
             <CardActions>
-              <Tooltip title="Save config" placement="top">
-                <IconButton
-                  size="small"
-                  onClick={async () => {
-                    const json = getSnapshot(dashboard);
-                    await shareJsonData(json, 'Dashboard Configuration', 'tio-dashboard-config.json')
-                  }}
-                >
-                  <SaveIcon />
-                </IconButton>
-              </Tooltip>
 
-              <Tooltip title="Upload config" placement="top">
+              <Tooltip title="UPLOAD" placement="top">
                 <IconButton
                   component="label"
                   size="small"
@@ -132,12 +121,24 @@ const DashboardConfigDialog = ({
                 </IconButton>
               </Tooltip>
 
-              <IconButton
-                  aria-label="close"
-                  onClick={onClose}
+              <Tooltip title="DOWNLOAD" placement="top">
+                <IconButton
+                  size="small"
+                  onClick={async () => {
+                    const json = getSnapshot(dashboard);
+                    await shareJsonData(json, 'Dashboard Configuration', 'tio-dashboard-config.json')
+                  }}
                 >
-                  <CloseIcon />
+                  <SaveIcon />
                 </IconButton>
+              </Tooltip>
+
+              <IconButton
+                aria-label="close"
+                onClick={onClose}
+              >
+                <CloseIcon />
+              </IconButton>
 
             </CardActions>
           }
@@ -148,38 +149,38 @@ const DashboardConfigDialog = ({
       <Divider />
 
       <DialogContent sx={{ p: 0 }}>
-          <Box
-            sx={{ display: 'flex', height: "calc(62vh)" }}
+        <Box
+          sx={{ display: 'flex', height: "calc(62vh)" }}
+        >
+          <Tabs
+            orientation="vertical"
+            variant="scrollable"
+            sx={{ borderRight: 1, borderColor: 'divider', height: "100%" }}
+            value={value}
+            onChange={handleChange}
+            aria-label="dashboard settings tabs"
           >
-            <Tabs
-              orientation="vertical"
-              variant="scrollable"
-              sx={{ borderRight: 1, borderColor: 'divider', height: "100%" }}
-              value={value}
-              onChange={handleChange}
-              aria-label="dashboard settings tabs"
-            >
-              <Tab icon={<OverviewIcon />} label="OVERVIEW" {...a11yProps(0)} />
-              <Tab icon={<TileIcon />} label="TILES" {...a11yProps(1)} />
-              <Tab icon={<SlotsIcon />} label="SLOTS" {...a11yProps(2)} />
-              <Tab icon={<UioIcon />} label="I/O" {...a11yProps(3)} />
-            </Tabs>
-            {/* </Box> */}
-            <Box sx={{ width: "100%", height: "100%", overflowY: "scroll" }}>
-              <CustomTabPanel key="overview-tab" value={value} index={0}>
-                <DashboardOverviewTab dashboard={dashboard} />
-              </CustomTabPanel>
-              <CustomTabPanel key="tiles-tab" value={value} index={1}>
-                <TilesTab dashboard={dashboard} />
-              </CustomTabPanel>
-              <CustomTabPanel key="slots-tab" value={value} index={2}>
-                <SlotsOverviewTab slots={dashboard.device.slots} />
-              </CustomTabPanel>
-              <CustomTabPanel key="io-tab" value={value} index={3}>
-                <UioOverviewTab uio={dashboard.device.uio} />
-              </CustomTabPanel>
-            </Box>
+            <Tab icon={<OverviewIcon />} label="INFO" {...a11yProps(0)} />
+            <Tab icon={<TileIcon />} label="TILES" {...a11yProps(1)} />
+            <Tab icon={<SlotsIcon />} label="SLOTS" {...a11yProps(2)} />
+            <Tab icon={<UioIcon />} label="I/O" {...a11yProps(3)} />
+          </Tabs>
+          {/* </Box> */}
+          <Box sx={{ width: "100%", height: "100%", overflowY: "scroll" }}>
+            <CustomTabPanel key="overview-tab" value={value} index={0}>
+              <DashboardOverviewTab dashboard={dashboard} />
+            </CustomTabPanel>
+            <CustomTabPanel key="tiles-tab" value={value} index={1}>
+              <TilesTab dashboard={dashboard} />
+            </CustomTabPanel>
+            <CustomTabPanel key="slots-tab" value={value} index={2}>
+              <SlotsOverviewTab slots={dashboard.device.slots} />
+            </CustomTabPanel>
+            <CustomTabPanel key="io-tab" value={value} index={3}>
+              <UioOverviewTab uio={dashboard.device.uio} />
+            </CustomTabPanel>
           </Box>
+        </Box>
       </DialogContent>
     </Dialog>
   );

@@ -15,7 +15,7 @@ interface Props {
 
 const DashboardChips = ({ dashboard, size, color  }: Props) => {
   return (
-    <Stack spacing={1} direction="row" justifyContent="start">
+    <Stack my={0.2} spacing={1} direction="row" justifyContent="start">
       <Chip
       size={size}
       icon={<TileIcon />}

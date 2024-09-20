@@ -1,12 +1,11 @@
 import { observer } from "mobx-react";
-// import DownloadIcon from '@mui/icons-material/SaveAltRounded';
-// import UploadIcon from '@mui/icons-material/UploadRounded';
+import DownloadIcon from '@mui/icons-material/SaveAltRounded';
+import UploadIcon from '@mui/icons-material/UploadRounded';
 import EditIcon from "@mui/icons-material/Edit";
 import {
   Typography,
   Stack,
   Box,
-  useTheme,
   Divider,
   Button,
   IconButton,
@@ -14,19 +13,18 @@ import {
 import { IDashboard } from "../../models/dashboard";
 import StyledMarkDown from "../StyledMarkDown";
 import DashboardChips from "../DashboardChips";
-// import JsonUploadInput from "../JsonUploadInput";
-// import { Notifier } from "../../api";
-// import { getSnapshot } from "mobx-state-tree";
-// import { shareJsonData } from "../utils";
 import { useState } from "react";
 import DashboardOverviewEditDialog from "./DashboardOverviewEditDialog";
+import JsonUploadInput from "../JsonUploadInput";
+import { Notifier } from "../../api";
+import { shareJsonData } from "../utils";
+import { getSnapshot } from "mobx-state-tree";
 
 interface Props {
   dashboard: IDashboard;
 }
 
 const DashboardOverviewTab = ({ dashboard }: Props) => {
-  // const theme = useTheme();
   const [isEditing, setEditing] = useState(false);
 
   return (
@@ -34,7 +32,7 @@ const DashboardOverviewTab = ({ dashboard }: Props) => {
       <Box m={1} px={1} height="100%">
 
         <Stack direction="row" justifyContent="space-between">
-          <Typography variant="h6">
+          <Typography variant="h6" lineHeight="1.0">
             {dashboard.name}
           </Typography>
 
@@ -53,29 +51,7 @@ const DashboardOverviewTab = ({ dashboard }: Props) => {
         </Stack>
 
         <DashboardChips dashboard={dashboard} size="small" color="primary" />
-
-        <Divider sx={{ pt: 1 }} />
-
-        <Typography mt={1} pb={4} variant="body1" overflow="scroll" sx={{ flexShrink: 2 }}>
-          <StyledMarkDown>{dashboard.description}</StyledMarkDown>
-        </Typography>
-      </Box>
-
-      {/* <Stack
-        direction="row"
-        spacing={1}
-        justifyContent="end"
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          width: "100%",
-          mb: 2,
-          right: 0,
-          mr: 2,
-          bgcolor: theme.palette.background.paper
-        }}
-
-      >
+        <Stack pt={1} spacing={1} direction="row" justifyContent="start" alignItems="start">
         <Button
           component="label"
           role={undefined}
@@ -83,7 +59,7 @@ const DashboardOverviewTab = ({ dashboard }: Props) => {
           variant="outlined"
           startIcon={<UploadIcon />}
         >
-          Upload Config
+          Upload
           <JsonUploadInput
             onSubmit={(snapshot) => {
               dashboard.copyFrom(snapshot);
@@ -106,13 +82,32 @@ const DashboardOverviewTab = ({ dashboard }: Props) => {
             shareJsonData(json, 'Dashboard Configuration', 'tio-dashboard-config.json')
           }}
         >
-          Save Config
+          Download
         </Button>
-      </Stack> */}
+        </Stack>
+
+        <Divider sx={{ pt: 1 }} />
+
+        <Typography mt={1} pb={4} variant="body1" overflow="scroll" sx={{ flexShrink: 2 }}>
+          <StyledMarkDown>{dashboard.description}</StyledMarkDown>
+        </Typography>
+      </Box>
+
+
+
+
       <DashboardOverviewEditDialog
         open={isEditing}
-        dashboard={dashboard}
-        onClose={() => setEditing(false)}
+        info={{ name: dashboard.name, description: dashboard.description, duration: dashboard.duration }}
+        onSubmit={(info) => {
+          dashboard.name = info.name;
+          dashboard.description = info.description;
+          dashboard.duration = info.duration;
+          setEditing(false);
+        }}
+        onCancel={() => {
+          setEditing(false);
+        }}
       />
     </>
   );

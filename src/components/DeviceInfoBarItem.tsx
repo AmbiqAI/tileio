@@ -14,10 +14,12 @@ import { ScanIcon } from '../assets/icons';
 
 interface Props {
   dashboard: IDashboard;
+  size?: "small" | "medium";
 }
 
-const DeviceInfoBarItem = ({ dashboard }: Props) => {
+const DeviceInfoBarItem = ({ dashboard, size }: Props) => {
   const { root: { device } } = useStore();
+  const isSmall = size === "small";
   const [isDeviceDialogOpen, showDeviceDialog] = useState(false);
 
   return (
@@ -37,8 +39,8 @@ const DeviceInfoBarItem = ({ dashboard }: Props) => {
           >
             <Stack direction="column" justifyContent="end">
               <Stack direction="row" justifyContent="start" alignItems="center">
-                <ScanIcon />
-                <Typography variant="h6" ml={1}>Select Device</Typography>
+                {!isSmall && (<ScanIcon />)}
+                <Typography variant="h6" lineHeight="1.0" ml={1}>Select Device</Typography>
               </Stack>
             </Stack>
           </NavButton>
@@ -61,31 +63,31 @@ const DeviceInfoBarItem = ({ dashboard }: Props) => {
               </Stack>
             </NavButton>
             <Divider orientation="vertical" flexItem />
-            <LoadingButton
-              disabled={device.state.connecting || device.state.disconnecting}
-              loading={device.state.connecting || device.state.disconnecting}
-              loadingPosition="center"
-              // variant="outlined"
-              onClick={() => {
-                if (!device) {
-                  return;
-                }
-                if (device.state.connected) {
-                  device.disconnect();
-                } else {
-                  device.connect(dashboard);
-                }
-              }}
-            >
-              <DeviceStateIcon
-                type={device.type}
-                online={device.state.online}
-                connected={device.state.connected}
-                sx={{ opacity: device.state.connecting || device.state.disconnecting ? 0 : 1 }}
-              />
-            </LoadingButton>
-            {/* <Divider orientation="vertical" flexItem />
-            <DeviceDetailMenu dashboard={dashboard} device={device} /> */}
+            {!isSmall && (
+              <LoadingButton
+                disabled={device.state.connecting || device.state.disconnecting}
+                loading={device.state.connecting || device.state.disconnecting}
+                loadingPosition="center"
+                // variant="outlined"
+                onClick={() => {
+                  if (!device) {
+                    return;
+                  }
+                  if (device.state.connected) {
+                    device.disconnect();
+                  } else {
+                    device.connect(dashboard);
+                  }
+                }}
+              >
+                <DeviceStateIcon
+                  type={device.type}
+                  online={device.state.online}
+                  connected={device.state.connected}
+                  sx={{ opacity: device.state.connecting || device.state.disconnecting ? 0 : 1 }}
+                />
+              </LoadingButton>
+            )}
           </Stack>
         )}
 
@@ -95,11 +97,16 @@ const DeviceInfoBarItem = ({ dashboard }: Props) => {
         dashboard={dashboard}
         open={isDeviceDialogOpen}
         close={() => { showDeviceDialog(false); }}
+        size={size}
       />
 
     </>
   );
 
+};
+
+DeviceInfoBarItem.defaultProps = {
+  size: "medium",
 };
 
 export default observer(DeviceInfoBarItem);

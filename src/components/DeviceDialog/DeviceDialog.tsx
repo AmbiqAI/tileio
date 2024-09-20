@@ -25,9 +25,10 @@ interface Props {
   dashboard: IDashboard;
   open: boolean;
   close: () => void;
+  size?: "small" | "medium";
 }
 
-const DeviceDialog = ({ dashboard, open, close }: Props) => {
+const DeviceDialog = ({ dashboard, open, close, size }: Props) => {
   const { root: { device } } = useStore();
 
   return (
@@ -102,7 +103,7 @@ const DeviceDialog = ({ dashboard, open, close }: Props) => {
       <DialogContent sx={{ bgcolor: "background.paper", p: 1 }}>
 
         {!device ? (
-          <DeviceSelectForm />
+          <DeviceSelectForm size={size}/>
         ) : (
           <DeviceInfoForm
             device={device}
@@ -114,6 +115,10 @@ const DeviceDialog = ({ dashboard, open, close }: Props) => {
 
     </Dialog>
   );
+};
+
+DeviceDialog.defaultProps = {
+  size: "medium",
 };
 
 export default observer(DeviceDialog);

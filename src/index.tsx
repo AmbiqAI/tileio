@@ -37,12 +37,27 @@ const SplashScreen = observer(({ initialized, error }: { initialized: boolean, e
       fullWidth
     >
       <DialogContent>
+      {!!error ? (
+        <Stack spacing={2} direction="column" alignItems="center" justifyContent="center">
+          <Typography color="error" variant="h6" sx={{ flexGrow: 1, textAlign: 'center' }}>
+            Tileio Fatal Error
+          </Typography>
+          <Typography variant="body2" sx={{ flexGrow: 1, textAlign: 'center' }}>
+            An error occurred while loading Tileio. Please try refreshing the page.
+          </Typography>
+          <Typography variant="caption" sx={{ flexGrow: 1, textAlign: 'center' }}>
+            {`Error details: ${error}`}
+          </Typography>
+
+        </Stack>
+      ) : (
       <Stack spacing={2} direction="column" alignItems="center" justifyContent="center">
         <Typography color="primary" variant="h4" sx={{ flexGrow: 1, textAlign: 'center' }}>
           Loading Tileio
         </Typography>
         <CircularProgress />
       </Stack>
+      )}
       </DialogContent>
     </Dialog>
   )
@@ -50,7 +65,7 @@ const SplashScreen = observer(({ initialized, error }: { initialized: boolean, e
 
 
 const AppContainer = observer(() => {
-  const { root: { settings: { isDarkMode, themeMode, setTheme }, initialized } } = useStore();
+  const { root: { settings: { isDarkMode, themeMode, setTheme }, initialized, error } } = useStore();
   const systemDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
   const useDarkMode =
     isDarkMode ||
@@ -63,7 +78,7 @@ const AppContainer = observer(() => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <SplashScreen initialized={initialized} />
+      <SplashScreen initialized={initialized} error={error}/>
       <App />
     </ThemeProvider>
   );

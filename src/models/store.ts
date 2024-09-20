@@ -21,15 +21,19 @@ const storage = new Storage({
   driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage]
 });
 
-
-storage.create().then(() => {
-  persist('rootStore', root, storage, {
-    jsonify: true,
-    whitelist: ['dashboards', 'records', 'settings']
-  }).then(() => {
-    store.root.initialize();
+try {
+  storage.create().then(() => {
+    persist('rootStore', root, storage, {
+      jsonify: true,
+      whitelist: ['dashboards', 'records', 'settings']
+    }).then(() => {
+      store.root.initialize();
+    });
   });
-});
+} catch (e) {
+  console.error('Fatal error', e);
+  store.root.initialize(e as string);
+}
 
 unprotect(root);
  // @ts-ignore

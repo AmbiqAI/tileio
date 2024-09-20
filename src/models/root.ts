@@ -19,6 +19,7 @@ export const Root = types
   initialized: false,
   device: (null as IDevice|null),
   record: (undefined as IRecord|undefined),
+  error: (undefined as string|undefined),
 }))
 .views(self => ({
   recordById(targetId: string): IRecord|undefined {
@@ -96,10 +97,11 @@ export const Root = types
     console.debug('root.beforeDestroy');
     closeDB();
   },
-  initialize: function() {
+  initialize: function(error?: string|undefined) {
     console.debug('Initializing root store');
     self.backend.initialize(self.settings.apiMode);
     self.initialized = true;
+    self.error = error;
   },
 }));
 

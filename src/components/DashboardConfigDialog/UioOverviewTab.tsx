@@ -16,7 +16,7 @@ const UioOverviewTab = ({ uio }: Props) => {
   return (
     <Stack spacing={1} direction="column" justifyContent="center" height="100%" width="100%" p={2}>
       <Stack direction="row" justifyContent="flex-start" width="100%">
-        <Typography variant="h6" ml={1}>I/O Configuration</Typography>
+        <Typography variant="h6" ml={1}>I/O Setup</Typography>
       </Stack>
       <Divider />
       <Box
