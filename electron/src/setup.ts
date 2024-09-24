@@ -90,7 +90,9 @@ export class ElectronCapacitorApp {
   private async loadMainWindow(thisRef: any) {
     if (electronIsDev) {
       console.log('Loading app from server');
-      await thisRef.MainWindow.loadURL('http://localhost:5173');
+      // await thisRef.MainWindow.loadURL('http://localhost:5173');
+      await thisRef.loadWebApp(thisRef.MainWindow);
+
       // this.CapacitorFileConfig.server.url);
     } else {
       // console.log('IDDQD', this.CapacitorFileConfig.server);
