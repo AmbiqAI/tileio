@@ -332,7 +332,7 @@ export class UsbHandler implements ApiHandler {
             }
           } catch (error) {
             // console.error(error);
-            await delay(1);
+            // await delay(1);
           }
         }
       }, 1);
