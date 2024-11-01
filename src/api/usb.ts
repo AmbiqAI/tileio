@@ -40,22 +40,42 @@ const TIO_USB_STOP_VAL = 0xAA;
 const TIO_USB_TX_HEADER_VAL = 0x02;
 const TIO_USB_TX_HEADER_LEN = 2;
 
+// Create device object to store the following:
+// slotConfigs: ISlotConfig[]
+// device: USBDevice
+// fifo: Uint8Array
+// slotStates: number[]
+// interface
+
+class DeviceState {
+  slotConfigs: ISlotConfig[];
+  device: USBDevice;
+  fifo: Uint8Array;
+  slotStates: number[];
+  interface: number;
+
+  constructor(device: USBDevice) {
+    this.device = device;
+    this.slotConfigs = [];
+    this.fifo = new Uint8Array([]);
+    this.slotStates = [];
+    this.interface = 0;
+  }
+}
+
+
 export class UsbHandler implements ApiHandler {
 
   initialized: boolean;
-  deviceSlots: Record<string, ISlotConfig[]|undefined>;
   callbacks: Record<string, any>;
   _devices: USBDevice[];
-  deviceFifos: Record<string, Uint8Array>;
-  deviceSlotStates: Record<string, number[]>;
+  deviceStates: Record<string, DeviceState>;
 
   constructor() {
     this.initialized = false;
-    this.deviceSlots = {};
     this.callbacks = {};
     this._devices = [];
-    this.deviceFifos = {};
-    this.deviceSlotStates = {};
+    this.deviceStates = {};
   }
 
   _disconnectCallback(event: USBConnectionEvent) {
@@ -127,7 +147,6 @@ export class UsbHandler implements ApiHandler {
       console.warn(`Invalid packet length ${packet.byteLength}`);
       return null;
     }
-    console.log(`Decoding packet ${packet.byteLength} bytes`);
     const frameStart = packet.getUint8(TIO_USB_START_IDX);
     const slotIdx = packet.getUint8(TIO_USB_SLOT_IDX);
     const ptype = packet.getUint8(TIO_USB_TYPE_IDX);
@@ -148,7 +167,7 @@ export class UsbHandler implements ApiHandler {
       return null;
     }
 
-    const slots = this.deviceSlots[deviceId];
+    const slots = this.deviceStates[deviceId].slotConfigs;
 
     // Handle slot signal
     if (ptype == PacketType.Signal) {
@@ -157,9 +176,9 @@ export class UsbHandler implements ApiHandler {
         return null;
       }
       const slot = slots[slotIdx];
-      const lastTs = this.deviceSlotStates[deviceId][slotIdx];
+      const lastTs = this.deviceStates[deviceId].slotStates[slotIdx];
       const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.fs, slot.dtype, lastTs);
-      this.deviceSlotStates[deviceId][slotIdx] = rst.ts;
+      this.deviceStates[deviceId].slotStates[slotIdx] = rst.ts;
       await cb(slotIdx, rst.signals, rst.mask);
 
     } else if (ptype == PacketType.Metrics) {
@@ -187,9 +206,9 @@ export class UsbHandler implements ApiHandler {
 
   async enqueueFrame(deviceId: string, frame: DataView): Promise<void> {
     // Combine with existing fifo
-    this.deviceFifos[deviceId] = new Uint8Array([...this.deviceFifos[deviceId], ...new Uint8Array(frame.buffer)]);
+    this.deviceStates[deviceId].fifo = new Uint8Array([...this.deviceStates[deviceId].fifo, ...new Uint8Array(frame.buffer)]);
 
-    const fifo = this.deviceFifos[deviceId];
+    const fifo = this.deviceStates[deviceId].fifo;
 
     let offset = 0;
     while (fifo.length - offset >= TIO_USB_PACKET_LEN) {
@@ -202,7 +221,7 @@ export class UsbHandler implements ApiHandler {
         offset += TIO_USB_PACKET_LEN;
       }
     }
-    this.deviceFifos[deviceId] = new Uint8Array(fifo.buffer.slice(offset));
+    this.deviceStates[deviceId].fifo = new Uint8Array(fifo.buffer.slice(offset));
   }
 
   /**
@@ -252,8 +271,7 @@ export class UsbHandler implements ApiHandler {
   async enableDevicePolling(deviceId: string): Promise<void> {
     const device = await this._getDevice(deviceId);
     if (device) {
-
-      this.deviceFifos[deviceId] = new Uint8Array([]);
+      this.deviceStates[deviceId].fifo = new Uint8Array([]);
 
       // Select configuration
       if (device.configuration === null) {
@@ -295,7 +313,8 @@ export class UsbHandler implements ApiHandler {
         'index' : ifaceNumber
       });
 
-      this.deviceFifos[deviceId] = new Uint8Array([]);
+      this.deviceStates[deviceId].fifo = new Uint8Array([]);
+      this.deviceStates[deviceId].interface = ifaceNumber;
 
       const intervalcb = setTimeout(async () => {
         let done = false;
@@ -308,7 +327,6 @@ export class UsbHandler implements ApiHandler {
             } else {
               const rst = await device.transferIn(endpointIn, 64);
               if (rst.status === 'ok' && rst.data) {
-                console.log(`Received ${rst.data.byteLength} bytes`);
                 await this.enqueueFrame(deviceId, rst.data);
               }
             }
@@ -328,15 +346,13 @@ export class UsbHandler implements ApiHandler {
       clearTimeout(timeout);
       this.callbacks[`dev${deviceId}.poll`] = undefined;
     }
-    this.deviceFifos[deviceId] = new Uint8Array([]);
+    this.deviceStates[deviceId].fifo = new Uint8Array([]);
 
   }
 
   async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
 
-    this.deviceSlots[deviceId] = slots;
     this.callbacks[`dev${deviceId}.disconnect`] = onDisconnect;
-    this.deviceSlotStates[deviceId] = slots.map(s => 0);
 
     let device = await this._getDevice(deviceId);
     if (!device) {
@@ -347,6 +363,10 @@ export class UsbHandler implements ApiHandler {
     if (!device) {
       throw new Error(`Device ${deviceId} not found`);
     }
+
+    this.deviceStates[deviceId] = new DeviceState(device);
+    this.deviceStates[deviceId].slotConfigs = slots;
+    this.deviceStates[deviceId].slotStates = slots.map(s => 0);
 
     await device.open();
 
@@ -359,8 +379,10 @@ export class UsbHandler implements ApiHandler {
     if (!device) {
       return;
     }
-    this.deviceSlots[deviceId] = undefined;
-    this.deviceSlotStates[deviceId] = [];
+    const ifaceNumber = this.deviceStates[deviceId].interface;
+    this.deviceStates[deviceId].slotConfigs = [];
+    this.deviceStates[deviceId].fifo = new Uint8Array([]);
+    this.deviceStates[deviceId].slotStates = [];
 
     await this.disableDevicePolling(deviceId);
 
@@ -375,13 +397,13 @@ export class UsbHandler implements ApiHandler {
       this.callbacks[`dev${deviceId}.disconnect`] = undefined;
     }
     if (device.opened) {
-      // await device.controlTransferOut({
-      //   'requestType' : 'class',
-      //   'recipient' : 'interface',
-      //   'request' : 0x22,
-      //   'value' : 0x00,
-      //   'index' : ifaceNumber
-      // });
+      await device.controlTransferOut({
+        'requestType' : 'class',
+        'recipient' : 'interface',
+        'request' : 0x22,
+        'value' : 0x00,
+        'index' : ifaceNumber
+      });
       await device.close();
     }
   }

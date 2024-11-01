@@ -61,6 +61,7 @@ const SvgTile = ({ config }: TileProps) => {
             src={configs.content}
             width="100%"
             title={configs.name}
+            onError={(e) => console.error(e)}
           />
         </Stack>
       </GridZStack>

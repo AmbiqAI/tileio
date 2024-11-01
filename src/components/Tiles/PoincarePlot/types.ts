@@ -39,6 +39,11 @@ export const PoincarePlotSpec: TileSpec = {
         title: "Primary Color",
         default: ThemeColors.colors.primaryColor,
       },
+      secondaryColor: {
+        type: 'string',
+        title: 'Secondary Color',
+        default: ThemeColors.colors.secondaryColor
+      },
       min: {
         type: 'number',
         title: 'Minimum Value',
@@ -77,6 +82,9 @@ export const PoincarePlotSpec: TileSpec = {
     "primaryColor": {
       "ui:widget": "color"
     },
+    "secondaryColor": {
+      "ui:widget": "color"
+    },
   }
 };
 
@@ -86,6 +94,7 @@ export interface PoincarePlotConfig {
   ch: number;
   fiducial: number;
   primaryColor: string;
+  secondaryColor: string;
   min?: number;
   max?: number;
   label?: string;
@@ -100,6 +109,7 @@ export function parseConfig(config: { [key: string]: any }): PoincarePlotConfig 
     ch: 0,
     fiducial: 0,
     primaryColor: ThemeColors.colors.primaryColor,
+    secondaryColor: ThemeColors.colors.secondaryColor,
     ...config
   } as PoincarePlotConfig;
   return configs;

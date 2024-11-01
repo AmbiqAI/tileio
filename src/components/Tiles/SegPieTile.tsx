@@ -14,7 +14,7 @@ export const SegPieTileSpec: TileSpec = {
   sizes: ["sm", "md"],
   schema: {
     type: 'object',
-    required: ['name', 'slot', 'units', 'segmentMask', 'segments'],
+    required: ['name', 'slot', 'units', 'segmentMask', 'segments', 'primaryColor', 'secondaryColor'],
     properties: {
       name: {
         type: 'string',
@@ -60,7 +60,17 @@ export const SegPieTileSpec: TileSpec = {
               default: ThemeColors.colors.primaryColor
             }
           }
-        }
+        },
+      },
+      primaryColor: {
+        type: 'string',
+        default: ThemeColors.colors.primaryColor,
+        description: 'Primary color',
+      },
+      secondaryColor: {
+        type: 'string',
+        default: ThemeColors.colors.secondaryColor,
+        description: 'Secondary color',
       },
     }
   },
@@ -77,7 +87,13 @@ export const SegPieTileSpec: TileSpec = {
           "ui:widget": "color"
         }
       }
-    }
+    },
+    "primaryColor": {
+      "ui:widget": "color"
+    },
+    "secondaryColor": {
+      "ui:widget": "color"
+    },
   }
 };
 
@@ -87,6 +103,9 @@ export interface SegPieTileConfig {
   slot: number;
   segmentMask: number;
   segments: {name: string, value: number, color: string}[];
+  primaryColor: string;
+  secondaryColor: string;
+
 }
 
 export function parseConfig(config: { [key: string]: any }): SegPieTileConfig {
@@ -96,6 +115,8 @@ export function parseConfig(config: { [key: string]: any }): SegPieTileConfig {
     slot: 0,
     segmentMask: 0x3F,
     segments: [],
+    primaryColor: ThemeColors.colors.primaryColor,
+    secondaryColor: ThemeColors.colors.secondaryColor,
     ...config
   } as SegPieTileConfig;
   return configs;
@@ -234,7 +255,7 @@ const SegPieTile = observer(({ slots, config, size }: TileProps) => {
             pb: 0.5,
           }}
         >
-          <Typography color={ThemeColors.colors.secondaryColor} fontWeight={700} variant="h6" sx={{ lineHeight: 1 }}>
+          <Typography color={configs.secondaryColor} fontWeight={700} variant="h6" sx={{ lineHeight: 1 }}>
             {configs.units}
           </Typography>
         </Stack>

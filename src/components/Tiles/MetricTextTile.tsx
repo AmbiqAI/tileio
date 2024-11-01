@@ -138,7 +138,7 @@ const MetricTextTile = observer(({ slots, config }: TileProps) => {
               overflowY: "scroll"
             }}
           >
-            <StyledMarkDown>
+            <StyledMarkDown color={configs.primaryColor}>
               {text}
             </StyledMarkDown>
           </Box>
