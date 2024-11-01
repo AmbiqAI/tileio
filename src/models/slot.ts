@@ -236,19 +236,19 @@ export const SlotMask = types
     const latestTs = self.latestTs;
     let start = 0;
     let end = 0;
+    let prev = self.data.length > 0 ? (self.data[0][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK : 0;
     for(let i = 1; i < self.data.length; i++) {
-      let prev = (self.data[i-1][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
       let curr = (self.data[i][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
-      if (!prev && curr) {
-        start = self.data[i][0];
-      } else if (prev && !curr) {
+      if (prev !== curr) {
         end = self.data[i][0];
         if (start >= 0 && end <= latestTs) {
           bounds.push({start, end, value: prev, label: ""});
         }
-        start = -1;
+        start = end;
+        prev = curr;
       }
     }
+
     return bounds;
   },
   get segmentAmounts(): {[key: number]: number} {
@@ -256,23 +256,40 @@ export const SlotMask = types
     const latestTs = self.latestTs;
     let duration = 0;
     let startIdx = 0;
+    let prev = self.data.length > 0 ? (self.data[0][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK : 0;
     for(let i = 1; i < self.data.length; i++) {
-      let prev = (self.data[i-1][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
       let curr = (self.data[i][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
-      if (!prev && curr) {
-        startIdx = i;
-      } else if (prev && !curr) {
+      if (prev !== curr) {
+        duration = i - startIdx;
         if (startIdx >= 0 && self.data[i][0] <= latestTs) {
-          duration = i - startIdx;
           if (amounts[prev]) {
             amounts[prev] += duration;
           } else {
             amounts[prev] = duration;
           }
         }
-        startIdx = -1;
+        startIdx = i;
+        prev = curr;
       }
     }
+
+    // for(let i = 1; i < self.data.length; i++) {
+    //   let prev = (self.data[i-1][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
+    //   let curr = (self.data[i][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
+    //   if (!prev && curr) {
+    //     startIdx = i;
+    //   } else if (prev && !curr) {
+    //     if (startIdx >= 0 && self.data[i][0] <= latestTs) {
+    //       duration = i - startIdx;
+    //       if (amounts[prev]) {
+    //         amounts[prev] += duration;
+    //       } else {
+    //         amounts[prev] = duration;
+    //       }
+    //     }
+    //     startIdx = -1;
+    //   }
+    // }
     return amounts;
   },
   get fiducials() {

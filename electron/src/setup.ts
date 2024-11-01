@@ -91,6 +91,7 @@ export class ElectronCapacitorApp {
     if (electronIsDev) {
       console.log('Loading app from server');
       await thisRef.MainWindow.loadURL('http://localhost:5173');
+      // await thisRef.loadWebApp(thisRef.MainWindow);
       // this.CapacitorFileConfig.server.url);
     } else {
       // console.log('IDDQD', this.CapacitorFileConfig.server);
@@ -310,9 +311,10 @@ export function setupContentSecurityPolicy(customScheme: string): void {
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          electronIsDev
-            ? `default-src ${customScheme}://* 'unsafe-inline' devtools://* 'unsafe-eval' data: localhost:* ws://localhost:*`
-            : `default-src ${customScheme}://* 'unsafe-inline' data:`,
+          "connect-src * data: blob: 'unsafe-inline'",
+          // electronIsDev
+          //   ? `default-src ${customScheme}://* 'unsafe-inline' devtools://* 'unsafe-eval' data: localhost:* ws://localhost:*`
+          //   : `default-src ${customScheme}://* 'unsafe-inline' data:`,
         ],
       },
     });

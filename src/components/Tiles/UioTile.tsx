@@ -15,7 +15,7 @@ export const UioTileSpec: TileSpec = {
   sizes: ["sm", "md", "lg"],
   schema: {
     type: "object",
-    required: ["name", "ios"],
+    required: ["name", "ios", "primaryColor", "secondaryColor"],
     properties: {
       name: {
         type: "string",
@@ -32,6 +32,16 @@ export const UioTileSpec: TileSpec = {
         },
         uniqueItems: true
       },
+      primaryColor: {
+        type: 'string',
+        default: ThemeColors.colors.primaryColor,
+        description: 'Primary color',
+      },
+      secondaryColor: {
+        type: 'string',
+        default: ThemeColors.colors.secondaryColor,
+        description: 'Secondary color',
+      },
     },
   },
   uischema: {
@@ -41,18 +51,28 @@ export const UioTileSpec: TileSpec = {
         "inline": true
       }
     },
+    "primaryColor": {
+      "ui:widget": "color"
+    },
+    "secondaryColor": {
+      "ui:widget": "color"
+    },
   }
 };
 
 export interface UioTileConfig {
   name: string;
   ios: number[];
+  primaryColor: string;
+  secondaryColor: string;
 }
 
 export function parseConfig(config: { [key: string]: any }): UioTileConfig {
   const configs = {
     name: "",
     ios: [],
+    primaryColor: ThemeColors.colors.primaryColor,
+    secondaryColor: ThemeColors.colors.secondaryColor,
     ...config,
   } as UioTileConfig;
   return configs;
@@ -123,7 +143,7 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
 
       <TileCornerLabel
         subheader={configs.name}
-        subheaderColor={ThemeColors.colors.secondaryColor}
+        subheaderColor={configs.secondaryColor}
       />
     </GridContainer>
   );

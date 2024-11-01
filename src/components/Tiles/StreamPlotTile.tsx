@@ -86,6 +86,12 @@ export const StreamPlotTileSpec: TileSpec =   {
         minimum: 5,
         maximum: 30,
         description: 'Frames per second'
+      },
+      displayYTicks: {
+        type: 'boolean',
+        title: 'Display Y Ticks',
+        default: true,
+        description: 'Display Y axis ticks'
       }
     }
   },
@@ -130,6 +136,7 @@ function parseConfig(config: { [key: string]: any}) {
     streamDelay: 500,
     streamGap: 500,
     fps: 15,
+    displayYTicks: false,
     ...config
   } as StreamPlotTileConfig;
   return configs;
@@ -147,6 +154,7 @@ export interface StreamPlotTileConfig {
   streamDelay: number;
   streamGap: number;
   fps: number;
+  displayYTicks: boolean;
 }
 
 
@@ -195,7 +203,7 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, dashboa
       scales: {
         y: {
           display: true,
-          ticks: { display: false },
+          ticks: { display: configs.displayYTicks },
           position: "left",
           title: {
             display: true,

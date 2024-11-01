@@ -3,7 +3,8 @@ import { IDashboardSnapshot } from '../../models/dashboard';
 
 
 export const availableDashboards = [
-  {file: 'hk-dashboard-config.json', name: 'HeartKit Dashboard'}
+  {file: 'hk-dashboard-config.json', name: 'HeartKit Dashboard'},
+  {file: 'hk-ap510-vs-ap4.json', name: 'HeartKit: AP510 vs AP4'},
 ];
 
 export const loadDashboard = async (name: string): Promise<IDashboardSnapshot|undefined> => {
@@ -12,7 +13,12 @@ export const loadDashboard = async (name: string): Promise<IDashboardSnapshot|un
       import('./hk-dashboard-config.json').then((data) => {
         res(cloneDeep(data?.default as IDashboardSnapshot));
       });
-    } else {
+    } else if (name == 'hk-ap510-vs-ap4.json') {
+      import('./hk-ap510-vs-ap4.json').then((data) => {
+        res(cloneDeep(data?.default as IDashboardSnapshot));
+      });
+    }
+    else {
       res(undefined);
     }
   })

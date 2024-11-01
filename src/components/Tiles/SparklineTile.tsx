@@ -116,7 +116,8 @@ const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
       latestTs={latestTs}
       data={data}
       units={configs.units}
-      primaryColor={alpha(configs.primaryColor, 0.6)}
+      primaryColor={configs.primaryColor}
+      // primaryColor={alpha(configs.primaryColor, 0.6)}
       secondaryColor={configs.secondaryColor}
       min={configs.min}
       max={configs.max}

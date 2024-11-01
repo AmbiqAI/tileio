@@ -229,7 +229,7 @@ const MetricsStreamTile = observer(({ size, slots, pause, duration, config }: Ti
     const metrics = configs.slot < slots.length ? slots[configs.slot].metrics : undefined;
     const mask = configs.slot < slots.length ? slots[configs.slot].mask : undefined;
 
-    if (pause || !chart || !metrics || !mask || !metrics.data || !latestTs) {
+    if (pause || !chart || !metrics || !mask || !metrics.data.length || !latestTs) {
       return;
     }
     for (let ch = 0; ch < configs.metrics.length; ch++) {

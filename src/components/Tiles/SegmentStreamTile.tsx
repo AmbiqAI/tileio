@@ -73,6 +73,12 @@ export const SegmentStreamTileSpec: TileSpec =   {
         minimum: 5,
         maximum: 30,
         description: 'Frames per second'
+      },
+      displayXTicks: {
+        type: 'boolean',
+        title: 'Display X Ticks',
+        default: true,
+        description: 'Display X axis ticks'
       }
     }
   },
@@ -100,6 +106,7 @@ export interface SegmentStreamTileConfig {
   segments: {name: string, value: number, color: string}[];
   streamDelay: number;
   fps: number;
+  displayXTicks: boolean;
 }
 
 function parseConfig(config: { [key: string]: any}) {
@@ -110,6 +117,7 @@ function parseConfig(config: { [key: string]: any}) {
     segments: [],
     streamDelay: 500,
     fps: 15,
+    displayXTicks: true,
     ...config
   } as SegmentStreamTileConfig;
   return configs;
@@ -123,7 +131,7 @@ const SegmentStreamTile = observer(({ size, slots, pause, duration, config }: Ti
   const chartEl = useRef<Chart<"line">>(null);
 
   const options = useMemo<ChartOptions<"line">>(() => {
-    const showAxis = size === "lg";
+    const showAxis = size === "lg" && configs.displayXTicks;
     const durationMs = getPlotDurationMs(duration, size);
     const min = configs.segments.reduce((min, seg) => Math.min(min, seg.value), 0);
     const max = configs.segments.reduce((max, seg) => Math.max(max, seg.value), 0);
