@@ -215,6 +215,7 @@ export class UsbHandler implements ApiHandler {
       const packet = new DataView(fifo.buffer.slice(offset, offset + TIO_USB_PACKET_LEN));
       // Check if frame is complete
       if (packet.getUint8(TIO_USB_START_IDX) !== TIO_USB_START_VAL || packet.getUint8(TIO_USB_STOP_IDX) !== TIO_USB_STOP_VAL) {
+        console.warn(`Invalid frame start/stop`);
         offset += 1;
       } else {
         await this.decodePacket(deviceId, packet);
@@ -331,8 +332,8 @@ export class UsbHandler implements ApiHandler {
               }
             }
           } catch (error) {
-            // console.error(error);
-            // await delay(1);
+            console.error(error);
+            await delay(10);
           }
         }
       }, 1);
