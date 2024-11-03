@@ -11,6 +11,7 @@ import {
   Stack,
   Box,
   Divider,
+  InputLabel,
 } from "@mui/material";
 import { ScanIcon } from "../../assets/icons";
 
@@ -31,7 +32,7 @@ const DeviceSelectForm = ({ size }: Props) => {
   const performScan = async () => {
     await backend.fetchDevices();
   };
-  const [inputValue, setInputValue] = useState("");
+  // const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<IDeviceInfoSnapshot[]>([]);
   const [selectedId, setSelectedId] = useState<IDeviceInfoSnapshot | null>(null);
 
@@ -42,14 +43,17 @@ const DeviceSelectForm = ({ size }: Props) => {
   return (
     <Box sx={{ p: 2, width: "100%" }}>
       <Stack
+        height="100%"
         width="100%"
         direction={isSmall ? "column" : "row"}
         alignItems="stretch"
         justifyContent="center"
-        my={2} spacing={1}
+        mx={2}
+        my={2}
+        spacing={1}
         padding={1}
       >
-        <FormControl sx={{ m: 1, minWidth: "80px" }} size="small">
+        <FormControl sx={{ m: 1, minWidth: "80px" }} >
           <Select
             autoWidth
             disabled={backend.fetching}
@@ -64,7 +68,29 @@ const DeviceSelectForm = ({ size }: Props) => {
             ))}
           </Select>
         </FormControl>
-        <Autocomplete
+        {/* Replace autocomplete with simple <Select /> */}
+
+        <FormControl sx={{ m: 1, minWidth: 300 }} >
+        <InputLabel id="device-select-label">Select Device</InputLabel>
+        <Select
+          label="Select Device"
+          value={selectedId?.id}
+          onChange={(e) => {
+            const id = e.target.value as string;
+            setSelectedId(options.find((d) => d.id === id) || null);
+          }}
+        >
+          {options.map((d) => (
+            <MenuItem key={d.id} value={d.id}>
+              <Stack width="100%" direction="row" alignItems="center" justifyContent="space-between">
+                <Typography>{`${d.name} (${d.id.substring(0, 7)})`}</Typography>
+                <DeviceStateIcon connected={true} online={true} type={d.type!} />
+              </Stack>
+            </MenuItem>
+          ))}
+        </Select>
+        </FormControl>
+        {/* <Autocomplete
           inputValue={inputValue}
           onInputChange={(event, newInputValue) => {
             setInputValue(newInputValue);
@@ -95,7 +121,7 @@ const DeviceSelectForm = ({ size }: Props) => {
               variant="outlined"
             />
           )}
-        />
+        /> */}
         <ScanButton
           disableRipple
           disabled={backend.fetching || !!device}
