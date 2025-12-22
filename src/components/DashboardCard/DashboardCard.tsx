@@ -29,19 +29,37 @@ const DashboardCard = ({ dashboard, device }: Props) => {
   return (
     <Card
       elevation={3}
+      // sx={{
+        // m: 2,
+        // borderRadius: 4,
+        // borderWidth: !!device ? 2 : 0,
+        // borderStyle: "solid",
+        // borderColor: "primary.main",
+        // width: 350,
+        // margin: "auto",
+        // bgcolor: (theme: Theme) =>
+        //   theme.palette.mode === "dark"
+        //     ? `rgba(0,0,0,0.6)`
+        //     : `rgba(255,255,255,0.9`,
+        // backdropFilter: "blur(20px)",
+      // }}
+      variant="outlined"
       sx={{
-        m: 2,
-        borderRadius: 4,
-        borderWidth: !!device ? 2 : 0,
-        borderStyle: "solid",
-        borderColor: "primary.main",
+        borderRadius: 3,
         width: 350,
-        margin: "auto",
-        bgcolor: (theme: Theme) =>
-          theme.palette.mode === "dark"
-            ? `rgba(0,0,0,0.6)`
-            : `rgba(255,255,255,0.9`,
-        backdropFilter: "blur(20px)",
+        borderColor: (theme) =>
+          theme.palette.mode === 'light'
+            ? 'rgba(255,255,255,0.32)'
+            : 'rgba(255,255,255,0.14)',
+        bgcolor: (theme) =>
+          theme.palette.mode === 'light'
+            ? 'rgba(255,255,255,0.4)'
+            : 'rgba(5,5,8,0.4)',
+        backdropFilter: 'blur(4px) saturate(100%)',
+        boxShadow: (theme) =>
+          theme.palette.mode === 'light'
+            ? '0 18px 60px rgba(15, 23, 42, 0.12)'
+            : '0 18px 60px rgba(0, 0, 0, 0.6)',
       }}
     >
       <CardActionArea sx={{ borderRadius: 0 }} onClick={() => history.push(dashboard.path)}>

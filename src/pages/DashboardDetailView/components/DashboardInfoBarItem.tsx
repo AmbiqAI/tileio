@@ -36,7 +36,7 @@ const DashboardInfoBarItem = ({ dashboard, size }: Props) => {
             <Typography
               variant="h6"
               style={{
-                lineHeight: "1.0",
+                lineHeight: "1.3",
                 textAlign: "left",
                 display: "-webkit-box",
                 WebkitBoxOrient: "vertical",

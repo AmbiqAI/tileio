@@ -38,18 +38,39 @@ const TileCard = ({ name, type, size, slots, dashboard, pause, uioState, config 
       flexGrow={0}
     >
       <Card
-        elevation={1}
+        variant="outlined"
         sx={{
           m: 0,
           p: 0,
-          // background: 'red',
-          borderRadius: 4,
           width: "100%",
-          // height: "100%"
           height: mh,
-          // maxWidth: mw,
-          // minWidth: 144,
+          borderRadius: 3,
+          borderColor: (theme) =>
+            theme.palette.mode === 'light'
+              ? 'rgba(255,255,255,0.32)'
+              : 'rgba(255,255,255,0.14)',
+          backgroundColor: (theme) =>
+            theme.palette.mode === 'light'
+              ? 'rgba(255,255,255,0.4)'
+              : 'rgba(5,5,8,0.4)',
+          backdropFilter: 'blur(4px) saturate(100%)',
+          boxShadow: (theme) =>
+            theme.palette.mode === 'light'
+              ? '0 18px 60px rgba(15, 23, 42, 0.12)'
+              : '0 18px 60px rgba(0, 0, 0, 0.6)',
         }}
+        // elevation={1}
+        // sx={{
+        //   m: 0,
+        //   p: 0,
+        //   // background: 'red',
+        //   borderRadius: 4,
+        //   width: "100%",
+        //   // height: "100%"
+        //   height: mh,
+        //   // maxWidth: mw,
+        //   // minWidth: 144,
+        // }}
       >
 
         {CreateTile({
