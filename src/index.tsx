@@ -14,6 +14,7 @@ import App from "./App";
 import "./index.css";
 import "./plugins";
 import { lightTheme, darkTheme } from "./theme/theme";
+import { HoneycombBackground } from "./components/HoneycombBackground";
 import { Box, CircularProgress, Dialog, DialogContent, Stack, Typography, useMediaQuery } from "@mui/material";
 import { observer } from "mobx-react";
 import { useStore } from "./models/store";
@@ -78,6 +79,12 @@ const AppContainer = observer(() => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+    <HoneycombBackground
+      paletteMode={theme.palette.mode}
+      hexagonSize={82}
+      hexagonMargin={6}
+      sx={{ zIndex: -1 }}
+    />
       <SplashScreen initialized={initialized} error={error}/>
       <App />
     </ThemeProvider>

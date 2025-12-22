@@ -12,10 +12,13 @@ function Footer({ children }: Props) {
     <Box sx={{ flexGrow: 1, mt: 5 }}>
       <AppBar
         position="fixed"
-        color="inherit"
+        color="transparent"
+        elevation={0}
         sx={{
           // position: "fixed",
-          backgroundColor: (theme: Theme) => alpha(theme.palette.background.default, 0.65),
+          // backgroundColor: (theme: Theme) => alpha(theme.palette.background.default, 0.65),
+          borderTop: '1px solid',
+          borderColor: 'divider',
           backdropFilter: "blur(8px)",
           pb: `env(safe-area-inset-bottom)`,
           top: "auto",

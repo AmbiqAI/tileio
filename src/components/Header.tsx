@@ -22,6 +22,9 @@ function ElevationScroll({ children }: { children: React.ReactElement }) {
       bottom: "auto",
       left: 0,
       right: 0,
+      borderBottomStyle: 'solid',
+      borderBottomWidth: '1px',
+      borderBottomColor: 'divider',
     },
   });
 }
@@ -34,8 +37,9 @@ function Header({ children }: Props) {
   return (
       <ElevationScroll>
         <AppBar
-          position="fixed"
-          color="inherit"
+          // position="sticky"
+          color="transparent"
+          elevation={0}
           sx={{
             position: "fixed",
             pt: 1,
@@ -43,6 +47,10 @@ function Header({ children }: Props) {
             bottom: "auto",
             left: 0,
             right: 0,
+            borderBottomStyle: 'solid',
+            borderBottomWidth: '1px',
+            borderBottomColor: 'divider',
+            backdropFilter: "blur(8px)",
           }}
         >
           {children}

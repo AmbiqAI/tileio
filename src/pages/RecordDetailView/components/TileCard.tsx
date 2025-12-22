@@ -33,15 +33,37 @@ const TileCard = ({ name, type, size, record, config }: Params) => {
       flexGrow={0}
     >
       <Card
-        elevation={1}
+        // elevation={1}
+        variant="outlined"
         sx={{
+          borderRadius: 3,
           m: 0,
           p: 0,
-          borderRadius: 2,
           height: mh,
           maxWidth: mw,
           minWidth: 144,
+          borderColor: (theme) =>
+            theme.palette.mode === 'light'
+              ? 'rgba(255,255,255,0.32)'
+              : 'rgba(255,255,255,0.14)',
+          backgroundColor: (theme) =>
+            theme.palette.mode === 'light'
+              ? 'rgba(255,255,255,0.4)'
+              : 'rgba(5,5,8,0.4)',
+          backdropFilter: 'blur(4px) saturate(100%)',
+          boxShadow: (theme) =>
+            theme.palette.mode === 'light'
+              ? '0 18px 60px rgba(15, 23, 42, 0.12)'
+              : '0 18px 60px rgba(0, 0, 0, 0.6)',
         }}
+        // sx={{
+        //   m: 0,
+        //   p: 0,
+        //   borderRadius: 2,
+        //   height: mh,
+        //   maxWidth: mw,
+        //   minWidth: 144,
+        // }}
       >
         {CreateTile({
           name: name,
