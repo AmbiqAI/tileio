@@ -37,9 +37,6 @@ const TIO_USB_CRC_LEN = 2;
 const TIO_USB_STOP_IDX = 255;
 const TIO_USB_STOP_VAL = 0xAA;
 
-const TIO_USB_TX_HEADER_VAL = 0x02;
-const TIO_USB_TX_HEADER_LEN = 2;
-
 // Create device object to store the following:
 // slotConfigs: ISlotConfig[]
 // device: USBDevice
@@ -459,21 +456,21 @@ export class UsbHandler implements ApiHandler {
 
     const packet = this.encodePacket(0, PacketType.Uio, state);
 
-    // NS has some header that it checks for on the first byte of every 64 byte frame
-    // We need to split the packet into 62 byte chunks and prepend the header
-    const buffer = new ArrayBuffer(64);
-    const bufferArray = new Uint8Array(buffer);
-    const bufferView = new DataView(buffer);
-    bufferView.setUint16(0, TIO_USB_TX_HEADER_VAL, false); // Stored as big endian...
-    const numChunks = Math.ceil(packet.byteLength / 62);
-    console.log(`Sending UIO state ${state} in ${numChunks} chunks`);
-    for (let i = 0; i < numChunks; i++) {
-      const chunk = packet.slice(i*62, (i+1)*62);
-      // Place chunk into buffer
-      const chunkArray = new Uint8Array(chunk);
-      bufferArray.set(chunkArray, 2);
-      await device.transferOut(3, bufferView);
-    }
+    // Send the packet as a single raw bulk OUT transfer (WebUSB's
+    // transferOut() spans as many underlying max-packet-size USB
+    // transactions as needed automatically -- no application-level framing
+    // needed, mirroring how device->host reads already work). Previously
+    // this was split into 62-byte chunks with a 2-byte "NS frame header"
+    // prepended to every 64-byte transfer, a convention inherited from an
+    // older neuralSPOT sample that multiplexed two different message types
+    // over one endpoint; TileIO's packets are already self-delimited
+    // (start/stop markers + CRC16 + fixed length) and only ever carry one
+    // kind of data, so that per-transfer header was pure legacy overhead --
+    // 25% larger on the wire (5x 64-byte transfers for one 256-byte
+    // packet) and 5 separate transferOut() calls instead of 1 for a single
+    // logical write.
+    console.log(`Sending UIO state ${state}`);
+    await device.transferOut(3, packet);
   }
 }
 
