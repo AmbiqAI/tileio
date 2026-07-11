@@ -36,6 +36,13 @@ const TIO_USB_CRC_IDX = 253;
 const TIO_USB_CRC_LEN = 2;
 const TIO_USB_STOP_IDX = 255;
 const TIO_USB_STOP_VAL = 0xAA;
+const TIO_USB_UIO_REQUEST_TIMEOUT_MS = 1000;
+
+interface UioRequest {
+  resolve: (state: number[]) => void;
+  reject: (error: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}
 
 // Create device object to store the following:
 // slotConfigs: ISlotConfig[]
@@ -50,6 +57,7 @@ class DeviceState {
   fifo: Uint8Array;
   slotStates: number[];
   interface: number;
+  uioRequest?: UioRequest;
 
   constructor(device: USBDevice) {
     this.device = device;
@@ -187,16 +195,22 @@ export class UsbHandler implements ApiHandler {
       await cb(slotIdx, rst);
 
     } else if (ptype == PacketType.Uio) {
-      const cb = this.callbacks[`dev${deviceId}.uio`];
-      if (cb == undefined) {
-        return null;
-      }
       if (data.length !== 10) {
         console.warn(`Invalid UIO state length: ${data.length}`);
         return null;
       }
       const state = Array.from(data).slice(2, 10);
-      await cb(state);
+      const deviceState = this.deviceStates[deviceId];
+      const request = deviceState.uioRequest;
+      if (request) {
+        clearTimeout(request.timeout);
+        deviceState.uioRequest = undefined;
+        request.resolve(state);
+      }
+      const cb = this.callbacks[`dev${deviceId}.uio`];
+      if (cb !== undefined) {
+        await cb(state);
+      }
 
     }
   }
@@ -377,7 +391,13 @@ export class UsbHandler implements ApiHandler {
     if (!device) {
       return;
     }
-    const ifaceNumber = this.deviceStates[deviceId].interface;
+    const deviceState = this.deviceStates[deviceId];
+    const ifaceNumber = deviceState.interface;
+    if (deviceState.uioRequest) {
+      clearTimeout(deviceState.uioRequest.timeout);
+      deviceState.uioRequest.reject(new Error('USB device disconnected while waiting for UIO state'));
+      deviceState.uioRequest = undefined;
+    }
     this.deviceStates[deviceId].slotConfigs = [];
     this.deviceStates[deviceId].fifo = new Uint8Array([]);
     this.deviceStates[deviceId].slotStates = [];
@@ -439,7 +459,28 @@ export class UsbHandler implements ApiHandler {
   }
 
   async getUioState(deviceId: string): Promise<number[]> {
-    return [];
+    const device = await this._getDevice(deviceId);
+    const deviceState = this.deviceStates[deviceId];
+    if (!device || !deviceState) {
+      throw new Error(`Device ${deviceId} not found`);
+    }
+    if (deviceState.uioRequest) {
+      throw new Error('A UIO state request is already pending');
+    }
+
+    const requestPacket = this.encodePacket(0, PacketType.Uio, []);
+    return await new Promise<number[]>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        deviceState.uioRequest = undefined;
+        reject(new Error('Timed out waiting for UIO state from USB device'));
+      }, TIO_USB_UIO_REQUEST_TIMEOUT_MS);
+      deviceState.uioRequest = { resolve, reject, timeout };
+      device.transferOut(3, requestPacket).catch((error) => {
+        clearTimeout(timeout);
+        deviceState.uioRequest = undefined;
+        reject(error instanceof Error ? error : new Error(String(error)));
+      });
+    });
   }
 
   async setUioState(deviceId: string, state: number[]): Promise<void> {

@@ -261,6 +261,7 @@ export const UioState = types
     io5: types.optional(types.number, 0),
     io6: types.optional(types.number, 0),
     io7: types.optional(types.number, 0),
+    hydrated: types.optional(types.boolean, false),
   })
   .views(self => ({
     get state(): number[] {
@@ -290,6 +291,10 @@ export const UioState = types
       self.io5 = state[5];
       self.io6 = state[6];
       self.io7 = state[7];
+      self.hydrated = true;
+    },
+    reset() {
+      self.hydrated = false;
     },
   }))
   .actions(self => ({
@@ -313,22 +318,13 @@ export const UioState = types
   }))
   .actions(self => ({
     updateState: flow(function* (state: number[]) {
-      if (state.length !== 8) {
-        console.debug(`Invalid state length: ${state.length}`);
-        return;
-      }
-      self.io0 = state[0];
-      self.io1 = state[1];
-      self.io2 = state[2];
-      self.io3 = state[3];
-      self.io4 = state[4];
-      self.io5 = state[5];
-      self.io6 = state[6];
-      self.io7 = state[7];
-      // self._pushState();
+      self._setState(state);
     }),
     updateIoState: flow(function* (index: number, state: number) {
       let didChange = false;
+      if (!self.hydrated) {
+        return;
+      }
       if (index < 0 || index > 7) {
         console.debug(`Invalid index: ${index}`);
         return;

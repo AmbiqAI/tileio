@@ -187,6 +187,7 @@ const Device = types
 .actions(self => ({
   onDisconnected: function(id: string) {
     self.state.setConnectionState(DeviceConnectionType.DISCONNECTED);
+    self.uioState.reset();
     new Promise<void>(async (resolve) => {
       await self.setNotifications(false);
       await self.stopPolling();
@@ -201,10 +202,12 @@ const Device = types
     try {
       self.dashboard = dashboard;
       self.slots.forEach(slot => slot.clear());
+      self.uioState.reset();
       self.state.setConnectionState(DeviceConnectionType.CONNECTING);
       yield ApiManager.deviceConnect(self.id, self.dashboard.device.slots, self.onDisconnected);
       self.state.setConnectionState(DeviceConnectionType.CONNECTED);
       yield self.setNotifications(true);
+      yield self.fetchUioState();
       yield self.startPolling();
     } catch (error) {
       console.error(error);
@@ -225,6 +228,7 @@ const Device = types
         yield self.stopRecording();
         yield ApiManager.deviceDisconnect(self.id);
         self.state.setConnectionState(DeviceConnectionType.DISCONNECTED);
+        self.uioState.reset();
       }
     } catch (error) {
       console.error(`Failed disconnecting from ${self.shortId}. (${error})`);

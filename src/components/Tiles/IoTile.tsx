@@ -91,7 +91,7 @@ const UioTile = observer(({ config, uioState, dashboard, pause }: TileProps) => 
             info={info}
             state={state}
             onChange={onChange}
-            disabled={!!pause}
+            disabled={!!pause || !uioState?.hydrated}
           />
         </Stack>
       </GridZStack>
