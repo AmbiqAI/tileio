@@ -143,10 +143,10 @@ export class BleHandler implements ApiHandler {
       }
       await BleClient.startNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_SIG_CHAR_UUIDS[slot], async (data: DataView) => {
         try {
-          const lastTs = this.deviceSlotStates[deviceId][slot];
           const numChs = slots[slot].chs.length;
           const fs = slots[slot].fs;
           const dtype = slots[slot].dtype;
+          const lastTs = this.deviceSlotStates[deviceId][slot];
           const rst = dataViewToSignalData(data, numChs, fs, dtype, lastTs);
           await cb(slot, rst.signals, rst.mask);
           this.deviceSlotStates[deviceId][slot] = rst.ts;

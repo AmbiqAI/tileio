@@ -132,7 +132,7 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
                     info={info}
                     state={state}
                     onChange={(state: number) => onChange(io, state)}
-                    disabled={!!pause}
+                    disabled={!!pause || !uioState?.hydrated}
                   />
                 </Grid>
               );

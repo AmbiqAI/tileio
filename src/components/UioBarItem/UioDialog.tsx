@@ -121,7 +121,7 @@ const UioDialog = ({ open, onClose, dashboard, device }: Props) => {
                     index={idx}
                     config={io.config}
                     io={io.state}
-                    disabled={!device.state.connected}
+                    disabled={!device.state.connected || !device.uioState.hydrated}
                     onChange={async (state: number) => {
                       await device.uioState.updateIoState(idx, state);
                     }}
