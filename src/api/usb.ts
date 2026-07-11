@@ -1,7 +1,7 @@
 /// <reference types="w3c-web-usb" />
 
 import { ApiHandler } from "./handler";
-import { calculateCRC16, createSignalClock, dataViewToSignalData, dataViewToMetrics, isMobile, SignalClock } from './utils';
+import { calculateCRC16, dataViewToSignalData, dataViewToMetrics, isMobile } from './utils';
 import { ISlotConfig } from "../models/slot";
 import { delay } from "../utils";
 
@@ -9,7 +9,6 @@ enum PacketType {
   Signal = 0,
   Metrics = 1,
   Uio = 2,
-  TimedSignal = 3,
 }
 
   // A packet includes the following fields:
@@ -57,7 +56,6 @@ class DeviceState {
   device: USBDevice;
   fifo: Uint8Array;
   slotStates: number[];
-  slotClocks: SignalClock[];
   interface: number;
   uioRequest?: UioRequest;
 
@@ -66,7 +64,6 @@ class DeviceState {
     this.slotConfigs = [];
     this.fifo = new Uint8Array([]);
     this.slotStates = [];
-    this.slotClocks = [];
     this.interface = 0;
   }
 }
@@ -178,14 +175,14 @@ export class UsbHandler implements ApiHandler {
     const slots = this.deviceStates[deviceId].slotConfigs;
 
     // Handle slot signal
-    if (ptype == PacketType.Signal || ptype == PacketType.TimedSignal) {
+    if (ptype == PacketType.Signal) {
       const cb = this.callbacks[`dev${deviceId}.slot${slotIdx}.sig`];
       if (slots == undefined || slotIdx >= slots.length || cb == undefined) {
         return null;
       }
       const slot = slots[slotIdx];
-      const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.fs, slot.dtype,
-                                       this.deviceStates[deviceId].slotClocks[slotIdx]);
+      const lastTs = this.deviceStates[deviceId].slotStates[slotIdx];
+      const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.fs, slot.dtype, lastTs);
       this.deviceStates[deviceId].slotStates[slotIdx] = rst.ts;
       await cb(slotIdx, rst.signals, rst.mask);
 
@@ -382,7 +379,6 @@ export class UsbHandler implements ApiHandler {
     this.deviceStates[deviceId] = new DeviceState(device);
     this.deviceStates[deviceId].slotConfigs = slots;
     this.deviceStates[deviceId].slotStates = slots.map(s => 0);
-    this.deviceStates[deviceId].slotClocks = slots.map(() => createSignalClock());
 
     await device.open();
 
@@ -405,7 +401,6 @@ export class UsbHandler implements ApiHandler {
     this.deviceStates[deviceId].slotConfigs = [];
     this.deviceStates[deviceId].fifo = new Uint8Array([]);
     this.deviceStates[deviceId].slotStates = [];
-    this.deviceStates[deviceId].slotClocks = [];
 
     await this.disableDevicePolling(deviceId);
 

@@ -17,86 +17,17 @@ function getDataByteLength(dtype: string): number {
   return 0;
 }
 
-const TIMED_SIGNAL_MAGIC0 = 0x54;
-const TIMED_SIGNAL_MAGIC1 = 0x53;
-const TIMED_SIGNAL_VERSION = 1;
-const TIMED_SIGNAL_HEADER_LEN = 12;
-const STREAM_PLAYOUT_DELAY_MS = 500;
-
-export interface SignalClock {
-  lastTs: number;
-  sourceBaseMs?: number;
-  hostBaseMs?: number;
-  lastSourceDeltaMs?: number;
-  lastSequence?: number;
-}
-
-export function createSignalClock(): SignalClock {
-  return { lastTs: 0 };
-}
-
-export function dataViewToSignalData(data: DataView, numChs: number, fs: number, dtype: string, clock: SignalClock): {signals: number[][], mask: number[][], ts: number} {
+export function dataViewToSignalData(data: DataView, numChs: number, fs: number, dtype: string, lastTs: number): {signals: number[][], mask: number[][], ts: number} {
   const ts = 1000/fs;
   const byteLen = getDataByteLength(dtype);
-  const stride = numChs * byteLen + 2;
-  const packetLen = data.getUint16(0, true);
-  let signalBytes = packetLen;
-  let offset = 2;
-  let sourceMs: number|undefined;
-  let sequence: number|undefined;
-
-  if (packetLen >= TIMED_SIGNAL_HEADER_LEN &&
-      data.byteLength >= 2 + TIMED_SIGNAL_HEADER_LEN &&
-      data.getUint8(2) === TIMED_SIGNAL_MAGIC0 &&
-      data.getUint8(3) === TIMED_SIGNAL_MAGIC1 &&
-      data.getUint8(4) === TIMED_SIGNAL_VERSION) {
-    sourceMs = data.getUint32(6, true);
-    sequence = data.getUint16(10, true);
-    signalBytes = data.getUint16(12, true);
-    offset += TIMED_SIGNAL_HEADER_LEN;
-    if (signalBytes + TIMED_SIGNAL_HEADER_LEN > packetLen) {
-      throw new Error('Timed signal payload length exceeds packet length');
-    }
-  }
-  if (stride === 0 || signalBytes % stride !== 0) {
-    throw new Error('Invalid signal payload length');
-  }
-  const signalLen = signalBytes / stride;
+  const signalLen = data.getUint16(0, true) / (numChs * byteLen + 2);
   const signals: number[][] = [];
   const mask: number[][] = [];
-  if (!signalLen) {
-    return {signals, mask, ts: clock.lastTs};
+  let offset = 2;
+  let refDate = Date.now() - ts*signalLen;
+  if (refDate < lastTs) {
+    refDate = lastTs;
   }
-
-  const now = Date.now();
-  const latestAllowed = now - STREAM_PLAYOUT_DELAY_MS;
-  let lastSampleTs: number;
-  if (sourceMs !== undefined) {
-    if (clock.sourceBaseMs === undefined || clock.hostBaseMs === undefined) {
-      clock.sourceBaseMs = sourceMs;
-      clock.hostBaseMs = latestAllowed;
-    }
-    const sourceDeltaMs = (sourceMs - clock.sourceBaseMs) >>> 0;
-    if (clock.lastSourceDeltaMs !== undefined && sourceDeltaMs <= clock.lastSourceDeltaMs) {
-      return {signals, mask, ts: clock.lastTs};
-    }
-    lastSampleTs = clock.hostBaseMs + sourceDeltaMs;
-    if (lastSampleTs > latestAllowed) {
-      clock.hostBaseMs -= lastSampleTs - latestAllowed;
-      lastSampleTs = latestAllowed;
-    }
-    clock.lastSourceDeltaMs = sourceDeltaMs;
-    clock.lastSequence = sequence;
-  } else {
-    // Legacy packets have no source clock. Drop compressed bursts instead of
-    // manufacturing future timestamps from arrival time.
-    lastSampleTs = clock.lastTs ? Math.min(clock.lastTs + signalLen * ts, latestAllowed) : latestAllowed;
-    if (clock.lastTs && lastSampleTs <= clock.lastTs) {
-      return {signals, mask, ts: clock.lastTs};
-    }
-  }
-
-  let refDate = lastSampleTs - (signalLen - 1) * ts;
   for (let i = 0; i < signalLen; i++) {
     mask.push([refDate, data.getUint16(offset, true)]);
     offset += 2;
@@ -121,9 +52,8 @@ export function dataViewToSignalData(data: DataView, numChs: number, fs: number,
     }
     signals.push(row);
     refDate += ts;
-  }
-  clock.lastTs = lastSampleTs;
-  return {signals, mask, ts: lastSampleTs};
+  };
+  return {signals, mask, ts: refDate};
 }
 
 export function dataViewToMetrics(data: DataView): number[] {
