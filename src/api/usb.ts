@@ -36,7 +36,8 @@ const TIO_USB_CRC_IDX = 253;
 const TIO_USB_CRC_LEN = 2;
 const TIO_USB_STOP_IDX = 255;
 const TIO_USB_STOP_VAL = 0xAA;
-const TIO_USB_UIO_REQUEST_TIMEOUT_MS = 1000;
+const TIO_USB_UIO_REQUEST_TIMEOUT_MS = 1500;
+const TIO_USB_UIO_REQUEST_ATTEMPTS = 3;
 
 interface UioRequest {
   resolve: (state: number[]) => void;
@@ -469,18 +470,29 @@ export class UsbHandler implements ApiHandler {
     }
 
     const requestPacket = this.encodePacket(0, PacketType.Uio, []);
-    return await new Promise<number[]>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        deviceState.uioRequest = undefined;
-        reject(new Error('Timed out waiting for UIO state from USB device'));
-      }, TIO_USB_UIO_REQUEST_TIMEOUT_MS);
-      deviceState.uioRequest = { resolve, reject, timeout };
-      device.transferOut(3, requestPacket).catch((error) => {
-        clearTimeout(timeout);
-        deviceState.uioRequest = undefined;
-        reject(error instanceof Error ? error : new Error(String(error)));
-      });
-    });
+    let lastError: Error|undefined;
+    for (let attempt = 0; attempt < TIO_USB_UIO_REQUEST_ATTEMPTS; attempt++) {
+      try {
+        return await new Promise<number[]>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            deviceState.uioRequest = undefined;
+            reject(new Error('Timed out waiting for UIO state from USB device'));
+          }, TIO_USB_UIO_REQUEST_TIMEOUT_MS);
+          deviceState.uioRequest = { resolve, reject, timeout };
+          device.transferOut(3, requestPacket).catch((error) => {
+            clearTimeout(timeout);
+            deviceState.uioRequest = undefined;
+            reject(error instanceof Error ? error : new Error(String(error)));
+          });
+        });
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        if (attempt + 1 < TIO_USB_UIO_REQUEST_ATTEMPTS) {
+          await delay(100);
+        }
+      }
+    }
+    throw lastError || new Error('Failed reading UIO state from USB device');
   }
 
   async setUioState(deviceId: string, state: number[]): Promise<void> {
