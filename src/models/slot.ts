@@ -323,7 +323,9 @@ export const SlotMask = types
     return amounts;
   },
   get qosState(): number {
-    return Math.round(self.qos.reduce((a, b) => a + b, 0) / self.qos.length);
+    // The header badge represents current signal quality. Averaging the
+    // retained plot history made it lag behind a recovered PPG signal.
+    return self.qos.length ? self.qos[self.qos.length - 1] : 0;
   }
 
 })).actions(self => ({
