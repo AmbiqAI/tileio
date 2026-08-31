@@ -168,7 +168,11 @@ export class UsbHandler implements ApiHandler {
     const actualCrc = calculateCRC16(data);
     const frameStop = packet.getUint8(TIO_USB_STOP_IDX);
     if (crc !== actualCrc) {
+      // Reject rather than dispatch: `dLength` is part of the CRC-covered
+      // region, so a corrupt length would feed a bogus sample count into the
+      // slot's playout clock and skew its timeline irrecoverably.
       console.warn(`CRC error ${crc} ${actualCrc}`);
+      return null;
     }
     if (frameStart !== 0x55 || frameStop !== 0xAA) {
       console.warn(`Frame error start: ${frameStart} stop: ${frameStop}`);
