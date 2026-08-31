@@ -4,6 +4,7 @@ import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
 import { delay } from '../utils';
 import { ApiHandler } from './handler';
 import { isMobile, dataViewToSignalData, dataViewToMetrics } from './utils';
+import { PlayoutClock } from './playoutClock';
 import { ISlotConfig } from '../models/slot';
 const TIO_SVC_UUID = "EECB7DB8-8B2D-402C-B995-825538B49328";
 const TIO_SLOTS_SIG_CHAR_UUIDS = [
@@ -27,13 +28,14 @@ export class BleHandler implements ApiHandler {
   initialized: boolean;
   deviceSlots: Record<string, ISlotConfig[]|undefined>;
   callbacks: Record<string, any>;
-  deviceSlotStates: Record<string, number[]>;
+  /** Per-device, per-slot virtual sample clocks used to timestamp signal frames. */
+  deviceSlotClocks: Record<string, PlayoutClock[]>;
 
   constructor() {
     this.initialized = false;
     this.deviceSlots = {};
     this.callbacks = {};
-    this.deviceSlotStates = {};
+    this.deviceSlotClocks = {};
   }
 
   static async supportedPlatform(): Promise<boolean> {
@@ -107,7 +109,7 @@ export class BleHandler implements ApiHandler {
   async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
     await this.deviceDisconnect(deviceId);
     this.deviceSlots[deviceId] = slots;
-    this.deviceSlotStates[deviceId] = slots.map(s => 0);
+    this.deviceSlotClocks[deviceId] = slots.map(s => new PlayoutClock({ fs: s.fs }));
     await BleClient.connect(deviceId, onDisconnect);
     await delay(100);
     await BleClient.getServices(deviceId);
@@ -115,7 +117,7 @@ export class BleHandler implements ApiHandler {
 
   async deviceDisconnect(deviceId: string): Promise<void> {
     this.deviceSlots[deviceId] = undefined;
-    this.deviceSlotStates[deviceId] = [];
+    this.deviceSlotClocks[deviceId] = [];
     await BleClient.disconnect(deviceId);
   }
 
@@ -144,12 +146,13 @@ export class BleHandler implements ApiHandler {
       await BleClient.startNotifications(deviceId, TIO_SVC_UUID,  TIO_SLOTS_SIG_CHAR_UUIDS[slot], async (data: DataView) => {
         try {
           const numChs = slots[slot].chs.length;
-          const fs = slots[slot].fs;
           const dtype = slots[slot].dtype;
-          const lastTs = this.deviceSlotStates[deviceId][slot];
-          const rst = dataViewToSignalData(data, numChs, fs, dtype, lastTs);
+          const clock = this.deviceSlotClocks[deviceId]?.[slot];
+          if (clock === undefined) {
+            return;
+          }
+          const rst = dataViewToSignalData(data, numChs, dtype, clock);
           await cb(slot, rst.signals, rst.mask);
-          this.deviceSlotStates[deviceId][slot] = rst.ts;
         } catch (error) {
           console.error(`Failed with notifications ${error}`);
         }

@@ -2,6 +2,7 @@
 
 import { ApiHandler } from "./handler";
 import { calculateCRC16, dataViewToSignalData, dataViewToMetrics, isMobile } from './utils';
+import { PlayoutClock } from './playoutClock';
 import { ISlotConfig } from "../models/slot";
 import { delay } from "../utils";
 
@@ -49,14 +50,15 @@ interface UioRequest {
 // slotConfigs: ISlotConfig[]
 // device: USBDevice
 // fifo: Uint8Array
-// slotStates: number[]
+// slotClocks: PlayoutClock[]
 // interface
 
 class DeviceState {
   slotConfigs: ISlotConfig[];
   device: USBDevice;
   fifo: Uint8Array;
-  slotStates: number[];
+  /** Per-slot virtual sample clock used to timestamp incoming signal frames. */
+  slotClocks: PlayoutClock[];
   interface: number;
   uioRequest?: UioRequest;
 
@@ -64,7 +66,7 @@ class DeviceState {
     this.device = device;
     this.slotConfigs = [];
     this.fifo = new Uint8Array([]);
-    this.slotStates = [];
+    this.slotClocks = [];
     this.interface = 0;
   }
 }
@@ -182,9 +184,11 @@ export class UsbHandler implements ApiHandler {
         return null;
       }
       const slot = slots[slotIdx];
-      const lastTs = this.deviceStates[deviceId].slotStates[slotIdx];
-      const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.fs, slot.dtype, lastTs);
-      this.deviceStates[deviceId].slotStates[slotIdx] = rst.ts;
+      const clock = this.deviceStates[deviceId].slotClocks[slotIdx];
+      if (clock === undefined) {
+        return null;
+      }
+      const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.dtype, clock);
       await cb(slotIdx, rst.signals, rst.mask);
 
     } else if (ptype == PacketType.Metrics) {
@@ -379,7 +383,7 @@ export class UsbHandler implements ApiHandler {
 
     this.deviceStates[deviceId] = new DeviceState(device);
     this.deviceStates[deviceId].slotConfigs = slots;
-    this.deviceStates[deviceId].slotStates = slots.map(s => 0);
+    this.deviceStates[deviceId].slotClocks = slots.map(s => new PlayoutClock({ fs: s.fs }));
 
     await device.open();
 
@@ -401,7 +405,7 @@ export class UsbHandler implements ApiHandler {
     }
     this.deviceStates[deviceId].slotConfigs = [];
     this.deviceStates[deviceId].fifo = new Uint8Array([]);
-    this.deviceStates[deviceId].slotStates = [];
+    this.deviceStates[deviceId].slotClocks = [];
 
     await this.disableDevicePolling(deviceId);
 
