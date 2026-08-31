@@ -2,7 +2,7 @@
 
 import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
 import { delay } from '../utils';
-import { ApiHandler } from './handler';
+import { ApiHandler, SlotSignalCallback } from './handler';
 import { isMobile, dataViewToSignalData, dataViewToMetrics } from './utils';
 import { PlayoutClock } from './playoutClock';
 import { ISlotConfig } from '../models/slot';
@@ -136,7 +136,7 @@ export class BleHandler implements ApiHandler {
     }
   }
 
-  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
+  async enableSlotNotifications(deviceId: string, slot: number, cb: SlotSignalCallback): Promise<void> {
     try {
       console.log(`enableSlotNotifications ${deviceId} ${slot}`);
       const slots = this.deviceSlots[deviceId];
@@ -151,8 +151,13 @@ export class BleHandler implements ApiHandler {
           if (clock === undefined) {
             return;
           }
+          // Slot configs stay editable while connected, so track `fs` live.
+          clock.setFs(slots[slot].fs);
           const rst = dataViewToSignalData(data, numChs, dtype, clock);
-          await cb(slot, rst.signals, rst.mask);
+          if (rst.signals.length === 0) {
+            return;
+          }
+          await cb(slot, rst.signals, rst.mask, rst.discontinuity);
         } catch (error) {
           console.error(`Failed with notifications ${error}`);
         }

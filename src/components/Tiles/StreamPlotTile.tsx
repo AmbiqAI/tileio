@@ -67,9 +67,12 @@ export const StreamPlotTileSpec: TileSpec =   {
         type: 'number',
         title: 'Stream Delay',
         default: 500,
-        minimum: -5000,
+        // Must be >= DEFAULT_PLAYOUT_DELAY_MS (src/api/playoutClock.ts): samples
+        // are stamped that far behind arrival, so a smaller delay leaves the
+        // trace permanently short of the chart edge.
+        minimum: 500,
         maximum: 5000,
-        description: 'Stream delay (ms)'
+        description: 'Stream delay (ms), minimum 500 (playout delay)'
       },
       streamGap: {
         type: 'number',
@@ -77,7 +80,7 @@ export const StreamPlotTileSpec: TileSpec =   {
         default: 500,
         minimum: 0,
         maximum: 5000,
-        description: 'Stream gap (ms)'
+        description: 'Stream gap (ms) - deprecated, trace breaks are now detected from the stream itself'
       },
       fps: {
         type: 'number',
@@ -171,7 +174,10 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, dashboa
       responsive: true,
       maintainAspectRatio: false,
       cubicInterpolationMode: "monotone",
-      spanGaps: configs.streamGap,
+      // Breaks are explicit: the playout clock keeps samples evenly spaced and
+      // the slot model inserts a NaN row at a real discontinuity. Spanning by a
+      // user-set time threshold would draw a line across lost data.
+      spanGaps: false,
       elements: {
         point: { radius: 1 },
       },

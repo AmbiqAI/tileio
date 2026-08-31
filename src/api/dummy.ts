@@ -1,6 +1,6 @@
 import { ISlotConfig } from '../models/slot';
 import { delay } from '../utils';
-import { ApiHandler } from './handler';
+import { ApiHandler, SlotSignalCallback } from './handler';
 
 const devices: {id: string, name: string}[] = [
   {
@@ -138,7 +138,7 @@ export class EmulatorHandler implements ApiHandler {
     this.callbacks[`${deviceId}.disconnect`] = undefined;
   }
 
-  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
+  async enableSlotNotifications(deviceId: string, slot: number, cb: SlotSignalCallback): Promise<void> {
     console.log(`enableSlotNotifications ${deviceId} ${slot}`);
     await this.disableSlotNotifications(deviceId, slot);
     const slots = this.deviceSlots[deviceId];
@@ -157,7 +157,7 @@ export class EmulatorHandler implements ApiHandler {
     const numSignals = fs/numPackets;
     const intervalcb = setInterval(() => {
       const rst = generateDummySlotSignals(slot, numSignals, numChs, fs);
-      cb(slot, rst.signals, rst.mask);
+      cb(slot, rst.signals, rst.mask, false);
     }, ts);
     this.callbacks[`dev${deviceId}.slot${slot}.sig`] = intervalcb;
   }

@@ -1,6 +1,6 @@
 /// <reference types="w3c-web-usb" />
 
-import { ApiHandler } from "./handler";
+import { ApiHandler, SlotSignalCallback } from "./handler";
 import { calculateCRC16, dataViewToSignalData, dataViewToMetrics, isMobile } from './utils';
 import { PlayoutClock } from './playoutClock';
 import { ISlotConfig } from "../models/slot";
@@ -188,8 +188,13 @@ export class UsbHandler implements ApiHandler {
       if (clock === undefined) {
         return null;
       }
+      // Slot configs stay editable while connected, so track `fs` live.
+      clock.setFs(slot.fs);
       const rst = dataViewToSignalData(new DataView(data.buffer), slot.chs.length, slot.dtype, clock);
-      await cb(slotIdx, rst.signals, rst.mask);
+      if (rst.signals.length === 0) {
+        return null;
+      }
+      await cb(slotIdx, rst.signals, rst.mask, rst.discontinuity);
 
     } else if (ptype == PacketType.Metrics) {
       const cb = this.callbacks[`dev${deviceId}.slot${slotIdx}.met`];
@@ -431,7 +436,7 @@ export class UsbHandler implements ApiHandler {
     }
   }
 
-  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
+  async enableSlotNotifications(deviceId: string, slot: number, cb: SlotSignalCallback): Promise<void> {
     this.callbacks[`dev${deviceId}.slot${slot}.sig`] = cb;
   }
 

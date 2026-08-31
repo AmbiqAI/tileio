@@ -162,6 +162,40 @@ export const SlotConfig = types
 export interface ISlotConfig extends Instance<typeof SlotConfig> {}
 export interface ISlotConfigSnapshot extends SnapshotIn<typeof SlotConfig> {}
 
+/**
+ * Sentinel mask value marking a break in the stream. Real masks are unsigned
+ * bit fields, so a negative value cannot collide with one.
+ */
+export const MASK_BREAK = -1;
+
+/**
+ * Time hole, in ms, that forces a trace break even when the transport did not
+ * report a discontinuity (e.g. a reconnect or a paused stream). The playout
+ * clock keeps samples evenly spaced, so any hole this large is a real outage.
+ */
+export const STREAM_BREAK_GAP_MS = 1000;
+
+/**
+ * True when a break marker must be inserted before `firstTs`: either the
+ * transport reported a playout-clock discontinuity, or the timeline has a hole
+ * no regular sample stream could produce.
+ */
+function needsBreak(hasData: boolean, latestTs: number, firstTs: number, discontinuity: boolean): boolean {
+  if (!hasData || firstTs <= latestTs) {
+    return false;
+  }
+  return discontinuity || firstTs - latestTs > STREAM_BREAK_GAP_MS;
+}
+
+/**
+ * Timestamp of the break marker: just after the last real sample, so a
+ * segmentation band ends where its data ends instead of being stretched across
+ * the hole. Always strictly between `latestTs` and `firstTs`.
+ */
+function breakTimestamp(latestTs: number, firstTs: number): number {
+  return Math.min(latestTs + 1, (latestTs + firstTs) / 2);
+}
+
 export const SlotSignals = types
 .model('SlotSignals', {
   latestTs: types.optional(types.number, 0),
@@ -170,8 +204,17 @@ export const SlotSignals = types
   data: [] as number[][],
 })).views(self => ({
 })).actions(self => ({
-  add: function(data: number[][]) {
+  /**
+   * Append decoded samples. When `discontinuity` is set (or a large time hole
+   * is detected) a NaN row is inserted first so the chart splits the trace
+   * instead of interpolating across missing data.
+   */
+  add: function(data: number[][], discontinuity: boolean = false) {
     if (data.length) {
+      if (needsBreak(self.data.length > 0, self.latestTs, data[0][0], discontinuity)) {
+        const breakTs = breakTimestamp(self.latestTs, data[0][0]);
+        self.data.push([breakTs, ...new Array(data[0].length - 1).fill(NaN)]);
+      }
       self.data.push(...data);
       self.latestTs = data[data.length-1][0];
     }
@@ -197,6 +240,11 @@ const SIG_QOS_OFFSET = 6;
 const SIG_QOS_MASK = 0x03;
 const SIG_FID_OFFSET = 8;
 const SIG_FID_MASK = 0xFF;
+
+/** Segmentation value of a mask row, preserving the {@link MASK_BREAK} sentinel. */
+function segmentValue(row: number[]): number {
+  return row[1] === MASK_BREAK ? MASK_BREAK : (row[1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
+}
 
 export const getQoSName = (connected: boolean, state: number) => {
   if (!connected) {
@@ -236,12 +284,14 @@ export const SlotMask = types
     const latestTs = self.latestTs;
     let start = 0;
     let end = 0;
-    let prev = self.data.length > 0 ? (self.data[0][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK : 0;
+    let prev = self.data.length > 0 ? segmentValue(self.data[0]) : 0;
     for(let i = 1; i < self.data.length; i++) {
-      let curr = (self.data[i][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
+      let curr = segmentValue(self.data[i]);
       if (prev !== curr) {
         end = self.data[i][0];
-        if (start >= 0 && end <= latestTs) {
+        // A break marker terminates the run and emits no bounds of its own, so
+        // the missing interval renders as a gap rather than a stretched band.
+        if (prev !== MASK_BREAK && start >= 0 && end <= latestTs) {
           bounds.push({start, end, value: prev, label: ""});
         }
         start = end;
@@ -256,12 +306,12 @@ export const SlotMask = types
     const latestTs = self.latestTs;
     let duration = 0;
     let startIdx = 0;
-    let prev = self.data.length > 0 ? (self.data[0][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK : 0;
+    let prev = self.data.length > 0 ? segmentValue(self.data[0]) : 0;
     for(let i = 1; i < self.data.length; i++) {
-      let curr = (self.data[i][1] >> SIG_SEG_OFFSET) & SIG_SEG_MASK;
+      let curr = segmentValue(self.data[i]);
       if (prev !== curr) {
         duration = i - startIdx;
-        if (startIdx >= 0 && self.data[i][0] <= latestTs) {
+        if (prev !== MASK_BREAK && startIdx >= 0 && self.data[i][0] <= latestTs) {
           if (amounts[prev]) {
             amounts[prev] += duration;
           } else {
@@ -296,6 +346,7 @@ export const SlotMask = types
     const fiducials = [];
     const latestTs = self.latestTs;
     for(let i = 0; i < self.data.length; i++) {
+      if (self.data[i][1] === MASK_BREAK) { continue; }
       const ts = self.data[i][0];
       const value = (self.data[i][1] >> SIG_FID_OFFSET) & SIG_FID_MASK;
       if (value && ts <= latestTs) {
@@ -307,7 +358,7 @@ export const SlotMask = types
   get qos(): number[] {
     // eslint-disable-next-line
     const latestTs = self.latestTs;
-    return self.data.map(d => (d[1] >> SIG_QOS_OFFSET) & SIG_QOS_MASK);
+    return self.data.filter(d => d[1] !== MASK_BREAK).map(d => (d[1] >> SIG_QOS_OFFSET) & SIG_QOS_MASK);
   }
 })).views(self => ({
   get fiducialAmounts(): {[key: number]: number} {
@@ -329,8 +380,12 @@ export const SlotMask = types
   }
 
 })).actions(self => ({
-  add: function(data: number[][]) {
+  /** Append mask rows, inserting a {@link MASK_BREAK} row at a discontinuity. */
+  add: function(data: number[][], discontinuity: boolean = false) {
     if (data.length) {
+      if (needsBreak(self.data.length > 0, self.latestTs, data[0][0], discontinuity)) {
+        self.data.push([breakTimestamp(self.latestTs, data[0][0]), MASK_BREAK]);
+      }
       self.data.push(...data);
       self.latestTs = data[data.length-1][0];
     }
@@ -383,9 +438,9 @@ export const Slot = types
 .volatile(self => ({
 }))
 .actions(self => ({
-  add: function(signals: number[][], mask: number[][]) {
-    self.signals.add(signals);
-    self.mask.add(mask);
+  add: function(signals: number[][], mask: number[][], discontinuity: boolean = false) {
+    self.signals.add(signals, discontinuity);
+    self.mask.add(mask, discontinuity);
   },
   addMetrics: function(metrics: number[][]) {
     self.metrics.add(metrics);

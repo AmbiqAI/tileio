@@ -23,7 +23,10 @@ function getDataByteLength(dtype: string): number {
  *
  * Timestamps come from the slot's {@link PlayoutClock}, not from arrival time,
  * so bursty transports still produce evenly spaced, monotonic timestamps.
- * `discontinuity` is set when the clock re-anchored after a genuine stall.
+ * `discontinuity` is set when the clock re-anchored (genuine stall, dropped
+ * backlog or sampling-rate change) and the trace must be broken.
+ *
+ * The frame is dropped (empty result) when the clock is bounding staleness.
  */
 export function dataViewToSignalData(data: DataView, numChs: number, dtype: string, clock: PlayoutClock): {signals: number[][], mask: number[][], discontinuity: boolean} {
   const byteLen = getDataByteLength(dtype);
@@ -32,7 +35,10 @@ export function dataViewToSignalData(data: DataView, numChs: number, dtype: stri
   const mask: number[][] = [];
   let offset = 2;
   const slice = clock.stamp(signalLen);
-  for (let i = 0; i < signalLen; i++) {
+  if (slice.count === 0) {
+    return {signals, mask, discontinuity: slice.discontinuity};
+  }
+  for (let i = 0; i < slice.count; i++) {
     const refDate = slice.startTs + i * slice.interval;
     mask.push([refDate, data.getUint16(offset, true)]);
     offset += 2;

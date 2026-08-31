@@ -62,9 +62,10 @@ export const SegmentStreamTileSpec: TileSpec =   {
         type: 'number',
         title: 'Stream Delay',
         default: 500,
-        minimum: 0,
+        // Must be >= DEFAULT_PLAYOUT_DELAY_MS (src/api/playoutClock.ts).
+        minimum: 500,
         maximum: 5000,
-        description: 'Stream delay (ms)'
+        description: 'Stream delay (ms), minimum 500 (playout delay)'
       },
       fps: {
         type: 'number',
