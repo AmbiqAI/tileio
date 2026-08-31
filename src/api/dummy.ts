@@ -1,6 +1,7 @@
 import { ISlotConfig } from '../models/slot';
 import { delay } from '../utils';
 import { ApiHandler, SlotSignalCallback } from './handler';
+import { PlayoutClock } from './playoutClock';
 
 const devices: {id: string, name: string}[] = [
   {
@@ -28,17 +29,23 @@ function getRandomFloat(min: number, max: number) {
 }
 
 
-function generateDummySlotSignals(slot: number, numSignals: number, numChs: number, fs: number): {signals: number[][], mask: number[][]} {
+/**
+ * Generate a synthetic frame, timestamped by the slot's playout clock so the
+ * emulator exercises the same anchoring, slew, re-anchor and drop paths as the
+ * real transports (setInterval bunches callbacks under load just as USB does).
+ */
+function generateDummySlotSignals(numSignals: number, numChs: number, fs: number, clock: PlayoutClock): {signals: number[][], mask: number[][], discontinuity: boolean} {
   const signals: number[][] = [];
   const mask: number[][] = [];
+  const slice = clock.stamp(numSignals);
 
   const sig_amp = 600;
   const sig_freq = 60/fs;
   const sig_offset = 9384;
   const sig_phi = (0.0/180.0)*Math.PI;
 
-  let ts = Date.now() - numSignals*1000/fs;
-  for (let i = 0; i < numSignals; i++) {
+  let ts = slice.startTs;
+  for (let i = 0; i < slice.count; i++) {
     // [5-0] : 6-bit segmentation
     // [7-6] : 2-bit QoS (0:bad, 1:poor, 2:fair, 3:good)
     // [15-8] : 8-bit Fiducial
@@ -52,10 +59,10 @@ function generateDummySlotSignals(slot: number, numSignals: number, numChs: numb
       const val = (sig_amp*Math.cos(2*Math.PI*sig_freq*ts/1000 + sig_phi) + sig_offset);
       signal.push(val);
     }
-    ts += 1000/fs;
+    ts += slice.interval;
     signals.push(signal);
   }
-  return { signals, mask };
+  return { signals, mask, discontinuity: slice.discontinuity };
 }
 
 function generateDummySlotMetrics(slot: number, numMetrics: number): number[] {
@@ -155,9 +162,12 @@ export class EmulatorHandler implements ApiHandler {
     const numPackets = Math.ceil(fs/maxSlotsPerPacket);
     const ts = 1000/numPackets;
     const numSignals = fs/numPackets;
+    const clock = new PlayoutClock({ fs });
     const intervalcb = setInterval(() => {
-      const rst = generateDummySlotSignals(slot, numSignals, numChs, fs);
-      cb(slot, rst.signals, rst.mask, false);
+      clock.setFs(slots[slot].fs);
+      const rst = generateDummySlotSignals(numSignals, numChs, fs, clock);
+      if (rst.signals.length === 0) { return; }
+      cb(slot, rst.signals, rst.mask, rst.discontinuity);
     }, ts);
     this.callbacks[`dev${deviceId}.slot${slot}.sig`] = intervalcb;
   }

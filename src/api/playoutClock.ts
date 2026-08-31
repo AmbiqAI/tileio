@@ -31,6 +31,13 @@
  *     re-anchors with a discontinuity. Worst-case rendered staleness is
  *     therefore `delayMs + maxLeadMs` (2000 ms by default).
  *
+ *     Cost: drop mode exits only when the emitted timeline has fully drained
+ *     (`next <= liveEdge`), so it also discards the genuinely live frames that
+ *     arrive while it drains - up to roughly one queued-lead worth per episode
+ *     (~800 ms measured on the 32-frame backlog case). That is deliberate: the
+ *     alternative is rendering the backlog as if it were live. The loss is
+ *     signalled by the re-anchor discontinuity, so it renders as a real gap.
+ *
  * Note on the effective delay: the anchor is evaluated once per frame against
  * that frame's arrival time, so `delayMs` is only achieved exactly for evenly
  * paced delivery (BLE). Under bursty delivery - several frames sharing one

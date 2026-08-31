@@ -7,6 +7,7 @@ import { ThemeColors } from "../../theme/theme";
 import { getPlotDurationMs } from "../constants";
 import { alpha, useTheme } from "@mui/material";
 import { observer } from "mobx-react";
+import { DEFAULT_PLAYOUT_DELAY_MS } from "../../api/playoutClock";
 
 export const SegmentStreamTileSpec: TileSpec =   {
   type: "SEGMENTS_STREAM_TILE",
@@ -201,7 +202,8 @@ const SegmentStreamTile = observer(({ size, slots, pause, duration, config }: Ti
           },
           realtime: {
             duration: durationMs,
-            delay: configs.streamDelay,
+            // Clamped to the playout delay; see StreamPlotTile.
+            delay: Math.max(configs.streamDelay, DEFAULT_PLAYOUT_DELAY_MS),
             frameRate: configs.fps,
             pause: pause,
           },

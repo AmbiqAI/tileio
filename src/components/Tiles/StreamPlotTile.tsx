@@ -7,6 +7,7 @@ import { alpha, useTheme } from "@mui/material";
 import { getPlotDurationMs } from "../constants";
 import { observer } from "mobx-react";
 import { ThemeColors } from "../../theme/theme";
+import { DEFAULT_PLAYOUT_DELAY_MS } from "../../api/playoutClock";
 
 export const StreamPlotTileSpec: TileSpec =   {
   type: "STREAM_PLOT_TILE",
@@ -239,7 +240,10 @@ const StreamPlotTile = observer(({ size, slots, pause, duration, config, dashboa
           },
           realtime: {
             duration: durationMs,
-            delay: configs.streamDelay,
+            // Clamped: samples are stamped DEFAULT_PLAYOUT_DELAY_MS behind
+            // arrival, and dashboards saved before the schema minimum are not
+            // revalidated on load (models/tile.ts stores configs as frozen).
+            delay: Math.max(configs.streamDelay, DEFAULT_PLAYOUT_DELAY_MS),
             frameRate: configs.fps,
             pause: pause,
           },
