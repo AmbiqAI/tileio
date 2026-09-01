@@ -47,9 +47,9 @@ const Device = types
     const oldestTs = Date.now() - 1000*(5+self.dashboard.duration);
     self.slots.forEach(slot => slot.prune(oldestTs));
   },
-  receivedSlotData: flow(function*(slot: number, signals: number[][], mask: number[][]) {
+  receivedSlotData: flow(function*(slot: number, signals: number[][], mask: number[][], discontinuity: boolean = false) {
     if (slot >= self.slots.length) { return; }
-    self.slots[slot].add(signals, mask);
+    self.slots[slot].add(signals, mask, discontinuity);
     if (self.record) {
       yield self.record.addSlotData(slot, signals, mask);
     }

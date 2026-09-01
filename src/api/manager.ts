@@ -4,7 +4,7 @@ import { DeviceInterfaceType } from "../models/types";
 import { delay } from "../utils";
 import { BleHandler } from "./ble";
 import { EmulatorHandler } from "./dummy";
-import { ApiHandler } from "./handler";
+import { ApiHandler, SlotSignalCallback } from "./handler";
 import { ApiModeType } from "./types";
 import { UsbHandler } from "./usb";
 
@@ -155,7 +155,7 @@ export class ApiManager {
     await handler.deviceDisconnect(deviceId);
   }
 
-  async enableSlotNotifications(deviceId: string, slot: number, cb: (slot: number, signals: number[][], mask: number[][]) => Promise<void>): Promise<void> {
+  async enableSlotNotifications(deviceId: string, slot: number, cb: SlotSignalCallback): Promise<void> {
     /**
      * Enable slot notifications for device
      * @param deviceId Device ID

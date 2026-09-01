@@ -152,7 +152,10 @@ const SignalPlotTile = observer(({ size, slots, pause, duration, config, dashboa
       responsive: true,
       maintainAspectRatio: false,
       cubicInterpolationMode: "monotone",
-      spanGaps: 2*configs.streamDelay,
+      // Breaks are explicit NaN rows inserted by the slot model. This chart
+      // plots against sample index, so a ms-based spanGaps threshold would
+      // bridge every break unconditionally.
+      spanGaps: false,
       elements: {
         point: { radius: 1 },
       },

@@ -1,5 +1,6 @@
 import { isPlatform } from '@ionic/react';
 import { Device } from '@capacitor/device';
+import { PlayoutClock } from './playoutClock';
 
 export async function isMobile(): Promise<boolean> {
   const info = await Device.getInfo();
@@ -17,18 +18,28 @@ function getDataByteLength(dtype: string): number {
   return 0;
 }
 
-export function dataViewToSignalData(data: DataView, numChs: number, fs: number, dtype: string, lastTs: number): {signals: number[][], mask: number[][], ts: number} {
-  const ts = 1000/fs;
+/**
+ * Decode a signal frame into `[ts, ...channels]` rows.
+ *
+ * Timestamps come from the slot's {@link PlayoutClock}, not from arrival time,
+ * so bursty transports still produce evenly spaced, monotonic timestamps.
+ * `discontinuity` is set when the clock re-anchored (genuine stall, dropped
+ * backlog or sampling-rate change) and the trace must be broken.
+ *
+ * The frame is dropped (empty result) when the clock is bounding staleness.
+ */
+export function dataViewToSignalData(data: DataView, numChs: number, dtype: string, clock: PlayoutClock): {signals: number[][], mask: number[][], discontinuity: boolean} {
   const byteLen = getDataByteLength(dtype);
   const signalLen = data.getUint16(0, true) / (numChs * byteLen + 2);
   const signals: number[][] = [];
   const mask: number[][] = [];
   let offset = 2;
-  let refDate = Date.now() - ts*signalLen;
-  if (refDate < lastTs) {
-    refDate = lastTs;
+  const slice = clock.stamp(signalLen);
+  if (slice.count === 0) {
+    return {signals, mask, discontinuity: slice.discontinuity};
   }
-  for (let i = 0; i < signalLen; i++) {
+  for (let i = 0; i < slice.count; i++) {
+    const refDate = slice.startTs + i * slice.interval;
     mask.push([refDate, data.getUint16(offset, true)]);
     offset += 2;
     let row = [refDate];
@@ -51,9 +62,8 @@ export function dataViewToSignalData(data: DataView, numChs: number, fs: number,
       offset += byteLen;
     }
     signals.push(row);
-    refDate += ts;
   };
-  return {signals, mask, ts: refDate};
+  return {signals, mask, discontinuity: slice.discontinuity};
 }
 
 export function dataViewToMetrics(data: DataView): number[] {
