@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { FormControl, FormHelperText, InputLabel, MenuItem, Select } from "@mui/material";
 import { availableDashboards } from "../../assets/dashboards";
 

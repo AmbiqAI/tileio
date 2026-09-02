@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Divider, Stack, Toolbar, useMediaQuery, useTheme } from "@mui/material";
 import { observer } from "mobx-react";
 import { IDevice } from "../../../models/device";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { unparse } from 'papaparse';
 import { Filesystem, Directory, Encoding, ReadFileOptions } from '@capacitor/filesystem';
 import { CapacitorSQLite, capSQLiteSet, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';

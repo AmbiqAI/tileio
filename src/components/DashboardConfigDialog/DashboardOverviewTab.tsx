@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { observer } from "mobx-react";
 import DownloadIcon from '@mui/icons-material/SaveAltRounded';
 import UploadIcon from '@mui/icons-material/UploadRounded';

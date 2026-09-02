@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { IconButton, Stack, Typography } from "@mui/material";
 import { observer } from "mobx-react";
 import EventIcon from "@mui/icons-material/AddLocation";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { IDeviceInfo, IDeviceInfoSnapshot } from "../models/deviceInfo";
 import { ISlotConfig } from "../models/slot";
 import { DeviceInterfaceType } from "../models/types";

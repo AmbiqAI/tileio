@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import Signal0Icon from '@mui/icons-material/SignalWifi0Bar';
 import Signal1Icon from '@mui/icons-material/SignalWifi1Bar';
 import Signal2Icon from '@mui/icons-material/SignalWifi2Bar';

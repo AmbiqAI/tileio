@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { useEffect, useMemo, useRef } from 'react'
 import { Box, type BoxProps, useTheme } from '@mui/material'
 import type { PaletteMode } from '@mui/material'

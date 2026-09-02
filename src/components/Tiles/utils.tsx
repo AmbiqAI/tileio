@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { useEffect, useMemo, useRef } from "react";
 import styled from "@emotion/styled";
 import { debounce, throttle } from "lodash";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Box } from "@mui/material";
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { IRecord } from "../../models/record";

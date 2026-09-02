@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Instance, SnapshotIn, applySnapshot, cast, destroy, types } from 'mobx-state-tree';
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { SegmentType } from './types';

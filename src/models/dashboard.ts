@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { applySnapshot, cast, destroy, detach, flow, Instance, SnapshotIn, typecheck, types } from 'mobx-state-tree';
 import { IRecord } from './record';
 import { IUioConfigSnapshot } from './uioState';

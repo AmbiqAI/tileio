@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import BatteryUnknownIcon from "@mui/icons-material/BatteryUnknown";
 import Battery20Icon from "@mui/icons-material/Battery20";
 import Battery30Icon from "@mui/icons-material/Battery30";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import SvgIcon, { SvgIconProps } from '@mui/material/SvgIcon'
 
 export const TileioIcon = (props: SvgIconProps) => {

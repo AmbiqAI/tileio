@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_MAX_LEAD_MS, PlayoutClock } from './playoutClock';
 import { dataViewToSignalData } from './utils';

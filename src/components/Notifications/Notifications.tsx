@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { useEffect } from "react";
 import { SnackbarKey, useSnackbar } from "notistack";
 import { Button } from "@mui/material";

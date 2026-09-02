@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { TileSize } from "./Tiles/BaseTile";
 
 export const NUM_SLOTS = 4;

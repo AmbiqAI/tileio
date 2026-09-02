@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Device } from "@capacitor/device";
 import { isPlatform } from "@ionic/react";
 import { Share } from "@capacitor/share";

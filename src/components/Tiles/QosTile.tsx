@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Card, Stack, Typography } from "@mui/material";
 import { TileProps, TileSpec } from "./BaseTile";
 import { observer } from "mobx-react";

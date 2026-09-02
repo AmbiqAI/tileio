@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { ButtonBase, Theme } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { alpha } from "@mui/system";

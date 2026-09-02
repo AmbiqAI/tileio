@@ -24,3 +24,25 @@ Tileio is a powerful application to create highly customizable dashboards for st
 Tileio discovers and communicates to devices (e.g. Apollo4 Blue EVB) via **webBLE** or **webUSB**. A device streams data to Tileio through designated **slots**. At a high-level a **slot** consists of a set of similar signals (e.g. accelerometer) captured at the same sampling rate (e.g. 100 Hz). More specifically, a **slot** consists of two components: (1) a set of **channels** (e.g. X, Y, Z) along with a **mask** and (2) a set of **metrics**. A device can have up to 4 slots with each slot having up to 4 channels and up to 60 metrics.
 
 Beyond streaming data, Tileio also provides a generic I/O (input/output) control interface that can be used to interact with the device. The interface consists of 8 configurable I/O elements that be configured as buttons, toggle switches, sliders, and select boxes.
+
+## License
+
+Tileio is licensed under the [BSD 3-Clause License](./LICENSE). Ambiq-authored
+source files under `src/` carry an `SPDX-License-Identifier: BSD-3-Clause`
+header.
+
+Tileio depends on third-party open source software, which remains under its own
+licenses. [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md) lists every
+production dependency with its version, license, repository, and license text,
+along with the checked-in `sql.js` WebAssembly binary. The file is generated
+from `package-lock.json` with:
+
+```bash
+npm run notices
+```
+
+Regenerate and commit it whenever dependencies change. The build copies it into
+the deployed site, so it is also available at
+<https://ambiqai.github.io/tileio/THIRD-PARTY-NOTICES.md>.
+
+See [NOTICE](./NOTICE) for the attribution summary.

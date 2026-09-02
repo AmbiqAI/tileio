@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 /// <reference types="web-bluetooth" />
 
 import { BleClient, numberToUUID } from '@capacitor-community/bluetooth-le';
