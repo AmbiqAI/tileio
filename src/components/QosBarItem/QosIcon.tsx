@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import DisconnectedIcon from '@mui/icons-material/SensorsOffRounded';
 import ConnectIcon from '@mui/icons-material/SensorsRounded';
 import { getQoSColor, ISlot } from "../../models/slot";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { RJSFSchema, UiSchema } from "@rjsf/utils";
 import { ISlotConfigSnapshot, SlotConfig, SlotConfigSchema } from "./slot";
 import { UioConfig, UioConfigSchema } from "./uioState";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import React from "react";
 import { AppBar, Theme } from "@mui/material";
 import { alpha } from "@mui/material/styles";

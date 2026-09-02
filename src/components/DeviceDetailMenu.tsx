@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { useState } from 'react';
 import {
   Divider, Fade, IconButton, ListItemIcon,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { ErrorBoundary } from "react-error-boundary"
 import { TileProps, BaseTile, RegisteredTiles } from "./BaseTile";
 import { Box, Typography } from "@mui/material";

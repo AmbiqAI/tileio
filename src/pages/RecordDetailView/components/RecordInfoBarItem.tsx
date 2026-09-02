@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Divider, Stack, Typography } from "@mui/material";
 import { IRecord } from "../../../models/record";
 import { observer } from "mobx-react";

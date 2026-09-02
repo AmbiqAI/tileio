@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Storage } from '@ionic/storage'
 import { onSnapshot, applySnapshot, IStateTreeNode } from 'mobx-state-tree'
 

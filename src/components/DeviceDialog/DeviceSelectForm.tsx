@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import {

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { ISlotConfig } from '../models/slot';
 import { RecordData } from './record';
 import { SqlRecordData, deleteSqlRecordData, initSqlDB, closeSqlDB } from './sqliteDb';

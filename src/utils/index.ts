@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import {v4 as uuidv4} from 'uuid';
 import { types } from 'mobx-state-tree';
 

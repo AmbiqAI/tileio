@@ -1,0 +1,11 @@
+Tileio
+Copyright (c) 2026, Ambiq
+
+This product includes software developed by Ambiq. Ambiq-authored source code in
+this repository is licensed under the BSD 3-Clause License; the full text is in
+the LICENSE file at the root of this repository. The application also
+incorporates third-party open source software, and the deployed site bundles
+some of it. Each third-party component remains under its own license; the
+complete list of those components, their versions, licenses, and license texts
+is in THIRD-PARTY-NOTICES.md, which is generated from the production dependency
+tree by `npm run notices` and is also published with the deployed application.

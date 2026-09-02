@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import BluetoothOnIcon from "@mui/icons-material/BluetoothOutlined";
 import BluetoothConnectedIcon from "@mui/icons-material/BluetoothConnectedRounded";
 import BluetoothOffIcon from "@mui/icons-material/BluetoothDisabledRounded";

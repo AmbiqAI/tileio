@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { Fade, Stack, styled, Typography } from '@mui/material';

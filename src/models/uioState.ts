@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { applySnapshot, flow, Instance, SnapshotIn, types } from 'mobx-state-tree';
 import ApiManager from '../api';

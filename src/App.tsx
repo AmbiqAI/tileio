@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { createHashHistory } from 'history';
 import { Router, Route, Redirect, Switch } from 'react-router-dom';
 import DashboardsView from './pages/DashboardsView';

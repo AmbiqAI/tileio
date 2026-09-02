@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Instance, SnapshotIn, types, flow, applySnapshot, destroy, getSnapshot, clone } from 'mobx-state-tree';
 import { matchPath } from 'react-router';
 import { formatDurationHMS, JsonStringDate, uuid4 } from '../utils';

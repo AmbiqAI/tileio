@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { flow, hasParentOfType } from 'mobx-state-tree';
 import { cast, clone, destroy, getParentOfType, Instance, SnapshotIn, types } from 'mobx-state-tree';
 import { Link as RouterLink } from 'react-router-dom';

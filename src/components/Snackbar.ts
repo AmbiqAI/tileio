@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { withTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 import { Theme } from "@mui/material";

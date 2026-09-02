@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Doughnut } from "react-chartjs-2";
 import { useEffect, useMemo, useRef } from "react";
 import { Chart, ChartData, ChartOptions } from "chart.js";

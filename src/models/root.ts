@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { flow, Instance, types } from 'mobx-state-tree';
 import Device, { IDevice } from './device';
 import Dashboard, { IDashboard, IDashboardSnapshot } from './dashboard';

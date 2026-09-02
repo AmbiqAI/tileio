@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Box } from "@mui/system";
 import { observer } from "mobx-react";
 import { useStore } from "../../../models/store";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { Theme } from '@mui/material/styles';
 import { Instance, SnapshotIn, types } from 'mobx-state-tree';
 import { darkTheme } from '../theme/theme';

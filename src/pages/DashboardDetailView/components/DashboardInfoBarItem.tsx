@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import { observer } from 'mobx-react';

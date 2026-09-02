@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Ambiq
+
 import { describe, expect, it } from 'vitest';
 import { MASK_BREAK, Slot, SlotMask, SlotSignals } from './slot';
 
