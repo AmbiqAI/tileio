@@ -85,7 +85,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build-web": "export APP_BASE_URL=/tileio/ tsc && vite build",
+    "build-web": "export APP_BASE_URL=/tileio/ && tsc && vite build",
     "build": "tsc && vite build",
     "notices": "node scripts/generate-notices.mjs",
     "serve": "vite preview",
