@@ -42,6 +42,14 @@ const TIO_USB_STOP_IDX = 255;
 const TIO_USB_STOP_VAL = 0xAA;
 const TIO_USB_UIO_REQUEST_TIMEOUT_MS = 1500;
 const TIO_USB_UIO_REQUEST_ATTEMPTS = 3;
+// Bounds the queue at about half a second of stream at the device packet cadence. See #37
+const TIO_USB_RX_QUEUE_MAX = 12;
+const TIO_USB_RX_LOG_INTERVAL_MS = 1000;
+// Chunks reassembled per pump turn; the loop yields between turns. See #37
+const TIO_USB_RX_DRAIN_BATCH = 4;
+// Reads kept in flight so the endpoint is never idle while a completion is handled. See #37
+const TIO_USB_RX_INFLIGHT = 2;
+const TIO_USB_RX_RETRY_DELAY_MS = 10;
 
 interface UioRequest {
   resolve: (state: number[]) => void;
@@ -64,6 +72,16 @@ class DeviceState {
   slotClocks: PlayoutClock[];
   interface: number;
   uioRequest?: UioRequest;
+  /** Bytes received but not yet reassembled, drained off the read path. See #37 */
+  rxQueue: DataView[];
+  rxDropped: number;
+  rxDropLoggedAt: number;
+  rxDraining: boolean;
+  rxDrainTimer?: ReturnType<typeof setTimeout>;
+  rxStalls: number;
+  rxStallLoggedAt: number;
+  /** Set on teardown so the read loop and the drain pump stop touching a closing device. See #37 */
+  stopped: boolean;
 
   constructor(device: USBDevice) {
     this.device = device;
@@ -71,6 +89,13 @@ class DeviceState {
     this.fifo = new Uint8Array([]);
     this.slotClocks = [];
     this.interface = 0;
+    this.rxQueue = [];
+    this.rxDropped = 0;
+    this.rxDropLoggedAt = 0;
+    this.rxDraining = false;
+    this.rxStalls = 0;
+    this.rxStallLoggedAt = 0;
+    this.stopped = false;
   }
 }
 
@@ -253,6 +278,70 @@ export class UsbHandler implements ApiHandler {
     this.deviceStates[deviceId].fifo = new Uint8Array(fifo.buffer.slice(offset));
   }
 
+  /** Non-blocking hand-off from the read loop; a full queue sheds its oldest chunk. See #37 */
+  queueRxChunk(deviceId: string, chunk: DataView): void {
+    const state = this.deviceStates[deviceId];
+    if (state === undefined || state.stopped) {
+      return;
+    }
+    if (state.rxQueue.length >= TIO_USB_RX_QUEUE_MAX) {
+      state.rxQueue.shift();
+      state.rxDropped += 1;
+      const now = Date.now();
+      if (now - state.rxDropLoggedAt >= TIO_USB_RX_LOG_INTERVAL_MS) {
+        state.rxDropLoggedAt = now;
+        console.warn(`USB rx queue full on ${deviceId}, shedding oldest chunk, ${state.rxDropped} dropped since connect`);
+      }
+    }
+    state.rxQueue.push(chunk);
+    this.scheduleRxDrain(deviceId);
+  }
+
+  /** Throttled notice for a halted or babbling in endpoint. See #37 */
+  noteRxStall(state: DeviceState, deviceId: string, status: string): void {
+    state.rxStalls += 1;
+    const now = Date.now();
+    if (now - state.rxStallLoggedAt >= TIO_USB_RX_LOG_INTERVAL_MS) {
+      state.rxStallLoggedAt = now;
+      console.warn(`USB in endpoint ${status} on ${deviceId}, ${state.rxStalls} stalls since connect`);
+    }
+  }
+
+  scheduleRxDrain(deviceId: string): void {
+    const state = this.deviceStates[deviceId];
+    if (state === undefined || state.stopped || state.rxDraining || state.rxDrainTimer !== undefined) {
+      return;
+    }
+    state.rxDrainTimer = setTimeout(() => {
+      state.rxDrainTimer = undefined;
+      this.drainRxQueue(deviceId).catch((error) => console.error(error));
+    }, 0);
+  }
+
+  /** Reassembly and callbacks run here, off the read path, in arrival order. See #37 */
+  async drainRxQueue(deviceId: string): Promise<void> {
+    const state = this.deviceStates[deviceId];
+    // enqueueFrame reads and rewrites fifo across an await, so only one drain may be in flight. See #37
+    if (state === undefined || state.stopped || state.rxDraining) {
+      return;
+    }
+    state.rxDraining = true;
+    try {
+      for (let i = 0; i < TIO_USB_RX_DRAIN_BATCH; i++) {
+        const chunk = state.rxQueue.shift();
+        if (chunk === undefined) {
+          break;
+        }
+        await this.enqueueFrame(deviceId, chunk);
+      }
+    } finally {
+      state.rxDraining = false;
+    }
+    if (!state.stopped && state.rxQueue.length > 0) {
+      this.scheduleRxDrain(deviceId);
+    }
+  }
+
   /**
    * Start scanning for available devices.
    * On web, user will be prompted and can only select one device.
@@ -343,27 +432,59 @@ export class UsbHandler implements ApiHandler {
       });
 
       this.deviceStates[deviceId].fifo = new Uint8Array([]);
+      this.deviceStates[deviceId].rxQueue = [];
+      this.deviceStates[deviceId].rxDropped = 0;
+      this.deviceStates[deviceId].rxDropLoggedAt = 0;
+      this.deviceStates[deviceId].rxDraining = false;
+      this.deviceStates[deviceId].rxStalls = 0;
+      this.deviceStates[deviceId].rxStallLoggedAt = 0;
+      this.deviceStates[deviceId].stopped = false;
       this.deviceStates[deviceId].interface = ifaceNumber;
 
       const intervalcb = setTimeout(async () => {
-        let done = false;
-        while (!done) {
+        const state = this.deviceStates[deviceId];
+        if (state === undefined) {
+          return;
+        }
+        // The device fills every USB packet, so one packet per transfer; asking for
+        // more would wait on bytes that only arrive with a later packet. See #37
+        // Submission order equals completion order on one endpoint, so this FIFO of
+        // concurrent transfers preserves arrival order; WebUSB queues them, verified on the bench. See #37
+        const pending: Promise<USBInTransferResult>[] = [];
+        while (!state.stopped) {
           try {
             if (!device || device.opened === false) {
-              done = true;
               console.debug(`Device ${deviceId} closed`);
-              this.deviceDisconnect(deviceId);
-            } else {
-              const rst = await device.transferIn(endpointIn, 64);
-              if (rst.status === 'ok' && rst.data) {
-                await this.enqueueFrame(deviceId, rst.data);
+              state.stopped = true;
+              this.deviceDisconnect(deviceId).catch((error) => console.error(error));
+              break;
+            }
+            while (pending.length < TIO_USB_RX_INFLIGHT) {
+              pending.push(device.transferIn(endpointIn, TIO_USB_PACKET_LEN));
+            }
+            const rst = await pending.shift()!;
+            if (rst.status === 'ok') {
+              if (rst.data) {
+                this.queueRxChunk(deviceId, rst.data);
               }
+            } else if (rst.status === 'stall') {
+              // transferIn resolves with 'stall' rather than rejecting, so clear the halt here or the loop spins. See #37
+              await Promise.allSettled(pending.splice(0));
+              await device.clearHalt('in', endpointIn);
+              this.noteRxStall(state, deviceId, 'halted');
+              await delay(TIO_USB_RX_RETRY_DELAY_MS);
+            } else {
+              await Promise.allSettled(pending.splice(0));
+              this.noteRxStall(state, deviceId, rst.status ?? 'unknown');
+              await delay(TIO_USB_RX_RETRY_DELAY_MS);
             }
           } catch (error) {
             console.error(error);
-            await delay(10);
+            await delay(TIO_USB_RX_RETRY_DELAY_MS);
           }
         }
+        // WebUSB has no cancel, so outstanding transfers are abandoned; settle them so nothing rejects unhandled. See #37
+        await Promise.allSettled(pending.splice(0));
       }, 1);
       this.callbacks[`dev${deviceId}.poll`] = intervalcb;
     }
@@ -375,8 +496,17 @@ export class UsbHandler implements ApiHandler {
       clearTimeout(timeout);
       this.callbacks[`dev${deviceId}.poll`] = undefined;
     }
-    this.deviceStates[deviceId].fifo = new Uint8Array([]);
-
+    const state = this.deviceStates[deviceId];
+    if (state === undefined) {
+      return;
+    }
+    state.stopped = true;
+    if (state.rxDrainTimer !== undefined) {
+      clearTimeout(state.rxDrainTimer);
+      state.rxDrainTimer = undefined;
+    }
+    state.fifo = new Uint8Array([]);
+    state.rxQueue = [];
   }
 
   async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
@@ -415,8 +545,14 @@ export class UsbHandler implements ApiHandler {
       deviceState.uioRequest.reject(new Error('USB device disconnected while waiting for UIO state'));
       deviceState.uioRequest = undefined;
     }
+    deviceState.stopped = true;
+    if (deviceState.rxDrainTimer !== undefined) {
+      clearTimeout(deviceState.rxDrainTimer);
+      deviceState.rxDrainTimer = undefined;
+    }
     this.deviceStates[deviceId].slotConfigs = [];
     this.deviceStates[deviceId].fifo = new Uint8Array([]);
+    this.deviceStates[deviceId].rxQueue = [];
     this.deviceStates[deviceId].slotClocks = [];
 
     await this.disableDevicePolling(deviceId);
