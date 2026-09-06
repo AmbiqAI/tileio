@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 Ambiq
 
-import { flow, hasParentOfType } from 'mobx-state-tree';
+import { flow, hasParentOfType, isAlive } from 'mobx-state-tree';
 import { cast, clone, destroy, getParentOfType, Instance, SnapshotIn, types } from 'mobx-state-tree';
 import { Link as RouterLink } from 'react-router-dom';
 import { IconButton } from '@mui/material';
@@ -213,6 +213,11 @@ const Device = types
       yield self.fetchUioState();
       yield self.startPolling();
     } catch (error) {
+      if (!isAlive(self)) {
+        // Forget Device superseded this connect; nothing left to report on. See #41.
+        console.debug(error);
+        return;
+      }
       console.error(error);
       Notifier.add({
         message: `Failed connecting to ${self.shortId}. (${error})`,
