@@ -224,7 +224,8 @@ const Device = types
   }),
   disconnect: flow(function*() {
     try {
-      if (self.state.connected) {
+      // Connecting and disconnecting also hold transport resources, so tear those down too. See #30
+      if (!self.state.disconnected) {
         self.state.setConnectionState(DeviceConnectionType.DISCONNECTING);
         yield self.setNotifications(false);
         yield self.stopPolling();
@@ -241,15 +242,16 @@ const Device = types
 }))
 .actions(self => ({
   delete: flow(function*() {
+    const id = self.id;
     try {
-      console.debug(`Deleting device ${self.id}`);
-      if (self.state.connected) {
-        yield self.disconnect();
-      }
+      console.debug(`Deleting device ${id}`);
+      // The transport teardown must complete before the node goes away, or a read
+      // outlives it and the next interface finds the device busy. See #30
+      yield self.disconnect();
       destroy(self);
     } catch(error) {
       Notifier.add({
-        message: `Failed removing device ${self.id}`, options: { variant: 'error' },
+        message: `Failed removing device ${id}`, options: { variant: 'error' },
       });
     }
   }),

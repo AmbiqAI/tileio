@@ -50,6 +50,8 @@ const TIO_USB_RX_DRAIN_BATCH = 4;
 // Reads kept in flight so the endpoint is never idle while a completion is handled. See #37
 const TIO_USB_RX_INFLIGHT = 2;
 const TIO_USB_RX_RETRY_DELAY_MS = 10;
+// Bound on waiting for the read loop to settle; WebUSB cannot cancel a transferIn. See #30
+const TIO_USB_TEARDOWN_TIMEOUT_MS = 250;
 
 interface UioRequest {
   resolve: (state: number[]) => void;
@@ -82,6 +84,8 @@ class DeviceState {
   rxStallLoggedAt: number;
   /** Set on teardown so the read loop and the drain pump stop touching a closing device. See #37 */
   stopped: boolean;
+  /** Resolves once the read loop has exited and its transfers have settled. See #30 */
+  readLoop?: Promise<void>;
 
   constructor(device: USBDevice) {
     this.device = device;
@@ -450,50 +454,61 @@ export class UsbHandler implements ApiHandler {
       this.deviceStates[deviceId].stopped = false;
       this.deviceStates[deviceId].interface = ifaceNumber;
 
-      const intervalcb = setTimeout(async () => {
+      const intervalcb = setTimeout(() => {
         const state = this.deviceStates[deviceId];
         if (state === undefined) {
           return;
         }
-        // The device fills every USB packet, so one packet per transfer; asking for
-        // more would wait on bytes that only arrive with a later packet. See #37
-        // Submission order equals completion order on one endpoint, so this FIFO of
-        // concurrent transfers preserves arrival order; WebUSB queues them, verified on the bench. See #37
-        const pending: Promise<USBInTransferResult>[] = [];
-        while (!state.stopped) {
-          try {
-            if (!device || device.opened === false) {
-              console.debug(`Device ${deviceId} closed`);
-              state.stopped = true;
-              this.deviceDisconnect(deviceId).catch((error) => console.error(error));
-              break;
-            }
-            while (pending.length < TIO_USB_RX_INFLIGHT) {
-              pending.push(device.transferIn(endpointIn, TIO_USB_PACKET_LEN));
-            }
-            const rst = await pending.shift()!;
-            if (rst.status === 'ok') {
-              if (rst.data) {
-                this.queueRxChunk(deviceId, rst.data);
+        // Teardown awaits this promise, so nothing is left reading a device being closed. See #30
+        state.readLoop = (async () => {
+          // The device fills every USB packet, so one packet per transfer; asking for
+          // more would wait on bytes that only arrive with a later packet. See #37
+          // Submission order equals completion order on one endpoint, so this FIFO of
+          // concurrent transfers preserves arrival order; WebUSB queues them, verified on the bench. See #37
+          const pending: Promise<USBInTransferResult>[] = [];
+          while (!state.stopped) {
+            try {
+              if (!device || device.opened === false) {
+                console.debug(`Device ${deviceId} closed`);
+                state.stopped = true;
+                this.deviceDisconnect(deviceId).catch((error) => console.error(error));
+                break;
               }
-            } else if (rst.status === 'stall') {
-              // transferIn resolves with 'stall' rather than rejecting, so clear the halt here or the loop spins. See #37
-              await Promise.allSettled(pending.splice(0));
-              await device.clearHalt('in', endpointIn);
-              this.noteRxStall(state, deviceId, 'halted');
-              await delay(TIO_USB_RX_RETRY_DELAY_MS);
-            } else {
-              await Promise.allSettled(pending.splice(0));
-              this.noteRxStall(state, deviceId, rst.status ?? 'unknown');
+              while (pending.length < TIO_USB_RX_INFLIGHT) {
+                pending.push(device.transferIn(endpointIn, TIO_USB_PACKET_LEN));
+              }
+              const rst = await pending.shift()!;
+              if (rst.status === 'ok') {
+                if (rst.data) {
+                  this.queueRxChunk(deviceId, rst.data);
+                }
+              } else if (rst.status === 'stall') {
+                // transferIn resolves with 'stall' rather than rejecting, so clear the halt here or the loop spins. See #37
+                await Promise.allSettled(pending.splice(0));
+                await device.clearHalt('in', endpointIn);
+                this.noteRxStall(state, deviceId, 'halted');
+                await delay(TIO_USB_RX_RETRY_DELAY_MS);
+              } else {
+                await Promise.allSettled(pending.splice(0));
+                this.noteRxStall(state, deviceId, rst.status ?? 'unknown');
+                await delay(TIO_USB_RX_RETRY_DELAY_MS);
+              }
+            } catch (error) {
+              // close() rejects the in-flight reads; that is the teardown path, not a fault. See #30
+              if (state.stopped) {
+                break;
+              }
+              console.error(error);
               await delay(TIO_USB_RX_RETRY_DELAY_MS);
             }
-          } catch (error) {
-            console.error(error);
-            await delay(TIO_USB_RX_RETRY_DELAY_MS);
           }
-        }
-        // WebUSB has no cancel, so outstanding transfers are abandoned; settle them so nothing rejects unhandled. See #37
-        await Promise.allSettled(pending.splice(0));
+          // WebUSB has no cancel. Give the last reads a bounded chance to land: a transfer left
+          // outstanding keeps the interface claimed and makes releaseInterface throw. See #30
+          await Promise.race([
+            Promise.allSettled(pending.splice(0)),
+            delay(TIO_USB_TEARDOWN_TIMEOUT_MS),
+          ]);
+        })();
       }, 1);
       this.callbacks[`dev${deviceId}.poll`] = intervalcb;
     }
@@ -513,6 +528,10 @@ export class UsbHandler implements ApiHandler {
     if (state.rxDrainTimer !== undefined) {
       clearTimeout(state.rxDrainTimer);
       state.rxDrainTimer = undefined;
+    }
+    if (state.readLoop !== undefined) {
+      await Promise.race([state.readLoop, delay(TIO_USB_TEARDOWN_TIMEOUT_MS)]);
+      state.readLoop = undefined;
     }
     state.fifo = new Uint8Array([]);
     state.rxQueue = [];
@@ -584,6 +603,12 @@ export class UsbHandler implements ApiHandler {
         'value' : 0x00,
         'index' : ifaceNumber
       });
+      try {
+        await device.releaseInterface(ifaceNumber);
+      } catch (error) {
+        // A read that outlived the teardown window still holds the claim; close() aborts it. See #30
+        console.debug(`USB release of interface ${ifaceNumber} on ${deviceId} failed: ${error}`);
+      }
       await device.close();
     }
   }
