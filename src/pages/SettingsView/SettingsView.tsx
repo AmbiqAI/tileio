@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 Ambiq
 
-import { Box, Fade, Stack } from "@mui/material";
+import { Box, Fade, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
 import { observer } from "mobx-react";
 import DangerCard from "./components/DangerCard";
@@ -37,6 +37,15 @@ const SettingsView = () => {
           </Grid>
           <Grid width="100%">
             <DangerCard />
+          </Grid>
+          <Grid width="100%">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block", textAlign: "center" }}
+            >
+              {`Version ${__APP_VERSION__} · Build ${__APP_COMMIT__}`}
+            </Typography>
           </Grid>
         </Grid>
       </Stack>

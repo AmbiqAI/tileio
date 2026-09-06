@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 Ambiq
 
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
@@ -33,11 +34,37 @@ function thirdPartyNotices(): Plugin {
   };
 }
 
+/** Short commit of the build. See #31 */
+function buildCommit(): string {
+  // The Pages checkout is shallow and detached, so prefer what the runner already knows.
+  const sha = process.env.GITHUB_SHA;
+  if (sha) {
+    return sha.slice(0, 7);
+  }
+  try {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+      cwd: __dirname,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).toString().trim();
+  } catch {
+    return 'dev';
+  }
+}
+
+function appVersion(): string {
+  const pkg = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
+  return pkg.version as string;
+}
+
 export default defineConfig(() => {
   const APP_BASE_URL = process.env.APP_BASE_URL || '/';
   console.log('APP_BASE_URL', APP_BASE_URL);
   return {
     base: APP_BASE_URL,
+    define: {
+      __APP_VERSION__: JSON.stringify(appVersion()),
+      __APP_COMMIT__: JSON.stringify(buildCommit()),
+    },
     build: {
       outDir: 'build',
     },
