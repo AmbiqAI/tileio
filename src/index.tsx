@@ -23,7 +23,8 @@ import { observer } from "mobx-react";
 import { useStore } from "./models/store";
 import { ThemeModeType } from "./models/settings";
 
-// For web, add sqlite wasm
+// jeep-sqlite bundles the sql.js 1.8.0 glue and fetches public/assets/sql-wasm.wasm at
+// runtime, so that asset stays on 1.8.0 no matter what the lock resolves. See #35
 customElements.define("jeep-sqlite", JeepSqlite);
 window.addEventListener("DOMContentLoaded", async () => {
   const platform = Capacitor.getPlatform();
