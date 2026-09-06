@@ -258,13 +258,18 @@ export class UsbHandler implements ApiHandler {
   }
 
   async enqueueFrame(deviceId: string, frame: DataView): Promise<void> {
+    const state = this.deviceStates[deviceId];
+    if (state === undefined || state.stopped) {
+      return;
+    }
     // Combine with existing fifo
-    this.deviceStates[deviceId].fifo = new Uint8Array([...this.deviceStates[deviceId].fifo, ...new Uint8Array(frame.buffer)]);
+    state.fifo = new Uint8Array([...state.fifo, ...new Uint8Array(frame.buffer)]);
 
-    const fifo = this.deviceStates[deviceId].fifo;
+    const fifo = state.fifo;
 
     let offset = 0;
-    while (fifo.length - offset >= TIO_USB_PACKET_LEN) {
+    // decodePacket awaits the slot callbacks, so teardown can land between packets. See #41
+    while (fifo.length - offset >= TIO_USB_PACKET_LEN && !state.stopped) {
       const packet = new DataView(fifo.buffer.slice(offset, offset + TIO_USB_PACKET_LEN));
       // Check if frame is complete
       if (packet.getUint8(TIO_USB_START_IDX) !== TIO_USB_START_VAL || packet.getUint8(TIO_USB_STOP_IDX) !== TIO_USB_STOP_VAL) {
@@ -275,7 +280,10 @@ export class UsbHandler implements ApiHandler {
         offset += TIO_USB_PACKET_LEN;
       }
     }
-    this.deviceStates[deviceId].fifo = new Uint8Array(fifo.buffer.slice(offset));
+    // Teardown empties the fifo; writing the remainder back would resurrect stale bytes. See #41
+    if (!state.stopped) {
+      state.fifo = new Uint8Array(fifo.buffer.slice(offset));
+    }
   }
 
   /** Non-blocking hand-off from the read loop; a full queue sheds its oldest chunk. See #37 */
@@ -327,7 +335,8 @@ export class UsbHandler implements ApiHandler {
     }
     state.rxDraining = true;
     try {
-      for (let i = 0; i < TIO_USB_RX_DRAIN_BATCH; i++) {
+      // enqueueFrame awaits, so teardown can land mid-batch; re-check before every chunk. See #41
+      for (let i = 0; i < TIO_USB_RX_DRAIN_BATCH && !state.stopped; i++) {
         const chunk = state.rxQueue.shift();
         if (chunk === undefined) {
           break;
