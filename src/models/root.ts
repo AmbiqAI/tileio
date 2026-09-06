@@ -70,24 +70,29 @@ export const Root = types
     Notifier.add({ message: `Removed all records` });
   }),
   setActiveDevice: flow(function*(deviceId: string) {
-    if (self.device) {
-      yield self.device.delete();
-    }
+    const previous = self.device;
     self.device = null;
+    if (previous) {
+      yield previous.delete();
+    }
     const device = self.backend.deviceById(deviceId);
     if (device) {
       self.device = device;
     }
   }),
   clearActiveDevice: flow(function*() {
+    // Drop the reference first so no view reads a node that is about to be destroyed,
+    // then await the teardown so the next scan starts with the transport released. See #30
+    const previous = self.device;
+    const name = previous?.name;
+    self.device = null;
     try {
-      if (self.device) {
-        yield self.device.delete();
+      if (previous) {
+        yield previous.delete();
       }
     } catch (error) {
-      console.error(`Failed disconnecting from ${self.device?.name}. (${error})`);
+      console.error(`Failed disconnecting from ${name}. (${error})`);
     }
-    self.device = null;
   })
 
 }))

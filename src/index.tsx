@@ -23,7 +23,9 @@ import { observer } from "mobx-react";
 import { useStore } from "./models/store";
 import { ThemeModeType } from "./models/settings";
 
-// For web, add sqlite wasm
+// jeep-sqlite fetches public/assets/sql-wasm.wasm at runtime, so that checked-in binary
+// is what ships; npm never refreshes it. Its identity is the hash recorded in
+// scripts/generate-notices.mjs, not whatever the lock resolves. See #35
 customElements.define("jeep-sqlite", JeepSqlite);
 window.addEventListener("DOMContentLoaded", async () => {
   const platform = Capacitor.getPlatform();

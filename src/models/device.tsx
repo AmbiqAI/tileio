@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 Ambiq
 
-import { flow, hasParentOfType } from 'mobx-state-tree';
+import { flow, hasParentOfType, isAlive } from 'mobx-state-tree';
 import { cast, clone, destroy, getParentOfType, Instance, SnapshotIn, types } from 'mobx-state-tree';
 import { Link as RouterLink } from 'react-router-dom';
 import { IconButton } from '@mui/material';
@@ -213,6 +213,11 @@ const Device = types
       yield self.fetchUioState();
       yield self.startPolling();
     } catch (error) {
+      if (!isAlive(self)) {
+        // Forget Device superseded this connect; nothing left to report on. See #41.
+        console.debug(error);
+        return;
+      }
       console.error(error);
       Notifier.add({
         message: `Failed connecting to ${self.shortId}. (${error})`,
@@ -224,7 +229,8 @@ const Device = types
   }),
   disconnect: flow(function*() {
     try {
-      if (self.state.connected) {
+      // Connecting and disconnecting also hold transport resources, so tear those down too. See #30
+      if (!self.state.disconnected) {
         self.state.setConnectionState(DeviceConnectionType.DISCONNECTING);
         yield self.setNotifications(false);
         yield self.stopPolling();
@@ -241,15 +247,16 @@ const Device = types
 }))
 .actions(self => ({
   delete: flow(function*() {
+    const id = self.id;
     try {
-      console.debug(`Deleting device ${self.id}`);
-      if (self.state.connected) {
-        yield self.disconnect();
-      }
+      console.debug(`Deleting device ${id}`);
+      // The transport teardown must complete before the node goes away, or a read
+      // outlives it and the next interface finds the device busy. See #30
+      yield self.disconnect();
       destroy(self);
     } catch(error) {
       Notifier.add({
-        message: `Failed removing device ${self.id}`, options: { variant: 'error' },
+        message: `Failed removing device ${id}`, options: { variant: 'error' },
       });
     }
   }),

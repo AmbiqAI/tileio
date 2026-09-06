@@ -50,6 +50,8 @@ const TIO_USB_RX_DRAIN_BATCH = 4;
 // Reads kept in flight so the endpoint is never idle while a completion is handled. See #37
 const TIO_USB_RX_INFLIGHT = 2;
 const TIO_USB_RX_RETRY_DELAY_MS = 10;
+// Bound on waiting for the read loop to settle; WebUSB cannot cancel a transferIn. See #30
+const TIO_USB_TEARDOWN_TIMEOUT_MS = 250;
 
 interface UioRequest {
   resolve: (state: number[]) => void;
@@ -82,9 +84,17 @@ class DeviceState {
   rxStallLoggedAt: number;
   /** Set on teardown so the read loop and the drain pump stop touching a closing device. See #37 */
   stopped: boolean;
+  /** Resolves once the read loop has exited and its transfers have settled. See #30 */
+  readLoop?: Promise<void>;
+  /** Connect attempt that owns this state; a disconnect bumps the handler's token past it. See #41 */
+  generation: number;
+  /** Whether `interface` is claimed, so teardown does not release what was never claimed. See #41 */
+  claimed: boolean;
 
-  constructor(device: USBDevice) {
+  constructor(device: USBDevice, generation: number) {
     this.device = device;
+    this.generation = generation;
+    this.claimed = false;
     this.slotConfigs = [];
     this.fifo = new Uint8Array([]);
     this.slotClocks = [];
@@ -106,12 +116,38 @@ export class UsbHandler implements ApiHandler {
   callbacks: Record<string, any>;
   _devices: USBDevice[];
   deviceStates: Record<string, DeviceState>;
+  /** Latest connect token per device; a disconnect bumps it to supersede an in-flight connect. See #41 */
+  deviceGenerations: Record<string, number>;
 
   constructor() {
     this.initialized = false;
     this.callbacks = {};
     this._devices = [];
     this.deviceStates = {};
+    this.deviceGenerations = {};
+  }
+
+  /** False once a disconnect (or a newer connect) superseded the attempt holding `generation`. See #41 */
+  isCurrentGeneration(deviceId: string, generation: number): boolean {
+    return this.deviceGenerations[deviceId] === generation;
+  }
+
+  /** Unwinds a connect a disconnect superseded mid-flight, releasing only what it took. See #41 */
+  async abandonConnect(deviceId: string, state: DeviceState): Promise<void> {
+    state.stopped = true;
+    if (this.deviceStates[deviceId] === state) {
+      delete this.deviceStates[deviceId];
+    }
+    try {
+      if (state.claimed && state.device.opened) {
+        await state.device.releaseInterface(state.interface);
+      }
+      if (state.device.opened) {
+        await state.device.close();
+      }
+    } catch (error) {
+      console.debug(`USB unwind of superseded connect on ${deviceId} failed: ${error}`);
+    }
   }
 
   _disconnectCallback(event: USBConnectionEvent) {
@@ -177,7 +213,7 @@ export class UsbHandler implements ApiHandler {
     return packet;
   }
 
-  async decodePacket(deviceId: string, packet: DataView) {
+  async decodePacket(state: DeviceState, deviceId: string, packet: DataView) {
 
     if (packet.byteLength !== TIO_USB_PACKET_LEN) {
       console.warn(`Invalid packet length ${packet.byteLength}`);
@@ -207,7 +243,7 @@ export class UsbHandler implements ApiHandler {
       return null;
     }
 
-    const slots = this.deviceStates[deviceId].slotConfigs;
+    const slots = state.slotConfigs;
 
     // Handle slot signal
     if (ptype == PacketType.Signal) {
@@ -216,7 +252,7 @@ export class UsbHandler implements ApiHandler {
         return null;
       }
       const slot = slots[slotIdx];
-      const clock = this.deviceStates[deviceId].slotClocks[slotIdx];
+      const clock = state.slotClocks[slotIdx];
       if (clock === undefined) {
         return null;
       }
@@ -241,47 +277,52 @@ export class UsbHandler implements ApiHandler {
         console.warn(`Invalid UIO state length: ${data.length}`);
         return null;
       }
-      const state = Array.from(data).slice(2, 10);
-      const deviceState = this.deviceStates[deviceId];
-      const request = deviceState.uioRequest;
+      const uioState = Array.from(data).slice(2, 10);
+      const request = state.uioRequest;
       if (request) {
         clearTimeout(request.timeout);
-        deviceState.uioRequest = undefined;
-        request.resolve(state);
+        state.uioRequest = undefined;
+        request.resolve(uioState);
       }
       const cb = this.callbacks[`dev${deviceId}.uio`];
       if (cb !== undefined) {
-        await cb(state);
+        await cb(uioState);
       }
 
     }
   }
 
-  async enqueueFrame(deviceId: string, frame: DataView): Promise<void> {
+  async enqueueFrame(state: DeviceState, deviceId: string, frame: DataView): Promise<void> {
+    if (state.stopped) {
+      return;
+    }
     // Combine with existing fifo
-    this.deviceStates[deviceId].fifo = new Uint8Array([...this.deviceStates[deviceId].fifo, ...new Uint8Array(frame.buffer)]);
+    state.fifo = new Uint8Array([...state.fifo, ...new Uint8Array(frame.buffer)]);
 
-    const fifo = this.deviceStates[deviceId].fifo;
+    const fifo = state.fifo;
 
     let offset = 0;
-    while (fifo.length - offset >= TIO_USB_PACKET_LEN) {
+    // decodePacket awaits the slot callbacks, so teardown can land between packets. See #41
+    while (fifo.length - offset >= TIO_USB_PACKET_LEN && !state.stopped) {
       const packet = new DataView(fifo.buffer.slice(offset, offset + TIO_USB_PACKET_LEN));
       // Check if frame is complete
       if (packet.getUint8(TIO_USB_START_IDX) !== TIO_USB_START_VAL || packet.getUint8(TIO_USB_STOP_IDX) !== TIO_USB_STOP_VAL) {
         console.warn(`Invalid frame start/stop`);
         offset += 1;
       } else {
-        await this.decodePacket(deviceId, packet);
+        await this.decodePacket(state, deviceId, packet);
         offset += TIO_USB_PACKET_LEN;
       }
     }
-    this.deviceStates[deviceId].fifo = new Uint8Array(fifo.buffer.slice(offset));
+    // Teardown empties the fifo; writing the remainder back would resurrect stale bytes. See #41
+    if (!state.stopped) {
+      state.fifo = new Uint8Array(fifo.buffer.slice(offset));
+    }
   }
 
   /** Non-blocking hand-off from the read loop; a full queue sheds its oldest chunk. See #37 */
-  queueRxChunk(deviceId: string, chunk: DataView): void {
-    const state = this.deviceStates[deviceId];
-    if (state === undefined || state.stopped) {
+  queueRxChunk(state: DeviceState, deviceId: string, chunk: DataView): void {
+    if (state.stopped) {
       return;
     }
     if (state.rxQueue.length >= TIO_USB_RX_QUEUE_MAX) {
@@ -294,7 +335,7 @@ export class UsbHandler implements ApiHandler {
       }
     }
     state.rxQueue.push(chunk);
-    this.scheduleRxDrain(deviceId);
+    this.scheduleRxDrain(state, deviceId);
   }
 
   /** Throttled notice for a halted or babbling in endpoint. See #37 */
@@ -307,38 +348,37 @@ export class UsbHandler implements ApiHandler {
     }
   }
 
-  scheduleRxDrain(deviceId: string): void {
-    const state = this.deviceStates[deviceId];
-    if (state === undefined || state.stopped || state.rxDraining || state.rxDrainTimer !== undefined) {
+  scheduleRxDrain(state: DeviceState, deviceId: string): void {
+    if (state.stopped || state.rxDraining || state.rxDrainTimer !== undefined) {
       return;
     }
     state.rxDrainTimer = setTimeout(() => {
       state.rxDrainTimer = undefined;
-      this.drainRxQueue(deviceId).catch((error) => console.error(error));
+      this.drainRxQueue(state, deviceId).catch((error) => console.error(error));
     }, 0);
   }
 
   /** Reassembly and callbacks run here, off the read path, in arrival order. See #37 */
-  async drainRxQueue(deviceId: string): Promise<void> {
-    const state = this.deviceStates[deviceId];
+  async drainRxQueue(state: DeviceState, deviceId: string): Promise<void> {
     // enqueueFrame reads and rewrites fifo across an await, so only one drain may be in flight. See #37
-    if (state === undefined || state.stopped || state.rxDraining) {
+    if (state.stopped || state.rxDraining) {
       return;
     }
     state.rxDraining = true;
     try {
-      for (let i = 0; i < TIO_USB_RX_DRAIN_BATCH; i++) {
+      // enqueueFrame awaits, so teardown can land mid-batch; re-check before every chunk. See #41
+      for (let i = 0; i < TIO_USB_RX_DRAIN_BATCH && !state.stopped; i++) {
         const chunk = state.rxQueue.shift();
         if (chunk === undefined) {
           break;
         }
-        await this.enqueueFrame(deviceId, chunk);
+        await this.enqueueFrame(state, deviceId, chunk);
       }
     } finally {
       state.rxDraining = false;
     }
     if (!state.stopped && state.rxQueue.length > 0) {
-      this.scheduleRxDrain(deviceId);
+      this.scheduleRxDrain(state, deviceId);
     }
   }
 
@@ -387,9 +427,10 @@ export class UsbHandler implements ApiHandler {
   }
 
   async enableDevicePolling(deviceId: string): Promise<void> {
+    const state = this.deviceStates[deviceId];
     const device = await this._getDevice(deviceId);
-    if (device) {
-      this.deviceStates[deviceId].fifo = new Uint8Array([]);
+    if (device && state && this.isCurrentGeneration(deviceId, state.generation)) {
+      state.fifo = new Uint8Array([]);
 
       // Select configuration
       if (device.configuration === null) {
@@ -419,9 +460,17 @@ export class UsbHandler implements ApiHandler {
         }
       }
 
+      // A disconnect can land while the configuration is read; claiming after it orphans the loop. See #41
+      if (!this.isCurrentGeneration(deviceId, state.generation)) {
+        await this.abandonConnect(deviceId, state);
+        return;
+      }
+
       // Claim interface
       console.debug(`USB claiming interface ${ifaceNumber} endpointIn ${endpointIn} endpointOut ${endpointOut}`);
       await device.claimInterface(ifaceNumber);
+      state.interface = ifaceNumber;
+      state.claimed = true;
       await device.selectAlternateInterface(ifaceNumber, 0);
       await device.controlTransferOut({
         'requestType' : 'class',
@@ -431,60 +480,74 @@ export class UsbHandler implements ApiHandler {
         'index' : ifaceNumber
       });
 
-      this.deviceStates[deviceId].fifo = new Uint8Array([]);
-      this.deviceStates[deviceId].rxQueue = [];
-      this.deviceStates[deviceId].rxDropped = 0;
-      this.deviceStates[deviceId].rxDropLoggedAt = 0;
-      this.deviceStates[deviceId].rxDraining = false;
-      this.deviceStates[deviceId].rxStalls = 0;
-      this.deviceStates[deviceId].rxStallLoggedAt = 0;
-      this.deviceStates[deviceId].stopped = false;
-      this.deviceStates[deviceId].interface = ifaceNumber;
+      state.fifo = new Uint8Array([]);
+      state.rxQueue = [];
+      state.rxDropped = 0;
+      state.rxDropLoggedAt = 0;
+      state.rxDraining = false;
+      state.rxStalls = 0;
+      state.rxStallLoggedAt = 0;
+      state.stopped = false;
 
-      const intervalcb = setTimeout(async () => {
-        const state = this.deviceStates[deviceId];
-        if (state === undefined) {
+      if (!this.isCurrentGeneration(deviceId, state.generation)) {
+        await this.abandonConnect(deviceId, state);
+        return;
+      }
+
+      const intervalcb = setTimeout(() => {
+        if (state.stopped || !this.isCurrentGeneration(deviceId, state.generation)) {
           return;
         }
-        // The device fills every USB packet, so one packet per transfer; asking for
-        // more would wait on bytes that only arrive with a later packet. See #37
-        // Submission order equals completion order on one endpoint, so this FIFO of
-        // concurrent transfers preserves arrival order; WebUSB queues them, verified on the bench. See #37
-        const pending: Promise<USBInTransferResult>[] = [];
-        while (!state.stopped) {
-          try {
-            if (!device || device.opened === false) {
-              console.debug(`Device ${deviceId} closed`);
-              state.stopped = true;
-              this.deviceDisconnect(deviceId).catch((error) => console.error(error));
-              break;
-            }
-            while (pending.length < TIO_USB_RX_INFLIGHT) {
-              pending.push(device.transferIn(endpointIn, TIO_USB_PACKET_LEN));
-            }
-            const rst = await pending.shift()!;
-            if (rst.status === 'ok') {
-              if (rst.data) {
-                this.queueRxChunk(deviceId, rst.data);
+        // Teardown awaits this promise, so nothing is left reading a device being closed. See #30
+        state.readLoop = (async () => {
+          // The device fills every USB packet, so one packet per transfer; asking for
+          // more would wait on bytes that only arrive with a later packet. See #37
+          // Submission order equals completion order on one endpoint, so this FIFO of
+          // concurrent transfers preserves arrival order; WebUSB queues them, verified on the bench. See #37
+          const pending: Promise<USBInTransferResult>[] = [];
+          while (!state.stopped && this.isCurrentGeneration(deviceId, state.generation)) {
+            try {
+              if (!device || device.opened === false) {
+                console.debug(`Device ${deviceId} closed`);
+                state.stopped = true;
+                this.deviceDisconnect(deviceId).catch((error) => console.error(error));
+                break;
               }
-            } else if (rst.status === 'stall') {
-              // transferIn resolves with 'stall' rather than rejecting, so clear the halt here or the loop spins. See #37
-              await Promise.allSettled(pending.splice(0));
-              await device.clearHalt('in', endpointIn);
-              this.noteRxStall(state, deviceId, 'halted');
-              await delay(TIO_USB_RX_RETRY_DELAY_MS);
-            } else {
-              await Promise.allSettled(pending.splice(0));
-              this.noteRxStall(state, deviceId, rst.status ?? 'unknown');
+              while (pending.length < TIO_USB_RX_INFLIGHT) {
+                pending.push(device.transferIn(endpointIn, TIO_USB_PACKET_LEN));
+              }
+              const rst = await pending.shift()!;
+              if (rst.status === 'ok') {
+                if (rst.data) {
+                  this.queueRxChunk(state, deviceId, rst.data);
+                }
+              } else if (rst.status === 'stall') {
+                // transferIn resolves with 'stall' rather than rejecting, so clear the halt here or the loop spins. See #37
+                await Promise.allSettled(pending.splice(0));
+                await device.clearHalt('in', endpointIn);
+                this.noteRxStall(state, deviceId, 'halted');
+                await delay(TIO_USB_RX_RETRY_DELAY_MS);
+              } else {
+                await Promise.allSettled(pending.splice(0));
+                this.noteRxStall(state, deviceId, rst.status ?? 'unknown');
+                await delay(TIO_USB_RX_RETRY_DELAY_MS);
+              }
+            } catch (error) {
+              // close() rejects the in-flight reads; that is the teardown path, not a fault. See #30
+              if (state.stopped) {
+                break;
+              }
+              console.error(error);
               await delay(TIO_USB_RX_RETRY_DELAY_MS);
             }
-          } catch (error) {
-            console.error(error);
-            await delay(TIO_USB_RX_RETRY_DELAY_MS);
           }
-        }
-        // WebUSB has no cancel, so outstanding transfers are abandoned; settle them so nothing rejects unhandled. See #37
-        await Promise.allSettled(pending.splice(0));
+          // WebUSB has no cancel. Give the last reads a bounded chance to land: a transfer left
+          // outstanding keeps the interface claimed and makes releaseInterface throw. See #30
+          await Promise.race([
+            Promise.allSettled(pending.splice(0)),
+            delay(TIO_USB_TEARDOWN_TIMEOUT_MS),
+          ]);
+        })();
       }, 1);
       this.callbacks[`dev${deviceId}.poll`] = intervalcb;
     }
@@ -505,12 +568,19 @@ export class UsbHandler implements ApiHandler {
       clearTimeout(state.rxDrainTimer);
       state.rxDrainTimer = undefined;
     }
+    if (state.readLoop !== undefined) {
+      await Promise.race([state.readLoop, delay(TIO_USB_TEARDOWN_TIMEOUT_MS)]);
+      state.readLoop = undefined;
+    }
     state.fifo = new Uint8Array([]);
     state.rxQueue = [];
   }
 
   async deviceConnect(deviceId: string, slots: ISlotConfig[], onDisconnect?: (deviceId: string) => void): Promise<void> {
 
+    // Every attempt takes a token so a disconnect landing mid-connect can supersede it. See #41
+    const generation = (this.deviceGenerations[deviceId] ?? 0) + 1;
+    this.deviceGenerations[deviceId] = generation;
     this.callbacks[`dev${deviceId}.disconnect`] = onDisconnect;
 
     let device = await this._getDevice(deviceId);
@@ -523,37 +593,54 @@ export class UsbHandler implements ApiHandler {
       throw new Error(`Device ${deviceId} not found`);
     }
 
-    this.deviceStates[deviceId] = new DeviceState(device);
-    this.deviceStates[deviceId].slotConfigs = slots;
-    this.deviceStates[deviceId].slotClocks = slots.map(s => new PlayoutClock({ fs: s.fs }));
+    if (!this.isCurrentGeneration(deviceId, generation)) {
+      if (this.callbacks[`dev${deviceId}.disconnect`] === onDisconnect) {
+        this.callbacks[`dev${deviceId}.disconnect`] = undefined;
+      }
+      throw new Error(`Connect to ${deviceId} superseded by a disconnect`);
+    }
+
+    const state = new DeviceState(device, generation);
+    this.deviceStates[deviceId] = state;
+    state.slotConfigs = slots;
+    state.slotClocks = slots.map(s => new PlayoutClock({ fs: s.fs }));
 
     await device.open();
+
+    if (!this.isCurrentGeneration(deviceId, generation)) {
+      await this.abandonConnect(deviceId, state);
+      throw new Error(`Connect to ${deviceId} superseded by a disconnect`);
+    }
 
     await this.enableDevicePolling(deviceId);
   }
 
 
   async deviceDisconnect(deviceId: string): Promise<void> {
+    // Bump first: a connect still awaiting open() must not claim the interface behind us. See #41
+    this.deviceGenerations[deviceId] = (this.deviceGenerations[deviceId] ?? 0) + 1;
     const device = this._devices.find(device => device.serialNumber === deviceId);
     if (!device) {
       return;
     }
     const deviceState = this.deviceStates[deviceId];
-    const ifaceNumber = deviceState.interface;
-    if (deviceState.uioRequest) {
-      clearTimeout(deviceState.uioRequest.timeout);
-      deviceState.uioRequest.reject(new Error('USB device disconnected while waiting for UIO state'));
-      deviceState.uioRequest = undefined;
+    const ifaceNumber = deviceState?.interface ?? 0;
+    if (deviceState) {
+      if (deviceState.uioRequest) {
+        clearTimeout(deviceState.uioRequest.timeout);
+        deviceState.uioRequest.reject(new Error('USB device disconnected while waiting for UIO state'));
+        deviceState.uioRequest = undefined;
+      }
+      deviceState.stopped = true;
+      if (deviceState.rxDrainTimer !== undefined) {
+        clearTimeout(deviceState.rxDrainTimer);
+        deviceState.rxDrainTimer = undefined;
+      }
+      deviceState.slotConfigs = [];
+      deviceState.fifo = new Uint8Array([]);
+      deviceState.rxQueue = [];
+      deviceState.slotClocks = [];
     }
-    deviceState.stopped = true;
-    if (deviceState.rxDrainTimer !== undefined) {
-      clearTimeout(deviceState.rxDrainTimer);
-      deviceState.rxDrainTimer = undefined;
-    }
-    this.deviceStates[deviceId].slotConfigs = [];
-    this.deviceStates[deviceId].fifo = new Uint8Array([]);
-    this.deviceStates[deviceId].rxQueue = [];
-    this.deviceStates[deviceId].slotClocks = [];
 
     await this.disableDevicePolling(deviceId);
 
@@ -568,13 +655,22 @@ export class UsbHandler implements ApiHandler {
       this.callbacks[`dev${deviceId}.disconnect`] = undefined;
     }
     if (device.opened) {
-      await device.controlTransferOut({
-        'requestType' : 'class',
-        'recipient' : 'interface',
-        'request' : 0x22,
-        'value' : 0x00,
-        'index' : ifaceNumber
-      });
+      // A connect torn down before it claimed has no interface to quiesce, and asking would throw. See #41
+      if (deviceState?.claimed) {
+        try {
+          await device.controlTransferOut({
+            'requestType' : 'class',
+            'recipient' : 'interface',
+            'request' : 0x22,
+            'value' : 0x00,
+            'index' : ifaceNumber
+          });
+          await device.releaseInterface(ifaceNumber);
+        } catch (error) {
+          // A read that outlived the teardown window still holds the claim; close() aborts it. See #30
+          console.debug(`USB release of interface ${ifaceNumber} on ${deviceId} failed: ${error}`);
+        }
+      }
       await device.close();
     }
   }
