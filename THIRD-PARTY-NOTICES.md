@@ -12430,7 +12430,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### swiper 11.2.10
+### swiper 14.2.0
 
 - License: MIT
 - Repository: https://github.com/nolimits4web/Swiper
@@ -13013,7 +13013,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### uuid 9.0.1
+### uuid 11.1.1
 
 - License: MIT
 - Repository: https://github.com/uuidjs/uuid
