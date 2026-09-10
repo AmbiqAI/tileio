@@ -4,10 +4,11 @@
 
 Prepare the refined built-in dashboard and renderer fixes for local review.
 Branch codex/vitals-dashboard-labels; base d6692e2. Main is untouched.
-Local commits approved. No push, issue publication, PR, merge or release without
-approval. Consult git log for the final local commit ID.
+Owner approved branch pushes and draft PR publication. Merge/release remain gated.
+Published issue43 and draft PR44: https://github.com/AmbiqAI/tileio/pull/44.
+Implementation head a750804; no hosted PR checks reported. Local checks below.
 
-Issue draft was shown before implementation but is not published:
+Issue draft was shown before implementation and published as43:
 "Refine Vital Sign Monitoring labels and comparison tiles".
 Scope: neutral metric/Markdown labels, consistent segmentation colors, compact
 bar/number slides, theme-aware heartKIT branding and concise dashboard summaries.
@@ -15,7 +16,7 @@ Owner approved a separate subtle modernization pass after checkpoint46d6408:
 quieter backgrounds, shared card surfaces, lighter typography and chart fills.
 Follow-up scope: compact I/O tile with labels above controls, adaptive columns,
 and primary-text I/O heading. Control behavior and other control views unchanged.
-Publish the issue only after approval, then reference it in the PR.
+PR44 references issue43 and paired firmware PR85.
 
 ## Done and decisions
 
@@ -106,8 +107,7 @@ Do not delete user data to clean up previews.
 
 ## Next steps and paired firmware
 
-Owner visual review, then approval to publish the issue and open the PR.
-No GitHub writes performed. Package version is1.1.3; proposed release is1.2.0,
+Owner visual review and release acceptance remain. Package version is1.1.3; proposed release is1.2.0,
 subject to owner approval. Main push automatically deploys GitHub Pages, so merge
 is public publication. The benchmark evidence gate above must be resolved before
 that step; it is not a customer-facing description change.
