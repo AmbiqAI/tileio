@@ -13,6 +13,8 @@ Scope: neutral metric/Markdown labels, consistent segmentation colors, compact
 bar/number slides, theme-aware heartKIT branding and concise dashboard summaries.
 Owner approved a separate subtle modernization pass after checkpoint46d6408:
 quieter backgrounds, shared card surfaces, lighter typography and chart fills.
+Follow-up scope: compact I/O tile with labels above controls, adaptive columns,
+and primary-text I/O heading. Control behavior and other control views unchanged.
 Publish the issue only after approval, then reference it in the PR.
 
 ## Done and decisions
@@ -72,7 +74,11 @@ Do not present these as production whole-system memory reductions.
 
 ## Validation
 
-50 tests pass; build-web passes with dependency-directive and bundle-size warnings.
+53 tests pass; build-web passes with dependency-directive and bundle-size warnings.
+Compact I/O follow-up verified at the normal1029px browser width and390px fallback.
+Four columns fit the desktop card; two columns scroll within narrow cards, with
+the final mode row verified reachable. Added opt-in compact-control tests. No
+device settings were changed during this visual pass.
 Tests cover template content/calculations, Markdown themes/overrides and headline
 slides, alongside existing transport/clock tests. Source cleanup removes dead
 single-value branches from the multi-value rendering path.
