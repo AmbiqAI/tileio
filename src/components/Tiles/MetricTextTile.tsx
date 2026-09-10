@@ -141,7 +141,7 @@ const MetricTextTile = observer(({ slots, config }: TileProps) => {
               overflowY: "scroll"
             }}
           >
-            <StyledMarkDown color={configs.primaryColor}>
+            <StyledMarkDown>
               {text}
             </StyledMarkDown>
           </Box>
@@ -150,7 +150,7 @@ const MetricTextTile = observer(({ slots, config }: TileProps) => {
 
       <TileCornerLabel
         subheader={configs.name}
-        subheaderColor={configs.secondaryColor ?? ThemeColors.colors.secondaryColor}
+        subheaderColor="text.primary"
       />
 
     </GridContainer>

@@ -175,7 +175,7 @@ const MetricPlotTile = observer(({
       <TileCornerLabel
         header={value}
         subheader={units}
-        subheaderColor={secondaryColor}
+        subheaderColor="text.primary"
       />
     </GridContainer>
   );

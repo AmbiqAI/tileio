@@ -163,6 +163,14 @@ const SegPieTile = observer(({ slots, config, size }: TileProps) => {
           position: "right",
           labels: {
             boxWidth: size === "sm" ? 20 : 40,
+            generateLabels: (chart) => configs.segments.map((segment, index) => ({
+              text: segment.name,
+              fillStyle: segment.color,
+              strokeStyle: segment.color,
+              fontColor: theme.palette.text.primary,
+              hidden: !chart.getDataVisibility(index),
+              index,
+            })),
             font: {
               size: 12,
               weight: "bold",
@@ -173,7 +181,7 @@ const SegPieTile = observer(({ slots, config, size }: TileProps) => {
       }
     };
     },
-  [theme]);
+  [theme, configs, size]);
 
   useEffect(() => {
     const chart = chartEl.current;
@@ -182,14 +190,6 @@ const SegPieTile = observer(({ slots, config, size }: TileProps) => {
     }
     const segmentAmounts = configs.slot < slots.length ? slots[configs.slot].mask.segmentAmounts : {};
     const data = configs.segments.map((segment) => segmentAmounts[segment.value] || 1e-9);
-
-    if (chart.legend) {
-      const total = Object.values(data).reduce((a, b) => a + b, 0) || 1;
-      chart.legend.legendItems = configs.segments.map((segment, i) => ({
-        text: `${segment.name}: ${(100*data[i]/total).toFixed(0)}%`,
-        fillStyle: segment.color || ThemeColors.colors.primaryColor,
-      }));
-    }
 
     const chartData = chart.data.datasets[0];
     chartData.data = data;
@@ -258,7 +258,7 @@ const SegPieTile = observer(({ slots, config, size }: TileProps) => {
             pb: 0.5,
           }}
         >
-          <Typography color={configs.secondaryColor} fontWeight={700} variant="h6" sx={{ lineHeight: 1 }}>
+          <Typography color="text.primary" fontWeight={700} variant="h6" sx={{ lineHeight: 1 }}>
             {configs.units}
           </Typography>
         </Stack>

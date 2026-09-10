@@ -81,10 +81,16 @@ const DashboardCard = ({ dashboard, device }: Props) => {
 
         <Divider />
 
-        <CardContent sx={{ height: 100, overflowY: "scroll", pt: 0 }} >
+        <CardContent sx={{ height: 72, overflow: "hidden", py: 1,
+          '& > div': { display: '-webkit-box', WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical', overflow: 'hidden' },
+          '& p': { margin: 0 },
+        }} >
+          <div>
           <StyledMarkDown>
-            {dashboard.description}
+            {dashboard.description.split(/\n\s*\n/).find(paragraph => paragraph.trim() && !/^\s*#/.test(paragraph)) || ''}
           </StyledMarkDown>
+          </div>
         </CardContent>
       </CardActionArea>
 

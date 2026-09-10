@@ -6,8 +6,8 @@ import { IDashboardSnapshot } from '../../models/dashboard';
 
 
 export const availableDashboards = [
-  {file: 'hk-dashboard-config.json', name: 'HeartKit Dashboard'},
-  {file: 'hk-ap510-vs-ap4.json', name: 'HeartKit: Vital Sign Monitoring'},
+  {file: 'hk-dashboard-config.json', name: 'heartKIT Dashboard'},
+  {file: 'hk-ap510-vs-ap4.json', name: 'Vital Sign Monitoring'},
 ];
 
 export const loadDashboard = async (name: string): Promise<IDashboardSnapshot|undefined> => {
