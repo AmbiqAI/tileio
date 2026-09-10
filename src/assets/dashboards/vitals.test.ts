@@ -23,7 +23,11 @@ describe('Vital Sign Monitoring template', () => {
     for (const name of ['MCU Battery Life', 'AI Throughput', 'Denoise Efficiency',
       'Segment Efficiency', 'Arrhythmia Efficiency']) expect(names).toContain(name);
     expect(dashboard.tiles.find(tile => tile.config.name === 'Arrhythmia Efficiency')?.config)
-      .toMatchObject({ slot: 0, metric: 10, max: 40000 });
+      .toMatchObject({ slot: 0, metric: 10, min: 0, max: 150, units: 'µJ/inf', transform: 'ips_per_watt_to_uj' });
+    for (const [name, max] of [['Denoise Efficiency', 200], ['Segment Efficiency', 600]] as const) {
+      expect(dashboard.tiles.find(tile => tile.config.name === name)?.config)
+        .toMatchObject({ min: 0, max, units: 'µJ/inf', transform: 'ips_per_watt_to_uj' });
+    }
   });
   it('uses the demo name and heartKIT branding', () => {
     expect(dashboard.name).toBe('Vital Sign Monitoring');

@@ -50,7 +50,8 @@ const MetricPlotTile = observer(({
 }: Props) => {
 
   const ts = data.length ? data[data.length - 1].ts : undefined;
-  const value = data.length ? (data[data.length - 1][yAxisId ?? "y"] || 0).toFixed(precision ?? 0) : "--";
+  const latestValue = data.length ? data[data.length - 1][yAxisId ?? "y"] : NaN;
+  const value = Number.isFinite(latestValue) ? latestValue.toFixed(precision ?? 0) : "--";
   const chartEl = useRef<Chart<"line">>(null);
 
   const chartData = useMemo<ChartData<"line">>(

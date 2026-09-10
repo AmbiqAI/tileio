@@ -25,7 +25,12 @@ P/QRS/T identities and colors agree between stream and pie chart.
 Metric labels use primary text; Markdown headings use primary text, weight500.
 Name is Vital Sign Monitoring; other brand mentions use heartKIT.
 
-AI Throughput maximum150 IPS; arrhythmia efficiency maximum40000 IPS/W.
+AI Throughput maximum150 IPS. Model Efficiency titles are retained, with
+µJ/inf units and optional Sparkline conversion 1e6/(IPS/W). Denoise range0-200,
+segment0-600, arrhythmia0-150; lower is better. Zero/nonfinite/negative efficiency
+is unavailable, not zero energy. Other sparklines default to identity.
+Template and saved preview both updated, labels visually verified.
+Requires corrected firmware IPS scale (firmware commit3de37f6), not yet flashed.
 Battery plot maximum28 days is unchanged. Battery values come from firmware.
 Apollo image replaced by supplied light/dark heartKIT SVGs. SvgTile accepts
 optional darkContent via the MUI theme, falling back to content.
@@ -74,7 +79,7 @@ Do not present these as production whole-system memory reductions.
 
 ## Validation
 
-53 tests pass; build-web passes with dependency-directive and bundle-size warnings.
+55 tests pass; build-web passes with dependency-directive and bundle-size warnings.
 Compact I/O follow-up verified at the normal1029px browser width and390px fallback.
 Four columns fit the desktop card; two columns scroll within narrow cards, with
 the final mode row verified reachable. Added opt-in compact-control tests. No
