@@ -234,6 +234,8 @@ export const NumbersSlide = ({ name, values }: ChartSlideConfig) => {
 
   if (values.length === 1) {
     const value = values[0];
+    const label = value.label || String(value.value);
+    const compactValue = !name || label.length > 6;
     return (
       <Stack sx={{ height: '100%', width: '100%', boxSizing: 'border-box',
         containerType: 'inline-size', textAlign: 'center', px: 0.5, py: 0.5,
@@ -241,10 +243,10 @@ export const NumbersSlide = ({ name, values }: ChartSlideConfig) => {
         alignItems: 'center', userSelect: 'none' }}>
         {name && <Typography component="h3" sx={{ fontSize: 13, fontWeight: 500,
           lineHeight: 1.3, color: 'text.primary' }}>{name}</Typography>}
-        <Typography component="p" sx={{ fontSize: name ? 'clamp(2rem, 26cqw, 3.25rem)' : 'clamp(1.25rem, 20cqw, 2.5rem)',
+        <Typography component="p" sx={{ fontSize: compactValue ? 'clamp(1.25rem, 20cqw, 2.5rem)' : 'clamp(2rem, 26cqw, 3.25rem)',
           lineHeight: 1.05, fontWeight: 600, letterSpacing: '-0.035em',
           fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', color: 'text.primary' }}>
-          {value.label || String(value.value)}
+          {label}
         </Typography>
         {name && <Typography component="p" sx={{ fontSize: 11, lineHeight: 1.3,
           fontWeight: 400, color: 'text.secondary' }}>{value.name}</Typography>}

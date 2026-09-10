@@ -9,7 +9,7 @@ describe('Vital Sign Monitoring template', () => {
     const segments = [
       { name: 'P-Wave', value: 1, color: '#00dfea' },
       { name: 'QRS', value: 2, color: '#bd6bf0' },
-      { name: 'T-Wave', value: 3, color: '#f0aa55' },
+      { name: 'T-Wave', value: 3, color: '#94a3b8' },
     ];
     for (const type of ['SEGMENTS_STREAM_TILE', 'SEG_PIE_TILE']) {
       expect(dashboard.tiles.find(tile => tile.type === type)?.config)
@@ -36,7 +36,7 @@ describe('Vital Sign Monitoring template', () => {
       darkContent: expect.stringContaining('<svg'),
     } });
   });
-  it('withholds unvalidated energy claims and scopes memory comparisons', () => {
+  it('scopes memory comparisons and keeps internal review notes out of the description', () => {
     const slides = dashboard.tiles[21].config.slides!;
     for (const [model, bss] of [
       [0, [326084, 220388]],
@@ -48,7 +48,8 @@ describe('Vital Sign Monitoring template', () => {
         values: bss.map(value => ({ value: value / 1024 })),
       });
     }
-    expect(JSON.stringify([dashboard.tiles[21], dashboard.tiles[22]])).not.toMatch(/energy|µJ/i);
+    expect(JSON.stringify(dashboard.tiles[21])).not.toMatch(/energy|µJ/i);
+    expect(dashboard.description).not.toMatch(/capture timing|customer release|validation remains unresolved/i);
     expect(dashboard.description).toContain('total runtime RAM');
   });
   it('consolidates comparisons and weights the aggregate by invocation rate', () => {
@@ -74,6 +75,9 @@ describe('Vital Sign Monitoring template', () => {
         { name: 'Faster inference', type: 'number', values: [{ value: gain, label: '2.32×', name: 'heliaAOT vs TFLM' }] },
         { name: 'Less memory', type: 'number', values: [{
           value: 100 * (1 - (220388 + 175124 + 183492) / (326084 * 3)), label: '41%', name: 'heliaAOT vs TFLM',
+        }] },
+        { name: 'Energy Efficiency', type: 'number', values: [{
+          value: 4, label: 'Up to 4×', name: 'heliaAOT vs TFLM',
         }] },
       ],
     } });

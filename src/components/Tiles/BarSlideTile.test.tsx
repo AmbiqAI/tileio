@@ -7,6 +7,14 @@ import { describe, expect, it } from 'vitest';
 import { NumbersSlide } from './BarSlideTile';
 
 describe('Number slide layout', () => {
+  it('fits a longer energy headline in a small card', () => {
+    const html = renderToStaticMarkup(<NumbersSlide name="Energy Efficiency" type="number" size="sm"
+      values={[{ name: 'heliaAOT vs TFLM', value: 4, label: 'Up to 4×', color: '#00dfea' }]} />);
+    expect(html).toContain('Up to 4×');
+    expect(html).toContain('20cqw');
+    expect(html).not.toContain('estimated');
+  });
+
   it('separates metric, value, and comparison without an underline', () => {
     const html = renderToStaticMarkup(<NumbersSlide name="Faster inference" type="number" size="sm"
       values={[{ name: 'heliaAOT vs TFLM', value: 2.32, label: '2.32×', color: '#00dfea' }]} />);

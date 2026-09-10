@@ -16,7 +16,7 @@ Publish the issue only after approval, then reference it in the PR.
 ## Done and decisions
 
 Template src/assets/dashboards/hk-ap510-vs-ap4.json retains 23 tiles and the
-original translucent appearance. Teal #00dfea, violet #bd6bf0, T-wave #f0aa55.
+original translucent appearance. Teal #00dfea, violet #bd6bf0, T-wave cool gray #94a3b8.
 P/QRS/T identities and colors agree between stream and pie chart.
 Metric labels use primary text; Markdown headings use primary text, weight500.
 Name is Vital Sign Monitoring; other brand mentions use heartKIT.
@@ -28,14 +28,20 @@ optional darkContent via the MUI theme, falling back to content.
 
 Poincare replaced by one bar carousel: latency and memory for each model,
 six slides total. TFLM violet, heliaAOT teal. Compact headings and engine labels.
-The small QR tile is replaced by a three-slide summary:
-heliaAOT wordmark, 2.32x Faster inference, 41% Less memory.
+The small QR tile is replaced by a four-slide summary:
+heliaAOT wordmark, 2.32x Faster inference, 41% Less memory, and
+Energy Efficiency / Up to 4x / heliaAOT vs TFLM, per owner request.
 Gain slides include "heliaAOT vs TFLM", centered responsive values and clickable
 pagination dots. No accent underline. Existing multi-value slides retained.
 
-All energy comparisons were removed, including relative ratios: the supplied
-profiler report flags power.window_observer_mismatch. Do not restore energy
-claims without valid matched captures. No measured battery-gain claim.
+The energy headline is the reported denoise reference gain rounded to 4x,
+not the combined-model gain. No "estimated" label on the slide per owner.
+The supplied profiler report still flags power.window_observer_mismatch.
+The internal timing-validation note is kept here, not in the customer-facing
+dashboard description, per owner request. Confirmation is still required before
+customer release. Other energy comparisons remain
+excluded. No measured battery-gain claim. Owner requested a checkpoint commit
+before a separate subtle modernization pass, keeping layout and behavior intact.
 
 Main-list descriptions show the first prose paragraph capped at three lines.
 Full description has a concise overview, benchmark scope and modeled-power
@@ -58,7 +64,7 @@ Do not present these as production whole-system memory reductions.
 
 ## Validation
 
-37 tests pass; build-web passes with dependency-directive and bundle-size warnings.
+38 tests pass; build-web passes with dependency-directive and bundle-size warnings.
 Tests cover template content/calculations, Markdown themes/overrides and headline
 slides, alongside existing transport/clock tests. Source cleanup removes dead
 single-value branches from the multi-value rendering path.
@@ -70,7 +76,10 @@ or connected-device acceptance in this UI task.
 
 Preview: http://127.0.0.1:5184/#/dashboards/583da6b6-f73b-4564-b44a-47a64d202b21.
 Saved dashboards do not automatically inherit template JSON changes.
-This saved preview was updated previously; old saved dashboards are historical.
+The energy slide and description are updated in both this saved preview and the
+template. Its longer headline fits the small card after responsive sizing;
+the rendered heading, value, comparison caption and pagination were checked.
+Old saved dashboards are historical.
 Do not delete user data to clean up previews.
 
 ## Next steps and paired firmware
