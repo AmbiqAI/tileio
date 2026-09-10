@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { observer } from "mobx-react";
 import Typography from "@mui/material/Typography";
-import { Card, CardActionArea, CardContent, Stack, Theme } from "@mui/material";
+import { Card, CardActionArea, CardContent, Stack } from "@mui/material";
 import AddDashboardDialog from "../../../components/NewDashboardDialog";
 import AddIcon from '@mui/icons-material/AddCircleOutlineRounded';
 
@@ -22,11 +22,6 @@ const AddDashboardCard = () => {
           marginX: "108px",
           height: 150,
           width: 150,
-          backgroundColor: (theme: Theme) =>
-            theme.palette.mode === "dark"
-              ? `rgba(0,0,0,0.2)`
-              : `rgba(255,255,255,0.2)`,
-          backdropFilter: "blur(40px)",
           textAlign: "center",
         }}
       >

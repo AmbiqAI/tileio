@@ -31,7 +31,7 @@ function createGradient(
 ) {
   const gradient = ctx.createLinearGradient(0, area.bottom, 0, area.top);
   gradient.addColorStop(0, alpha(color, 0.0));
-  gradient.addColorStop(1, alpha(color, 0.6));
+  gradient.addColorStop(1, alpha(color, 0.28));
   return gradient;
 }
 
@@ -159,7 +159,7 @@ const MetricPlotTile = observer(({
             pt: 1.2,
           }}
         >
-          <Typography fontWeight={700} variant="subtitle1" sx={{ lineHeight: 1 }}>
+          <Typography fontWeight={500} variant="subtitle1" sx={{ lineHeight: 1.2, px: 1 }}>
             {name}
           </Typography>
         </Stack>

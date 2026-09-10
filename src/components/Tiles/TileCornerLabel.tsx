@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 Ambiq
 
-import { Stack, Typography, TypographyProps } from "@mui/material"
+import { Stack, Typography } from "@mui/material"
 import { GridZStack } from "./utils"
 
 interface Props {
@@ -24,17 +24,17 @@ const TileCornerLabel = ({ header, subheader, headerColor, subheaderColor }: Pro
             userSelect: "none",
             WebkitUserSelect: "none",
             textAlign: "end",
-            pr: 1.0,
-            pb: 0.5,
+            pr: 1.5,
+            pb: 1.25,
           }}
         >
           {!!header && (
-            <Typography color={headerColor} fontWeight={900} variant="h3" sx={{ lineHeight: 1 }}>
+            <Typography color={headerColor} fontWeight={600} variant="h3" sx={{ lineHeight: 1.05, letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}>
               {header}
             </Typography>
           )}
           {!!subheader && (
-            <Typography color={subheaderColor} fontWeight={700} variant="h6" sx={{ lineHeight: 1 }}>
+            <Typography color={subheaderColor} fontWeight={500} variant="body2" sx={{ lineHeight: 1.4, letterSpacing: '0.02em' }}>
               {subheader}
             </Typography>
           )}

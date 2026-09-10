@@ -4,7 +4,6 @@
 import React from "react";
 import { AppBar, styled, Theme, useScrollTrigger } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { Box } from "@mui/system";
 
 function ElevationScroll({ children }: { children: React.ReactElement }) {
   const trigger = useScrollTrigger({
@@ -13,12 +12,12 @@ function ElevationScroll({ children }: { children: React.ReactElement }) {
   });
 
   return React.cloneElement(children, {
-    elevation: trigger ? 4 : 2,
+    elevation: 0,
     sx: {
-      transition: "background-color 0.5s",
+      transition: "background-color 150ms ease",
       backgroundColor: (theme: Theme) =>
-        alpha(theme.palette.background.default, trigger ? 0.4 : 0.75),
-      backdropFilter: trigger ? "blur(8px)" : "blur(0px)",
+        alpha(theme.palette.background.default, trigger ? 0.98 : 0.96),
+      '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
       position: "fixed",
       pt: `env(safe-area-inset-top)`,
       top: 0,
@@ -40,21 +39,8 @@ function Header({ children }: Props) {
   return (
       <ElevationScroll>
         <AppBar
-          // position="sticky"
           color="transparent"
           elevation={0}
-          sx={{
-            position: "fixed",
-            pt: 1,
-            top: 0,
-            bottom: "auto",
-            left: 0,
-            right: 0,
-            borderBottomStyle: 'solid',
-            borderBottomWidth: '1px',
-            borderBottomColor: 'divider',
-            backdropFilter: "blur(8px)",
-          }}
         >
           {children}
         </AppBar>

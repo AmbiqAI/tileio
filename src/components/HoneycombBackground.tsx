@@ -38,19 +38,14 @@ export function HoneycombBackground({
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   const colors = useMemo(() => {
-    const lightStroke = 'rgba(148,163,184,0.35)'
-    const darkStroke = 'rgba(148,163,184,0.28)'
-    const lightFill = 'rgba(255,255,255,0.6)'
-    const darkFill = 'rgba(12,18,34,0.55)'
-    const lightBg = 'radial-gradient(circle at 20% 20%, #f9fbff, #ffffff)'
-    const darkBg = 'radial-gradient(circle at 15% 20%, #020617, #0b1220)'
+    const lightStroke = 'rgba(100,116,139,0.06)'
+    const darkStroke = 'rgba(148,163,184,0.05)'
     return {
       stroke: mode === 'dark' ? darkStroke : lightStroke,
-      fill: mode === 'dark' ? darkFill : lightFill,
-      background: mode === 'dark' ? darkBg : lightBg,
-      glow: mode === 'dark' ? '0 0 12px rgba(59,130,246,0.18)' : '0 0 12px rgba(99,102,241,0.12)',
+      fill: 'transparent',
+      background: theme.palette.background.default,
     }
-  }, [mode])
+  }, [mode, theme.palette.background.default])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -107,7 +102,6 @@ export function HoneycombBackground({
         pointerEvents: 'none',
         zIndex: 0,
         background: colors.background,
-        boxShadow: colors.glow,
         ...sx,
       }}
     >
