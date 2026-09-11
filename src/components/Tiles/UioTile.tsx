@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 Ambiq
 
-import { Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
-import { GridContainer, GridZStack } from "./utils";
-import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import { useMemo } from "react";
 import IoControl from "../IoControl";
 import { ThemeColors } from "../../theme/theme";
-import TileCornerLabel from "./TileCornerLabel";
 
 export const UioTileSpec: TileSpec = {
   type: "UIO_TILE",
@@ -82,8 +79,6 @@ export function parseConfig(config: { [key: string]: any }): UioTileConfig {
 }
 
 const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProps) => {
-  const theme = useTheme();
-  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
   const configs = useMemo(() => parseConfig(config || {}), [config]);
   const onChange = async (io: number, state: number) => {
     if (uioState) {
@@ -91,64 +86,36 @@ const UioTile = observer(({ config, uioState, dashboard, pause, size }: TileProp
       await uioState.updateIoState(io, state);
     }
   }
-  let gridSize = size === "lg" ? 3 : size === "md" ? 6 : 12;
-  if (isSmall) {
-    gridSize = size === "lg" ? 6 : size === "md" ? 6 : 12;
-  }
   return (
-    <GridContainer>
-      <GridZStack level={0}>
-        <Stack
-          width="100%"
-          height="100%"
-          justifyContent="center"
-          alignItems="center"
-          p={0}
-        >
-          <Grid
-            container
-            spacing={0.5}
-            width="100%"
-            height="100%"
-            m={1}
-            overflow="scroll"
-            flexDirection="row"
-            flexWrap="wrap"
-            justifyContent="center"
-            alignContent="center"
-            alignItems="center"
-          >
+    <Stack sx={{ height: '100%', boxSizing: 'border-box', p: 1.5, gap: 1,
+      containerType: 'inline-size' }}>
+      {configs.name && <Typography sx={{ fontSize: 12, fontWeight: 500,
+        lineHeight: '16px', color: 'text.primary' }}>{configs.name}</Typography>}
+      <Box sx={{ display: 'grid', gridTemplateColumns: size === 'lg'
+        ? 'repeat(4, minmax(0, 1fr))' : size === 'md' ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
+        '@container (max-width: 400px)': { gridTemplateColumns: size === 'sm' ? 'minmax(0, 1fr)' : 'repeat(2, minmax(0, 1fr))' },
+        gap: 1.25, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', alignContent: 'start' }}>
             {configs.ios.map((io, idx) => {
               const state = uioState ? uioState.state[io] : 0;
               const info = dashboard.device.uio.list[io];
               return (
-                <Grid xs={gridSize}
+                <Box
                   key={`io-${io}`}
-                  display="flex"
-                  padding={0}
-                  justifyContent="center"
-                  alignItems="center"
-                  flexDirection="column"
+                  sx={{ minWidth: 0 }}
                 >
                   <IoControl
+                    compact
                     io={io}
                     info={info}
                     state={state}
                     onChange={(state: number) => onChange(io, state)}
                     disabled={!!pause || !uioState?.hydrated}
                   />
-                </Grid>
+                </Box>
               );
             })}
-          </Grid>
-        </Stack>
-      </GridZStack>
-
-      <TileCornerLabel
-        subheader={configs.name}
-        subheaderColor={configs.secondaryColor}
-      />
-    </GridContainer>
+      </Box>
+    </Stack>
   );
 });
 

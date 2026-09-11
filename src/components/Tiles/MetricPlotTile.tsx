@@ -31,7 +31,7 @@ function createGradient(
 ) {
   const gradient = ctx.createLinearGradient(0, area.bottom, 0, area.top);
   gradient.addColorStop(0, alpha(color, 0.0));
-  gradient.addColorStop(1, alpha(color, 0.6));
+  gradient.addColorStop(1, alpha(color, 0.28));
   return gradient;
 }
 
@@ -50,7 +50,8 @@ const MetricPlotTile = observer(({
 }: Props) => {
 
   const ts = data.length ? data[data.length - 1].ts : undefined;
-  const value = data.length ? (data[data.length - 1][yAxisId ?? "y"] || 0).toFixed(precision ?? 0) : "--";
+  const latestValue = data.length ? data[data.length - 1][yAxisId ?? "y"] : NaN;
+  const value = Number.isFinite(latestValue) ? latestValue.toFixed(precision ?? 0) : "--";
   const chartEl = useRef<Chart<"line">>(null);
 
   const chartData = useMemo<ChartData<"line">>(
@@ -159,7 +160,7 @@ const MetricPlotTile = observer(({
             pt: 1.2,
           }}
         >
-          <Typography fontWeight={700} variant="subtitle1" sx={{ lineHeight: 1 }}>
+          <Typography fontWeight={500} variant="subtitle1" sx={{ lineHeight: 1.2, px: 1 }}>
             {name}
           </Typography>
         </Stack>
@@ -175,7 +176,7 @@ const MetricPlotTile = observer(({
       <TileCornerLabel
         header={value}
         subheader={units}
-        subheaderColor={secondaryColor}
+        subheaderColor="text.primary"
       />
     </GridContainer>
   );

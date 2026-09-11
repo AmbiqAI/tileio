@@ -1,9 +1,35 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 Ambiq
 
-import { createTheme } from '@mui/material/styles';
+import { createTheme, ThemeOptions } from '@mui/material/styles';
+
+const typography: ThemeOptions['typography'] = {
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  h6: { fontWeight: 500 },
+  button: { textTransform: 'none', fontWeight: 500 },
+};
+
+const components: ThemeOptions['components'] = {
+  MuiCard: {
+    styleOverrides: {
+      root: ({ theme }) => ({
+        borderRadius: 12,
+        backgroundColor: theme.palette.background.paper,
+        backgroundImage: 'none',
+        border: `1px solid ${theme.palette.divider}`,
+        boxShadow: 'none',
+      }),
+    },
+  },
+  MuiPaper: { styleOverrides: { root: { backgroundImage: 'none' } } },
+  MuiButton: { defaultProps: { disableElevation: true } },
+  MuiOutlinedInput: { styleOverrides: { root: { borderRadius: 8 } } },
+  MuiTooltip: { defaultProps: { arrow: true } },
+};
 
 export const lightTheme = createTheme({
+  typography,
+  components,
   spacing: 8,
   breakpoints: {
     values: {
@@ -16,17 +42,15 @@ export const lightTheme = createTheme({
   },
   palette: {
     mode: 'light',
-    // background: {
-    //   default: '#ffffff',
-    //   paper: '#f5f5f5',
-    // },
+    background: { default: '#f3f5f7', paper: '#ffffff' },
+    divider: 'rgba(15, 23, 42, 0.12)',
     primary: {
-      main: '#9737FD',
+      main: '#7945bd',
       light: '#ce6cff',
       dark: '#6926b1'
     },
     secondary: {
-      main: '#20bff6',
+      main: '#007f9e',
       light: '#64deff',
       dark: '#007da4'
     },
@@ -37,15 +61,15 @@ export const lightTheme = createTheme({
       main: "#ff1744",
     },
     text: {
-      primary: '#0000000',
-      secondary: '#0000000',
+      primary: '#20252d',
+      secondary: '#596579',
     }
   },
-  components: {
-  }
 });
 
 export const darkTheme = createTheme({
+  typography,
+  components,
   spacing: 8,
   breakpoints: {
     values: {
@@ -58,8 +82,10 @@ export const darkTheme = createTheme({
   },
   palette: {
     mode: 'dark',
+    background: { default: '#101318', paper: '#181d24' },
+    divider: 'rgba(148, 163, 184, 0.16)',
     primary: {
-      main: '#ce6cff',
+      main: '#bd6bf0',
     },
     secondary: {
       main: '#20BFF6',
@@ -71,12 +97,10 @@ export const darkTheme = createTheme({
       main: "#ff1744",
     },
     text: {
-      primary: '#FFF',
-      secondary: '#FFF',
+      primary: '#f1f4f8',
+      secondary: '#a3afbf',
     }
   },
-  components: {
-  }
 });
 
 

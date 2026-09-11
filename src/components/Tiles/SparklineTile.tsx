@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2026 Ambiq
 
-import { alpha } from "@mui/material";
 import { observer } from "mobx-react";
 import { TileProps, TileSpec } from "./BaseTile";
 import MetricPlotTile from "./MetricPlotTile";
@@ -45,6 +44,13 @@ export const SparklineTileSpec: TileSpec = {
         minimum: 0,
         maximum: 2,
         description: 'Decimal places'
+      },
+      transform: {
+        type: 'string',
+        enum: ['identity', 'ips_per_watt_to_uj'],
+        enumNames: ['None', 'IPS/W to µJ/inf'],
+        default: 'identity',
+        title: 'Value conversion',
       },
       primaryColor: {
         type: 'string',
@@ -90,6 +96,7 @@ export interface SparklineTileConfig {
   metric: number;
   units: string;
   precision?: number;
+  transform?: 'identity' | 'ips_per_watt_to_uj';
   primaryColor: string;
   secondaryColor: string;
   min: number;
@@ -112,7 +119,7 @@ const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
   const configs = useMemo(() => parseConfig(config || {}), [config]);
   const metrics = configs.slot < slots.length ? slots[configs.slot].metrics : undefined;
   const latestTs = metrics ? metrics.latestTs : 0;
-  const data = metrics ? metrics.data.map((d) => ({ ts: d[0], y: d[configs.metric+1] })) : [];
+  const data = metrics ? metrics.data.map((d) => ({ ts: d[0], y: transformMetric(d[configs.metric+1], configs.transform) })) : [];
   return (
     <MetricPlotTile
       name={configs.name}
@@ -120,7 +127,6 @@ const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
       data={data}
       units={configs.units}
       primaryColor={configs.primaryColor}
-      // primaryColor={alpha(configs.primaryColor, 0.6)}
       secondaryColor={configs.secondaryColor}
       min={configs.min}
       max={configs.max}
@@ -130,3 +136,10 @@ const SparklineTile = observer(({ slots, duration, config }: TileProps) => {
   );
 });
 export default SparklineTile;
+
+export function transformMetric(value: number, transform?: SparklineTileConfig['transform']): number {
+  if (transform === 'ips_per_watt_to_uj') {
+    return Number.isFinite(value) && value > 0 ? 1e6 / value : NaN;
+  }
+  return value;
+}

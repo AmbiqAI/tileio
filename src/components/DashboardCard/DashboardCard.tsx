@@ -12,7 +12,6 @@ import {
   CardHeader,
   Divider,
   Stack,
-  Theme,
 } from "@mui/material";
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import { IDashboard } from "../../models/dashboard";
@@ -21,6 +20,7 @@ import StyledMarkDown from "../StyledMarkDown";
 import DashboardChips from "../DashboardChips";
 import { IDevice } from "../../models/device";
 import DeviceChips from "../DeviceChips";
+import { descriptionPreview } from "./descriptionPreview";
 
 interface Props {
   dashboard: IDashboard
@@ -32,37 +32,10 @@ const DashboardCard = ({ dashboard, device }: Props) => {
   return (
     <Card
       elevation={3}
-      // sx={{
-        // m: 2,
-        // borderRadius: 4,
-        // borderWidth: !!device ? 2 : 0,
-        // borderStyle: "solid",
-        // borderColor: "primary.main",
-        // width: 350,
-        // margin: "auto",
-        // bgcolor: (theme: Theme) =>
-        //   theme.palette.mode === "dark"
-        //     ? `rgba(0,0,0,0.6)`
-        //     : `rgba(255,255,255,0.9`,
-        // backdropFilter: "blur(20px)",
-      // }}
       variant="outlined"
       sx={{
         borderRadius: 3,
         width: 350,
-        borderColor: (theme) =>
-          theme.palette.mode === 'light'
-            ? 'rgba(255,255,255,0.32)'
-            : 'rgba(255,255,255,0.14)',
-        bgcolor: (theme) =>
-          theme.palette.mode === 'light'
-            ? 'rgba(255,255,255,0.4)'
-            : 'rgba(5,5,8,0.4)',
-        backdropFilter: 'blur(4px) saturate(100%)',
-        boxShadow: (theme) =>
-          theme.palette.mode === 'light'
-            ? '0 18px 60px rgba(15, 23, 42, 0.12)'
-            : '0 18px 60px rgba(0, 0, 0, 0.6)',
       }}
     >
       <CardActionArea sx={{ borderRadius: 0 }} onClick={() => history.push(dashboard.path)}>
@@ -81,10 +54,16 @@ const DashboardCard = ({ dashboard, device }: Props) => {
 
         <Divider />
 
-        <CardContent sx={{ height: 100, overflowY: "scroll", pt: 0 }} >
+        <CardContent sx={{ height: 72, overflow: "hidden", py: 1,
+          '& > div': { display: '-webkit-box', WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical', overflow: 'hidden' },
+          '& p': { margin: 0 },
+        }} >
+          <div>
           <StyledMarkDown>
-            {dashboard.description}
+            {descriptionPreview(dashboard.description)}
           </StyledMarkDown>
+          </div>
         </CardContent>
       </CardActionArea>
 

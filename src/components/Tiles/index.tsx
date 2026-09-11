@@ -32,7 +32,7 @@ export const CreateTile = (props: TileProps) => {
     <ErrorBoundary
       FallbackComponent={ErrorTile}
     >
-      <Component {...props} />;
+      <Component {...props} />
     </ErrorBoundary>
   );
 };

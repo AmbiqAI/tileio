@@ -3,7 +3,7 @@
 
 import { observer } from "mobx-react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import { A11y, Autoplay, Pagination, Navigation } from 'swiper/modules';
 import { TileProps, TileSpec } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
 import { Stack, Typography } from "@mui/material";
@@ -161,12 +161,13 @@ const BarSlide = ({ name, values: bars }: ChartSlideConfig) => {
       xValue: bar.value,
       yValue: bar.name,
       position: {
-        x: bar.location === 'outside' ? 'start' : 'end',
+        x: bar.location === 'outside' || bar.value < Math.max(...bars.map(item => item.value)) * 0.4 ? 'start' : 'end',
         y: 'center'
       },
-      color: theme.palette.text.primary,
+      color: bar.location === 'inside' && bar.value >= Math.max(...bars.map(item => item.value)) * 0.4
+        ? theme.palette.getContrastText(bar.color) : theme.palette.text.primary,
       font: {
-        size: 16,
+        size: 12,
         weight: 'bold',
       },
     }));
@@ -187,7 +188,7 @@ const BarSlide = ({ name, values: bars }: ChartSlideConfig) => {
           display: true,
           color: theme.palette.text.primary,
           font: {
-            size: 16,
+            size: 13,
             weight: 'bold',
           },
         },
@@ -210,11 +211,11 @@ const BarSlide = ({ name, values: bars }: ChartSlideConfig) => {
             display: true,
             align: 'center',
             padding: 8,
-            labelOffset: -16,
+            labelOffset: 0,
             crossAlign: 'near',
             color: theme.palette.text.primary,
-            minRotation: 90,
-            maxRotation: 90,
+            minRotation: 0,
+            maxRotation: 0,
             font: {
               weight: 'bold',
             },
@@ -229,10 +230,29 @@ const BarSlide = ({ name, values: bars }: ChartSlideConfig) => {
 }
 
 
-const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
+export const NumbersSlide = ({ name, values }: ChartSlideConfig) => {
 
-  const labelVariant = size === 'sm' ? 'h6' : 'h5';
-  const nameVariant = size === 'sm' ? 'body1' : 'h6';
+  if (values.length === 1) {
+    const value = values[0];
+    const label = value.label || String(value.value);
+    const compactValue = !name || label.length > 6;
+    return (
+      <Stack sx={{ height: '100%', width: '100%', boxSizing: 'border-box',
+        containerType: 'inline-size', textAlign: 'center', px: 0.5, py: 0.5,
+        display: 'grid', gridTemplateRows: name ? '28px minmax(0, 1fr) 24px' : '1fr',
+        alignItems: 'center', userSelect: 'none' }}>
+        {name && <Typography component="h3" sx={{ fontSize: 13, fontWeight: 500,
+          lineHeight: 1.3, color: 'text.primary' }}>{name}</Typography>}
+        <Typography component="p" sx={{ fontSize: compactValue ? 'clamp(1.25rem, 20cqw, 2.5rem)' : 'clamp(2rem, 26cqw, 3.25rem)',
+          lineHeight: 1.05, fontWeight: 600, letterSpacing: '-0.035em',
+          fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', color: 'text.primary' }}>
+          {label}
+        </Typography>
+        {name && <Typography component="p" sx={{ fontSize: 11, lineHeight: 1.3,
+          fontWeight: 400, color: 'text.secondary' }}>{value.name}</Typography>}
+      </Stack>
+    );
+  }
 
   return (
     <>
@@ -246,11 +266,11 @@ const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
       sx={{
         userSelect: "none",
         WebkitUserSelect: "none",
-        textAlign: "end",
+        textAlign: "center",
         pt: 1.2,
       }}
     >
-      <Typography fontWeight={700} variant="subtitle1" sx={{ lineHeight: 1 }}>
+      <Typography fontWeight={700} variant="subtitle1" sx={{ lineHeight: 1.2, px: 1 }}>
         {name}
       </Typography>
     </Stack>
@@ -265,7 +285,7 @@ const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
       >
       <Grid container justifyContent="center" spacing={1} width="100%" height="100%" pb={4}>
         {values.map((value, idx) => (
-        <Grid xs={4} key={`state-${idx}`}>
+        <Grid xs={12 / Math.max(1, values.length)} key={`state-${idx}`}>
           <Stack
             direction="row"
             height="100%"
@@ -275,17 +295,18 @@ const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
           >
             <div
               style={{
+                textAlign: "center",
                 borderBottomStyle: "solid",
-                borderBottomWidth: "4px",
+                borderBottomWidth: value.name ? "4px" : 0,
                 borderBottomColor: value.color,
               }}
             >
-              <Typography variant={labelVariant} fontWeight={600}>
+              <Typography variant="h6" fontWeight={600}>
                 {value.label || `${value.value}`}
               </Typography>
-              <Typography color={ThemeColors.colors.secondaryColor} variant={nameVariant} fontWeight={600}>
+              {value.name && <Typography color="text.primary" variant="caption" fontWeight={600}>
                 {value.name}
-              </Typography>
+              </Typography>}
             </div>
           </Stack>
         </Grid>
@@ -300,10 +321,17 @@ const NumbersSlide = ({ name, values, size }: ChartSlideConfig) => {
 
 const BarSlideTile = observer(({ size, config }: TileProps) => {
   const configs = useMemo(() => parseConfig(config || {}), [config]);
+  const summary = configs.slides.length > 0 && configs.slides.every(slide => slide.type === 'number' && slide.values.length === 1);
 
   return (
-    <GridContainer>
-      <GridZStack level={2}>
+    <Stack component={GridContainer} sx={{
+      '& .swiper-pagination': { bottom: '2px' },
+      '& .swiper-pagination-bullet': { width: 20, height: 20, m: '0 !important',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'transparent', opacity: 1,
+        '&::after': { content: '""', width: 5, height: 5, borderRadius: '50%', bgcolor: 'text.secondary', opacity: 0.3 } },
+      '& .swiper-pagination-bullet-active::after': { bgcolor: 'secondary.main', opacity: 1 },
+    }}>
+      <GridZStack level={2} style={{ bottom: configs.name ? 28 : 0, padding: summary ? '8px 12px' : '4px 8px' }}>
       <Swiper
         spaceBetween={30}
         centeredSlides={true}
@@ -312,15 +340,15 @@ const BarSlideTile = observer(({ size, config }: TileProps) => {
           disableOnInteraction: false,
         }}
         pagination={{
-          clickable: false,
-          enabled: false,
+          clickable: true,
+          enabled: summary && configs.slides.length > 1,
         }}
         navigation={false}
-        modules={[Autoplay, Pagination, Navigation]}
+        modules={[A11y, Autoplay, Pagination, Navigation]}
         className="mySwiper"
       >
       {configs.slides.map((slide, index) => (
-        <SwiperSlide key={`slide-${slide.name}-${index}`}>
+        <SwiperSlide key={`slide-${slide.name}-${index}`} style={summary ? { paddingBottom: 20, boxSizing: 'border-box' } : undefined}>
           {slide.type === 'number' && (
             <NumbersSlide name={slide.name} type={slide.type} values={slide.values} size={size} />
           )}
@@ -350,15 +378,15 @@ const BarSlideTile = observer(({ size, config }: TileProps) => {
         }}
       >
         <Typography
-        fontWeight={700}
-        color={ThemeColors.colors.secondaryColor}
-        variant="h6" sx={{ lineHeight: 1 }}>
+        fontWeight={400}
+        color="text.secondary"
+        variant="caption" sx={{ lineHeight: 1.2, px: 1 }}>
           {configs.name}
         </Typography>
       </Stack>
     </GridZStack>
 
-      </GridContainer>
+      </Stack>
   );
 });
 

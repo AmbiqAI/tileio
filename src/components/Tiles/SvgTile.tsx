@@ -4,7 +4,7 @@
 import { observer } from "mobx-react";
 import { TileProps } from "./BaseTile";
 import { GridContainer, GridZStack } from "./utils";
-import { Stack } from "@mui/material";
+import { Stack, useTheme } from "@mui/material";
 import SVG from 'react-inlinesvg';
 import { TileSpec } from "./BaseTile";
 import { useMemo } from "react";
@@ -27,6 +27,11 @@ export const SvgTileSpec: TileSpec = {
         type: 'string',
         default: '',
         title: 'SVG Content'
+      },
+      darkContent: {
+        type: 'string',
+        title: 'Dark-mode SVG (optional)',
+        default: ''
       }
     }
   },
@@ -34,12 +39,14 @@ export const SvgTileSpec: TileSpec = {
     "content": {
       "ui:widget": "textarea"
     },
+    "darkContent": { "ui:widget": "textarea" },
   }
 };
 
 export interface SvgTileConfig {
   name: string;
   content: string;
+  darkContent?: string;
 }
 
 export function parseConfig(config: { [key: string]: any }): SvgTileConfig {
@@ -53,6 +60,7 @@ export function parseConfig(config: { [key: string]: any }): SvgTileConfig {
 
 
 const SvgTile = ({ config }: TileProps) => {
+  const theme = useTheme();
   const configs = useMemo(() => parseConfig(config || {}), [config]);
 
   return (
@@ -61,8 +69,9 @@ const SvgTile = ({ config }: TileProps) => {
         <Stack height="100%" width="100%" p={1} justifyContent="center" alignItems="center">
           {/* @ts-ignore */}
           <SVG
-            src={configs.content}
+            src={theme.palette.mode === 'dark' && configs.darkContent ? configs.darkContent : configs.content}
             width="100%"
+            height="100%"
             title={configs.name}
             onError={(e) => console.error(e)}
           />
