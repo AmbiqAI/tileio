@@ -97,9 +97,9 @@ describe('Vital Sign Monitoring template', () => {
       name: '',
       slides: [
         { name: '', type: 'number', values: [{ value: 0, label: 'heliaAOT', name: '' }] },
-        { name: 'Faster inference', type: 'number', values: [{ value: gain, label: 'Up to ~5×', name: 'heliaAOT vs TFLM' }] },
+        { name: 'Faster inference', type: 'number', values: [{ value: gain, label: 'Up to 5×', name: 'heliaAOT vs TFLM' }] },
         { name: 'Less memory', type: 'number', values: [{
-          value: 100 * (1 - (223208 + 178080 + 186672) / (450796 + 456116 + 484852)), label: '~60%', name: 'heliaAOT vs TFLM',
+          value: 100 * (1 - (223208 + 178080 + 186672) / (450796 + 456116 + 484852)), label: '60%', name: 'heliaAOT vs TFLM',
         }] },
         { name: 'Energy Efficiency', type: 'number', values: [{
           value: energyGain, label: 'Up to 4×', name: 'heliaAOT vs TFLM',
