@@ -17,6 +17,8 @@ describe('Vital Sign Monitoring template', () => {
     }
   });
   it('retains concise metric names and scale headroom', () => {
+    expect(dashboard.tiles.find(tile => tile.config.name === 'MCU Battery Life')?.config)
+      .toMatchObject({ min: 0, max: 35, units: 'DAYS' });
     expect(dashboard.tiles.find(tile => tile.config.name === 'AI Throughput')?.config)
       .toMatchObject({ max: 150 });
     const names = dashboard.tiles.map(tile => tile.config.name);
