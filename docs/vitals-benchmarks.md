@@ -25,6 +25,12 @@ constants and allocates scratch in DTCM before measurement.
 
 ## Headline calculations
 
+The energy bars show relative energy per inference, with TFLM normalized to
+100 for each model. heliaAOT is 23.7 for denoise, 58.9 for segmentation, and
+41.2 for arrhythmia. Lower is better. The dashboard does not show raw energy
+units in these comparison bars; the measured source values remain above for
+traceability. Latency and memory bars retain the values in the table.
+
 - Faster inference: maximum TFLM / heliaAOT latency, 4.771×, displayed as **up to 4.7×**.
 - Energy efficiency: maximum TFLM / heliaAOT energy, 4.227×, displayed as **up to 4.2×**.
 - Less memory: one minus the ratio of summed heliaAOT to TFLM RAM, 57.75%, displayed as **58%**.

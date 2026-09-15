@@ -68,9 +68,13 @@ describe('Vital Sign Monitoring template', () => {
         values: latency.map(value => ({ value, label: `${value.toFixed(2)} ms` })),
       });
       expect(slides[model * 3 + 1]).toMatchObject({
-        name: expect.stringContaining('energy per inference'),
-        values: energy.map(value => ({ value, label: `${value.toFixed(1)} µJ` })),
+        name: expect.stringContaining('relative energy · TFLM = 100'),
+        values: energy.map(value => ({
+          value: 100 * value / energy[0],
+          label: (100 * value / energy[0]).toFixed(1).replace(/\.0$/, ''),
+        })),
       });
+      expect(JSON.stringify(slides[model * 3 + 1])).not.toMatch(/µJ|mW/);
     }
   });
   it('keeps the layout and scopes maximum gains separately from combined RAM', () => {
