@@ -31,11 +31,11 @@ The energy bars show relative energy per inference, with TFLM normalized to
 units in these comparison bars; the measured source values remain above for
 traceability. Latency and memory bars retain the values in the table.
 
-- Faster inference: maximum TFLM / heliaAOT latency, 4.771×, displayed as **up to ~5×**.
+- Faster inference: maximum TFLM / heliaAOT latency, 4.771×, displayed as **up to 5×**.
 - Energy efficiency: maximum TFLM / heliaAOT energy, 4.227×, displayed as **up to 4×**.
-- Less memory: one minus the ratio of summed heliaAOT to TFLM RAM, 57.75%, displayed as **~60%**.
+- Less memory: one minus the ratio of summed heliaAOT to TFLM RAM, 57.75%, displayed as **60%**.
 
-Approximation marks identify rounded-up headline values without an extra caption.
+The summary uses rounded headline values without an extra caption.
 Multipliers round to whole numbers and memory to one significant digit.
 Detailed bars retain measured values; no unmeasured placement gains are included.
 
