@@ -42,21 +42,42 @@ describe('Vital Sign Monitoring template', () => {
   });
   it('scopes memory comparisons and keeps internal review notes out of the description', () => {
     const slides = dashboard.tiles[21].config.slides!;
-    for (const [model, bss] of [
-      [0, [326084, 220388]],
-      [1, [326084, 175124]],
-      [2, [326084, 183492]],
+    for (const [model, ram] of [
+      [0, [450796, 223208]],
+      [1, [456116, 178080]],
+      [2, [484852, 186672]],
     ] as const) {
-      expect(slides[model * 2 + 1]).toMatchObject({
+      expect(slides[model * 3 + 2]).toMatchObject({
         name: expect.stringContaining('memory footprint'),
-        values: bss.map(value => ({ value: value / 1024 })),
+        values: ram.map(value => ({ value: value / 1024 })),
       });
     }
-    expect(JSON.stringify(dashboard.tiles[21])).not.toMatch(/energy|µJ/i);
     expect(dashboard.description).not.toMatch(/capture timing|customer release|validation remains unresolved/i);
-    expect(dashboard.description).toContain('total runtime RAM');
+    expect(dashboard.description).toContain('total RAM');
+    expect(dashboard.description).toContain('TFLM arena reservation');
   });
-  it('consolidates comparisons and weights the aggregate by invocation rate', () => {
+  it('uses matched latency and energy measurements', () => {
+    const slides = dashboard.tiles[21].config.slides!;
+    for (const [model, latency, energy] of [
+      [0, [73.420, 15.388], [403.586, 95.477]],
+      [1, [99.671, 56.981], [509.753, 300.383]],
+      [2, [21.839, 8.122], [119.661, 49.263]],
+    ] as const) {
+      expect(slides[model * 3]).toMatchObject({
+        name: expect.stringContaining(`${(latency[0] / latency[1]).toFixed(2)}× speedup`),
+        values: latency.map(value => ({ value, label: `${value.toFixed(2)} ms` })),
+      });
+      expect(slides[model * 3 + 1]).toMatchObject({
+        name: expect.stringContaining('relative energy · TFLM = 100'),
+        values: energy.map(value => ({
+          value: 100 * value / energy[0],
+          label: (100 * value / energy[0]).toFixed(1).replace(/\.0$/, ''),
+        })),
+      });
+      expect(JSON.stringify(slides[model * 3 + 1])).not.toMatch(/µJ|mW/);
+    }
+  });
+  it('keeps the layout and scopes maximum gains separately from combined RAM', () => {
     expect(dashboard.tiles).toHaveLength(23);
     expect(new Set(dashboard.tiles.map(tile => tile.id)).size).toBe(23);
     expect(dashboard.tiles.some(tile => tile.config.name === 'HeartKit QR Code')).toBe(false);
@@ -65,23 +86,23 @@ describe('Vital Sign Monitoring template', () => {
     });
     expect(dashboard.tiles.some(tile => tile.type === 'POINCARE_PLOT')).toBe(false);
     expect(dashboard.tiles[21]).toMatchObject({ type: 'BAR_SLIDE_TILE', config: {
-      slides: Array.from({ length: 6 }, () => ({ type: 'bar', values: [
+      slides: Array.from({ length: 9 }, () => ({ type: 'bar', values: [
         { name: 'TFLM', color: '#bd6bf0' }, { name: 'heliaAOT', color: '#00dfea' },
       ] })),
     } });
     expect(dashboard.description).toContain('Reference benchmarks');
-    const gain = ((70.905 + 97.280) / 2060 + 21.495 / 2000)
-      / ((15.522 + 58.020) / 2060 + 8.249 / 2000);
+    const gain = Math.max(73.420 / 15.388, 99.671 / 56.981, 21.839 / 8.122);
+    const energyGain = Math.max(403.586 / 95.477, 509.753 / 300.383, 119.661 / 49.263);
     expect(dashboard.tiles[22]).toMatchObject({ size: 'sm', type: 'BAR_SLIDE_TILE', config: {
       name: '',
       slides: [
         { name: '', type: 'number', values: [{ value: 0, label: 'heliaAOT', name: '' }] },
-        { name: 'Faster inference', type: 'number', values: [{ value: gain, label: '2.32×', name: 'heliaAOT vs TFLM' }] },
+        { name: 'Faster inference', type: 'number', values: [{ value: gain, label: 'Up to ~5×', name: 'heliaAOT vs TFLM' }] },
         { name: 'Less memory', type: 'number', values: [{
-          value: 100 * (1 - (220388 + 175124 + 183492) / (326084 * 3)), label: '41%', name: 'heliaAOT vs TFLM',
+          value: 100 * (1 - (223208 + 178080 + 186672) / (450796 + 456116 + 484852)), label: '~60%', name: 'heliaAOT vs TFLM',
         }] },
         { name: 'Energy Efficiency', type: 'number', values: [{
-          value: 4, label: 'Up to 4×', name: 'heliaAOT vs TFLM',
+          value: energyGain, label: 'Up to 4×', name: 'heliaAOT vs TFLM',
         }] },
       ],
     } });
