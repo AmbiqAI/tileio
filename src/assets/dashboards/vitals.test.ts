@@ -45,9 +45,9 @@ describe('Vital Sign Monitoring template', () => {
   it('scopes memory comparisons and keeps internal review notes out of the description', () => {
     const slides = dashboard.tiles[21].config.slides!;
     for (const [model, ram] of [
-      [0, [450796, 223208]],
-      [1, [456116, 178080]],
-      [2, [484852, 186672]],
+      [0, [290880, 93000]],
+      [1, [290880, 50088]],
+      [2, [282816, 34536]],
     ] as const) {
       expect(slides[model * 3 + 2]).toMatchObject({
         name: expect.stringContaining('memory footprint'),
@@ -61,9 +61,9 @@ describe('Vital Sign Monitoring template', () => {
   it('uses matched latency and energy measurements', () => {
     const slides = dashboard.tiles[21].config.slides!;
     for (const [model, latency, energy] of [
-      [0, [73.420, 15.388], [403.586, 95.477]],
-      [1, [99.671, 56.981], [509.753, 300.383]],
-      [2, [21.839, 8.122], [119.661, 49.263]],
+      [0, [65.37353515625, 12.22900390625], [403.586, 95.477]],
+      [1, [76.42181396484375, 16.13372802734375], [509.753, 300.383]],
+      [2, [21.73187255859375, 7.8765869140625], [119.661, 49.263]],
     ] as const) {
       expect(slides[model * 3]).toMatchObject({
         name: expect.stringContaining(`${(latency[0] / latency[1]).toFixed(2)}× speedup`),
