@@ -3,7 +3,6 @@
 
 import { describe, expect, it } from 'vitest';
 import dashboard from './hk-ap510-vs-ap4.json';
-import dataset from './vitals-benchmark-dataset.json';
 
 describe('Vital Sign Monitoring template', () => {
   it('keeps ECG segment identities and colors aligned', () => {
@@ -20,10 +19,10 @@ describe('Vital Sign Monitoring template', () => {
   it('retains concise metric names and scale headroom', () => {
     expect(dashboard.tiles.find(tile => tile.config.name === 'MCU Battery Life')?.config)
       .toMatchObject({ min: 0, max: 35, units: 'DAYS' });
-    expect(dashboard.tiles.find(tile => tile.config.name === 'Mean Stage Capacity')?.config)
+    expect(dashboard.tiles.find(tile => tile.config.name === 'AI Throughput')?.config)
       .toMatchObject({ max: 150 });
     const names = dashboard.tiles.map(tile => tile.config.name);
-    for (const name of ['MCU Battery Life', 'Mean Stage Capacity', 'Denoise Efficiency',
+    for (const name of ['MCU Battery Life', 'AI Throughput', 'Denoise Efficiency',
       'Segment Efficiency', 'Arrhythmia Efficiency']) expect(names).toContain(name);
     expect(dashboard.tiles.find(tile => tile.config.name === 'Arrhythmia Efficiency')?.config)
       .toMatchObject({ slot: 0, metric: 10, min: 0, max: 150, units: 'µJ/inf', transform: 'ips_per_watt_to_uj' });
@@ -43,67 +42,74 @@ describe('Vital Sign Monitoring template', () => {
       darkContent: expect.stringContaining('<svg'),
     } });
   });
-  it('uses only the three qualified SRAM/MRAM latency and memory pairs', () => {
+  it('scopes memory comparisons and keeps internal review notes out of the description', () => {
     const slides = dashboard.tiles[21].config.slides!;
-    expect(slides).toHaveLength(7);
-    for (const [index, latency, ram] of [
-      [0, [65.37353515625, 12.22900390625], [290880, 93000]],
-      [1, [76.42181396484375, 16.13372802734375], [290880, 50088]],
-      [2, [21.73187255859375, 7.8765869140625], [282816, 34536]],
+    for (const [model, ram] of [
+      [0, [290880, 93000]],
+      [1, [290880, 50088]],
+      [2, [282816, 34536]],
     ] as const) {
-      expect(slides[index * 2]).toMatchObject({
-        name: expect.stringContaining(`${(latency[0] / latency[1]).toFixed(2)}× speedup`),
-        values: latency.map(value => ({ value, label: `${value.toFixed(2)} ms` })),
-      });
-      expect(slides[index * 2 + 1]).toMatchObject({
+      expect(slides[model * 3 + 2]).toMatchObject({
         name: expect.stringContaining('memory footprint'),
         values: ram.map(value => ({ value: value / 1024 })),
       });
     }
-    expect(JSON.stringify(slides)).not.toMatch(/energy/i);
-    expect(dashboard.description).toContain('shared SRAM scratch and MRAM constants');
-    expect(dashboard.description).toContain('Stock TFLM/CMSIS-NN');
+    expect(dashboard.description).not.toMatch(/capture timing|customer release|validation remains unresolved/i);
+    expect(dashboard.description).toContain('total RAM');
     expect(dashboard.description).toContain('TFLM arena reservation');
-    expect(dashboard.description).toContain('not integrated application RAM');
   });
-  it('keeps missing comparisons and historical live power visible', () => {
-    expect(dashboard.description).toContain('Arrhythmia AOT uses batch-one signatures');
-    expect(dataset.rows[2].aotModelSha256).not.toBe(dataset.rows[2].modelSha256);
-    expect(dataset.rows[2].maxPairError).toBe(0.0078125);
-    expect(dashboard.description).toContain('New energy comparison is pending');
-    expect(dashboard.description).toContain('historical September 15 power references');
-    expect(dashboard.description).toContain('not live power-meter readings');
-    expect(dashboard.description).toContain('sensor power excluded');
-    expect(dashboard.description.length).toBeLessThan(1500);
+  it('uses matched latency and energy measurements', () => {
+    const slides = dashboard.tiles[21].config.slides!;
+    for (const [model, latency, energy] of [
+      [0, [65.37353515625, 12.22900390625], [403.586, 95.477]],
+      [1, [76.42181396484375, 16.13372802734375], [509.753, 300.383]],
+      [2, [21.73187255859375, 7.8765869140625], [119.661, 49.263]],
+    ] as const) {
+      expect(slides[model * 3]).toMatchObject({
+        name: expect.stringContaining(`${(latency[0] / latency[1]).toFixed(2)}× speedup`),
+        values: latency.map(value => ({ value, label: `${value.toFixed(2)} ms` })),
+      });
+      expect(slides[model * 3 + 1]).toMatchObject({
+        name: expect.stringContaining('relative energy · TFLM = 100'),
+        values: energy.map(value => ({
+          value: 100 * value / energy[0],
+          label: (100 * value / energy[0]).toFixed(1).replace(/\.0$/, ''),
+        })),
+      });
+      expect(JSON.stringify(slides[model * 3 + 1])).not.toMatch(/µJ|mW/);
+    }
   });
-  it('weights model time by configured call rates for all three qualified pairs', () => {
-    const p = dataset.workloadProjection;
-    expect(p.kind).toBe('configured-rate model-only projection');
-    expect(p.rows.map(row => row.model)).toEqual(['denoise', 'segmentation', 'arrhythmia']);
-    expect(p.rows.map(row => row.callsPerSecond)).toEqual([100 / 206, 100 / 206, 0.5]);
-    expect(p.excluded).toEqual([]);
-    expect(p.tflmMsPerSecond).toBeCloseTo(79.69863002740064, 9);
-    expect(p.aotMsPerSecond).toBeCloseTo(17.706609929649574, 9);
-    expect(p.speedup).toBe(p.tflmMsPerSecond / p.aotMsPerSecond);
-    expect(p.modelDutySavingsPercentagePoints).toBeCloseTo(6.199202009775107, 9);
-    expect(dashboard.tiles[21].config.slides?.[6]).toMatchObject({
-      name: 'Configured workload · all three models',
-      values: [{ value: p.tflmMsPerSecond, label: '79.70 ms/s' }, { value: p.aotMsPerSecond, label: '17.71 ms/s' }],
-    });
-    expect(dashboard.description).toContain('not measured total CPU gain');
-    expect(dashboard.description).toContain('not actual calls/s');
-  });
-  it('preserves layout and derives headlines from qualifying rows only', () => {
+  it('keeps the layout and scopes maximum gains separately from combined RAM', () => {
     expect(dashboard.tiles).toHaveLength(23);
     expect(new Set(dashboard.tiles.map(tile => tile.id)).size).toBe(23);
+    expect(dashboard.tiles.some(tile => tile.config.name === 'HeartKit QR Code')).toBe(false);
+    expect(dashboard.tiles[22].config.slides?.[0]).toMatchObject({
+      name: '', values: [{ name: '', label: 'heliaAOT' }],
+    });
     expect(dashboard.tiles.some(tile => tile.type === 'POINCARE_PLOT')).toBe(false);
-    const gain = dataset.workloadProjection.tflmMsPerSecond / dataset.workloadProjection.aotMsPerSecond;
-    expect(dashboard.tiles[22].config.slides).toEqual([
-      { name: '', type: 'number', values: [{ value: 0, label: 'heliaAOT', name: '', color: '#00dfea', location: 'inside' }] },
-      { name: 'Three-model workload projection', type: 'number', values: [{ value: gain, label: '4.50× projected', name: 'heliaAOT vs TFLM', color: '#00dfea', location: 'inside' }] },
-      { name: 'Standalone image RAM reduction', type: 'number', values: [{
-        value: 100 * (1 - (93000 + 50088 + 34536) / (290880 + 290880 + 282816)), label: '79.5%', name: 'heliaAOT vs TFLM', color: '#00dfea', location: 'inside',
-      }] },
-    ]);
+    expect(dashboard.tiles[21]).toMatchObject({ type: 'BAR_SLIDE_TILE', config: {
+      slides: Array.from({ length: 9 }, () => ({ type: 'bar', values: [
+        { name: 'TFLM', color: '#bd6bf0' }, { name: 'heliaAOT', color: '#00dfea' },
+      ] })),
+    } });
+    expect(dashboard.description).toContain('Reference benchmarks');
+    const gain = Math.max(73.420 / 15.388, 99.671 / 56.981, 21.839 / 8.122);
+    const energyGain = Math.max(403.586 / 95.477, 509.753 / 300.383, 119.661 / 49.263);
+    expect(dashboard.tiles[22]).toMatchObject({ size: 'sm', type: 'BAR_SLIDE_TILE', config: {
+      name: '',
+      slides: [
+        { name: '', type: 'number', values: [{ value: 0, label: 'heliaAOT', name: '' }] },
+        { name: 'Faster inference', type: 'number', values: [{ value: gain, label: 'Up to 5×', name: 'heliaAOT vs TFLM' }] },
+        { name: 'Less memory', type: 'number', values: [{
+          value: 100 * (1 - (223208 + 178080 + 186672) / (450796 + 456116 + 484852)), label: '60%', name: 'heliaAOT vs TFLM',
+        }] },
+        { name: 'Energy Efficiency', type: 'number', values: [{
+          value: energyGain, label: 'Up to 4×', name: 'heliaAOT vs TFLM',
+        }] },
+      ],
+    } });
+    expect(dashboard.description).toContain('sensor power excluded');
+    expect(dashboard.description).toContain('not integrated application RAM');
+    expect(dashboard.description.length).toBeLessThan(1500);
   });
 });
