@@ -107,5 +107,48 @@
       "modelSha256": "a1855af0e0b2a346d773e0d36ff8c8b986c51db4aed99a6066c9da9f23f12eab",
       "reason": "AOT0.23 strict shape propagation cannot resolve MEAN8 and41dependents; no qualified pair"
     }
-  ]
+  ],
+  "workloadProjection": {
+    "kind": "configured-rate model-only projection",
+    "conditions": "AI enabled,100Hz post-decimation ECG,steady state after window fill,no sample loss/backlog; no live run-counter evidence",
+    "formula": "sum(callsPerSecond * medianModelLatencyMs)",
+    "rows": [
+      {
+        "model": "denoise",
+        "callsPerSecond": 0.4854368932038835,
+        "rateBasis": "100 ECG samples/s divided by206 sample stride",
+        "tflmMsPerSecond": 31.734725804004857,
+        "aotMsPerSecond": 5.936409663228155
+      },
+      {
+        "model": "segmentation",
+        "callsPerSecond": 0.4854368932038835,
+        "rateBasis": "100 ECG samples/s divided by206 sample stride",
+        "tflmMsPerSecond": 37.09796794409891,
+        "aotMsPerSecond": 7.83190680939017
+      }
+    ],
+    "excluded": [
+      {
+        "model": "arrhythmia",
+        "callsPerSecond": 0.5,
+        "rateBasis": "100Hz /200-sample metrics stride, not500-sample model window",
+        "reason": "AOT conversion blocked; no qualifying pair, excluded from both sums"
+      }
+    ],
+    "tflmMsPerSecond": 68.83269374810376,
+    "aotMsPerSecond": 13.768316472618325,
+    "speedup": 4.999354415261624,
+    "modelTimeReductionPercent": 79.99741732757971,
+    "tflmDutyPercent": 6.883269374810377,
+    "aotDutyPercent": 1.3768316472618325,
+    "modelDutySavingsPercentagePoints": 5.506437727548544,
+    "notIncluded": "arrhythmia,preprocessing/DSP,transport,scheduler,othermodel/nonmodel work,idle/power; not measured total CPU or application speedup",
+    "sourceHead": "4d16e9c3f4dacf97551403f5e3c1a9de6136f018",
+    "sourceSha256": {
+      "src/constants.h": "d25d283f05768d352c94b2dd0a92b366139ed68b671bda1aaa3fde165998568d",
+      "src/main.cc": "df58a7a632ceb3fdb0692e96e6559fd48d52024631f7c9ba9e5daa73473be72c",
+      "src/inference_timing.h": "f59eaa582ddaf508af49f2a6a46c477fc42eaf634bb040da6b50358c200b8e8e"
+    }
+  }
 }

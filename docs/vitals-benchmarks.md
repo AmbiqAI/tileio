@@ -19,6 +19,33 @@ Arrhythmia (`a1855af0`, FP32 IO/INT8 internals) is **pending**: exact-model AOT 
 
 [Measurement checkpoint and limitations](https://github.com/AmbiqAI/helia-benchmark/issues/1#issuecomment-5848885586).
 
+## Configured-rate workload projection
+
+The workload calculation is `sum(frequency_i * latency_i)`, using the same call frequencies for both engines. It is not the mean of speedups or the mean/sum of `1 / latency` capacities.
+
+At demo source `4d16e9c`, ECG is decimated from 200 to 100 samples/s. Denoise and segmentation consume 206 samples per invocation (256-window minus two 25-sample pads). Arrhythmia runs once per metrics cycle: the 1000-sample metrics window advances 200 samples, even though the classifier consumes 500 samples. With AI enabled, steady input, filled windows and no drops/backlog:
+
+| Model | Configured calls/s | TFLM model ms/s | AOT model ms/s | Saved model ms/s |
+| --- | ---: | ---: | ---: | ---: |
+| Denoise | 100/206 = 0.485437 | 31.734726 | 5.936410 | 25.798316 |
+| Segmentation | 100/206 = 0.485437 | 37.097968 | 7.831907 | 29.266061 |
+| Arrhythmia | 100/200 = 0.5 | Pending qualifying pair | Pending | Pending |
+| **Qualified two-model subtotal** | | **68.832694** | **13.768316** | **55.064377** |
+
+The qualified subtotal is **4.999354×** lower model compute demand, a **79.9974%** reduction. Projected model-only duty changes from **6.883269% to 1.376832%**, saving **5.506438 percentage points**. The dashboard calls this a **two-model configured workload projection**, not an overall three-model or measured application gain. Arrhythmia is excluded from both sums; treating its missing candidate latency as zero would be invalid.
+
+No live invocation counters were captured in these standalone runs. Real sensor throughput, warm-up/window filling, model modes, sample loss, backlog and scheduler behavior can change actual calls/s. These projections exclude preprocessing, DSP, transport, scheduler overhead, other work and idle time. Model latencies use the saved case-0 timing workload, not an observed distribution of live sensor windows.
+
+### Existing live aggregation
+
+Firmware `ai_average_rate()` averages available positive stage IPS values. Those values are reciprocals of measured whole-stage durations, including stage overhead, rather than run-counter rates. The frontend metric is therefore relabelled **Mean Stage Capacity**, without changing the wire field or firmware. It must not serve as an aggregate workload speedup.
+
+The firmware battery-duty path already uses `stage_duty_frac(delta_runs, ips, elapsed_seconds)` separately for each stage: observed completed-run frequency × latest stage duration. It then retains other busy work and idle power terms. Keep this observed stage-duty estimate distinct from the static model-only projection; pipeline counters also need AI-mode/error qualification to identify successful model calls.
+
+A future workload-energy estimate is `sum(frequency_i * measured_energy_per_inference_i)` only for a matched measured dataset. No new energy aggregate is available. Historical power × stage-time estimates, non-model/idle power and sensor supply remain separate.
+
+Firmware module swap and actual sensor validation are tracked in [heartkit-vitals-demo #99](https://github.com/AmbiqAI/heartkit-vitals-demo/issues/99). The local owner should record successful model-call counter deltas over elapsed windows, modes/errors/sample drops, model-only and complete-stage durations, then compare observed rates with these configured projections. No firmware/sensor changes are part of this dashboard patch.
+
 ---
 
 # Historical September 15 reference benchmarks
