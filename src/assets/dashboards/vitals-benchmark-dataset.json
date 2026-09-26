@@ -14,7 +14,7 @@
   "coreVersion": "7.36.0",
   "coreSource": "8d34472eaf494589515d1463b8a427564ee83947",
   "demoSource": "4d16e9c3f4dacf97551403f5e3c1a9de6136f018",
-  "timing": "Median of3batches, each5warmups then100case0input-restore+invoke calls; output validation outside timing; sequential windows",
+  "timing": "Median of three batch means: five warmups followed by 100 case-0 input-restore-plus-invoke calls per batch. Full eight-case output validation is outside timing; engines use separate sequential windows.",
   "memory": "Linked allocated RAM includes8case validation output buffers, platform/stack and reserved256KiB TFLM arena; not peak/minimum or integrated demo footprint",
   "energyStatus": "pending matched rail-verified captures; no new energy claim",
   "rows": [
