@@ -99,15 +99,53 @@
         "recoveredRounds": []
       },
       "speedup": 4.736773412525772
-    }
-  ],
-  "excluded": [
+    },
     {
       "model": "arrhythmia",
       "modelSha256": "a1855af0e0b2a346d773e0d36ff8c8b986c51db4aed99a6066c9da9f23f12eab",
-      "reason": "AOT0.23 strict shape propagation cannot resolve MEAN8 and41dependents; no qualified pair"
+      "aotModelSha256": "8b91d202ac5b94201277daf1ad3dc8b381bdceb99a1ca7261f8eaafb0f7cc7a0",
+      "specialization": "AOT batch-one signature specialization; original TFLM asset retained; all eight host full outputs bit-exact; weights/operators/constants unchanged",
+      "specializationEvidenceSha256": "9e3d5aa7458423b98cff3f17430c1c95b7bcf19074c811de5d9af6777c88820e",
+      "inputSha256": "02171832285b0755cf09191079c3f6171465c0bc680be7c2d0d991983d38cd22",
+      "cases": 8,
+      "gate": "PASS",
+      "maxPairError": 0.0078125,
+      "tflm": {
+        "medianMs": 21.73187255859375,
+        "rangeMs": [
+          21.7291259765625,
+          21.73309326171875
+        ],
+        "recordsMs": [
+          21.73309326171875,
+          21.7291259765625,
+          21.73187255859375
+        ],
+        "loadBytes": 304996,
+        "allocatedRamBytes": 282816,
+        "elfSha256": "cd227cb506c30310073b266722c95b6eef2ef95c5353acd33c1a59676c5c1c31",
+        "recoveredRounds": []
+      },
+      "aot": {
+        "medianMs": 7.8765869140625,
+        "rangeMs": [
+          7.8753662109375,
+          7.87689208984375
+        ],
+        "recordsMs": [
+          7.8765869140625,
+          7.87689208984375,
+          7.8753662109375
+        ],
+        "loadBytes": 125580,
+        "allocatedRamBytes": 34536,
+        "elfSha256": "8df63bab23541e0ebc9310a486cc5da108ee54d3e321326bcad2439943232aea",
+        "recoveredRounds": []
+      },
+      "speedup": 2.7590468810538553
     }
   ],
+  "excluded": [],
   "workloadProjection": {
     "kind": "configured-rate model-only projection",
     "conditions": "AI enabled,100Hz post-decimation ECG,steady state after window fill,no sample loss/backlog; no live run-counter evidence",
@@ -126,24 +164,24 @@
         "rateBasis": "100 ECG samples/s divided by206 sample stride",
         "tflmMsPerSecond": 37.09796794409891,
         "aotMsPerSecond": 7.83190680939017
-      }
-    ],
-    "excluded": [
+      },
       {
         "model": "arrhythmia",
         "callsPerSecond": 0.5,
-        "rateBasis": "100Hz /200-sample metrics stride, not500-sample model window",
-        "reason": "AOT conversion blocked; no qualifying pair, excluded from both sums"
+        "rateBasis": "100 ECG samples/s divided by200 sample metrics stride",
+        "tflmMsPerSecond": 10.865936279296875,
+        "aotMsPerSecond": 3.93829345703125
       }
     ],
-    "tflmMsPerSecond": 68.83269374810376,
-    "aotMsPerSecond": 13.768316472618325,
-    "speedup": 4.999354415261624,
-    "modelTimeReductionPercent": 79.99741732757971,
-    "tflmDutyPercent": 6.883269374810377,
-    "aotDutyPercent": 1.3768316472618325,
-    "modelDutySavingsPercentagePoints": 5.506437727548544,
-    "notIncluded": "arrhythmia,preprocessing/DSP,transport,scheduler,othermodel/nonmodel work,idle/power; not measured total CPU or application speedup",
+    "excluded": [],
+    "tflmMsPerSecond": 79.69863002740064,
+    "aotMsPerSecond": 17.706609929649574,
+    "speedup": 4.501066570283786,
+    "modelTimeReductionPercent": 77.78304354345616,
+    "tflmDutyPercent": 7.969863002740064,
+    "aotDutyPercent": 1.7706609929649573,
+    "modelDutySavingsPercentagePoints": 6.199202009775107,
+    "notIncluded": "preprocessing/DSP,transport,scheduler,other work,idle/power; not measured total CPU or application speedup",
     "sourceHead": "4d16e9c3f4dacf97551403f5e3c1a9de6136f018",
     "sourceSha256": {
       "src/constants.h": "d25d283f05768d352c94b2dd0a92b366139ed68b671bda1aaa3fde165998568d",

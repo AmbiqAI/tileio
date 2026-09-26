@@ -43,12 +43,13 @@ describe('Vital Sign Monitoring template', () => {
       darkContent: expect.stringContaining('<svg'),
     } });
   });
-  it('uses only the two qualified SRAM/MRAM latency and memory pairs', () => {
+  it('uses only the three qualified SRAM/MRAM latency and memory pairs', () => {
     const slides = dashboard.tiles[21].config.slides!;
-    expect(slides).toHaveLength(5);
+    expect(slides).toHaveLength(7);
     for (const [index, latency, ram] of [
       [0, [65.37353515625, 12.22900390625], [290880, 93000]],
       [1, [76.42181396484375, 16.13372802734375], [290880, 50088]],
+      [2, [21.73187255859375, 7.8765869140625], [282816, 34536]],
     ] as const) {
       expect(slides[index * 2]).toMatchObject({
         name: expect.stringContaining(`${(latency[0] / latency[1]).toFixed(2)}× speedup`),
@@ -59,33 +60,35 @@ describe('Vital Sign Monitoring template', () => {
         values: ram.map(value => ({ value: value / 1024 })),
       });
     }
-    expect(JSON.stringify(slides)).not.toMatch(/Arrhythmia|energy/i);
+    expect(JSON.stringify(slides)).not.toMatch(/energy/i);
     expect(dashboard.description).toContain('shared SRAM scratch and MRAM constants');
     expect(dashboard.description).toContain('Stock TFLM/CMSIS-NN');
     expect(dashboard.description).toContain('TFLM arena reservation');
     expect(dashboard.description).toContain('not integrated application RAM');
   });
   it('keeps missing comparisons and historical live power visible', () => {
-    expect(dashboard.description).toContain('Arrhythmia comparison is pending');
+    expect(dashboard.description).toContain('Arrhythmia AOT uses batch-one signatures');
+    expect(dataset.rows[2].aotModelSha256).not.toBe(dataset.rows[2].modelSha256);
+    expect(dataset.rows[2].maxPairError).toBe(0.0078125);
     expect(dashboard.description).toContain('New energy comparison is pending');
     expect(dashboard.description).toContain('historical September 15 power references');
     expect(dashboard.description).toContain('not live power-meter readings');
     expect(dashboard.description).toContain('sensor power excluded');
     expect(dashboard.description.length).toBeLessThan(1500);
   });
-  it('weights model time by configured call rates and excludes the missing pair', () => {
+  it('weights model time by configured call rates for all three qualified pairs', () => {
     const p = dataset.workloadProjection;
     expect(p.kind).toBe('configured-rate model-only projection');
-    expect(p.rows.map(row => row.model)).toEqual(['denoise', 'segmentation']);
-    expect(p.rows.map(row => row.callsPerSecond)).toEqual([100 / 206, 100 / 206]);
-    expect(p.excluded).toMatchObject([{ model: 'arrhythmia', callsPerSecond: 0.5 }]);
-    expect(p.tflmMsPerSecond).toBeCloseTo(68.8326937481, 9);
-    expect(p.aotMsPerSecond).toBeCloseTo(13.7683164726, 9);
+    expect(p.rows.map(row => row.model)).toEqual(['denoise', 'segmentation', 'arrhythmia']);
+    expect(p.rows.map(row => row.callsPerSecond)).toEqual([100 / 206, 100 / 206, 0.5]);
+    expect(p.excluded).toEqual([]);
+    expect(p.tflmMsPerSecond).toBeCloseTo(79.69863002740064, 9);
+    expect(p.aotMsPerSecond).toBeCloseTo(17.706609929649574, 9);
     expect(p.speedup).toBe(p.tflmMsPerSecond / p.aotMsPerSecond);
-    expect(p.modelDutySavingsPercentagePoints).toBeCloseTo(5.50643772755, 9);
-    expect(dashboard.tiles[21].config.slides?.[4]).toMatchObject({
-      name: 'Configured workload · denoise + segment',
-      values: [{ value: p.tflmMsPerSecond, label: '68.83 ms/s' }, { value: p.aotMsPerSecond, label: '13.77 ms/s' }],
+    expect(p.modelDutySavingsPercentagePoints).toBeCloseTo(6.199202009775107, 9);
+    expect(dashboard.tiles[21].config.slides?.[6]).toMatchObject({
+      name: 'Configured workload · all three models',
+      values: [{ value: p.tflmMsPerSecond, label: '79.70 ms/s' }, { value: p.aotMsPerSecond, label: '17.71 ms/s' }],
     });
     expect(dashboard.description).toContain('not measured total CPU gain');
     expect(dashboard.description).toContain('not actual calls/s');
@@ -94,12 +97,12 @@ describe('Vital Sign Monitoring template', () => {
     expect(dashboard.tiles).toHaveLength(23);
     expect(new Set(dashboard.tiles.map(tile => tile.id)).size).toBe(23);
     expect(dashboard.tiles.some(tile => tile.type === 'POINCARE_PLOT')).toBe(false);
-    const gain = (65.37353515625 * (100 / 206) + 76.42181396484375 * (100 / 206)) / (12.22900390625 * (100 / 206) + 16.13372802734375 * (100 / 206));
+    const gain = dataset.workloadProjection.tflmMsPerSecond / dataset.workloadProjection.aotMsPerSecond;
     expect(dashboard.tiles[22].config.slides).toEqual([
       { name: '', type: 'number', values: [{ value: 0, label: 'heliaAOT', name: '', color: '#00dfea', location: 'inside' }] },
-      { name: 'Two-model workload projection', type: 'number', values: [{ value: gain, label: '5.00× projected', name: 'heliaAOT vs TFLM', color: '#00dfea', location: 'inside' }] },
-      { name: 'Two-model RAM reduction', type: 'number', values: [{
-        value: 100 * (1 - (93000 + 50088) / (290880 + 290880)), label: '75.4%', name: 'heliaAOT vs TFLM', color: '#00dfea', location: 'inside',
+      { name: 'Three-model workload projection', type: 'number', values: [{ value: gain, label: '4.50× projected', name: 'heliaAOT vs TFLM', color: '#00dfea', location: 'inside' }] },
+      { name: 'Three-model RAM reduction', type: 'number', values: [{
+        value: 100 * (1 - (93000 + 50088 + 34536) / (290880 + 290880 + 282816)), label: '79.5%', name: 'heliaAOT vs TFLM', color: '#00dfea', location: 'inside',
       }] },
     ]);
   });

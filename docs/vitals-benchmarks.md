@@ -1,40 +1,31 @@
 # Vital Sign Monitoring reference benchmarks
 
-The current carousel uses the qualifying rows from the [September 26 dataset](../src/assets/dashboards/vitals-benchmark-dataset.json). Exact shipped models are unchanged from heartkit-vitals-demo `4d16e9c`; no FP16 or re-export substitution. Apollo510 LP 96 MHz, shared SRAM working arenas and MRAM constants, matched Arm Toolchain for Embedded 22.1.0. This replaces the old TCM comparison rather than mixing its latency or RAM values into the new dataset.
+The current carousel uses the [September 26 dataset](../src/assets/dashboards/vitals-benchmark-dataset.json). Apollo510 LP 96 MHz, shared SRAM working arenas and MRAM constants, matched Arm Toolchain for Embedded 22.1.0. Stock CMSIS-NN TFLM is compared with heliaAOT 0.23/core 7.36. This replaces the historical TCM comparison. Original precision is retained: denoise FP32; segmentation INT8; arrhythmia FP32 IO with INT8 internals.
 
-| Model | Stock TFLM ms | AOT 0.23 ms | Speedup | TFLM load B | AOT load B | TFLM allocated RAM B | AOT allocated RAM B |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| denoise | 65.373535 | 12.229004 | 5.346× | 217764 | 109292 | 290880 | 93000 |
-| segmentation | 76.421814 | 16.133728 | 4.737× | 231092 | 94332 | 290880 | 50088 |
+| Model | Stock TFLM ms | AOT ms | Speedup | TFLM/AOT load B | TFLM/AOT allocated RAM B |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| denoise | 65.373535 | 12.229004 | 5.346× | 217764/109292 | 290880/93000 |
+| segmentation | 76.421814 | 16.133728 | 4.737× | 231092/94332 | 290880/50088 |
+| arrhythmia | 21.731873 | 7.876587 | 2.759× | 304996/125580 | 282816/34536 |
 
-Each latency is the median of three batch means: five warmups then 100 case-0 input-restore-plus-invoke calls. All eight saved inputs are evaluated outside the timed bracket. Separate sequential windows, same board/compiler/clock and verified ELF placement. Den FP32 passes the original per-element `1e-5 + 1e-5*abs(TFLM)` gate (worst difference 4.7683716e-6); segmentation is bit-exact across all eight cases, including thresholded masks. This comparison uses **stock CMSIS-NN TFLM**, distinct from the product's historical Helia-TFLM parity reference.
+Each latency is the median of three batch means: five warmups then 100 case-0 input-restore-plus-invoke calls. Full outputs for all eight saved cases are checked outside timing. Separate sequential windows, same board/compiler/clock and verified ELF placement. Den FP32 passes `1e-5 + 1e-5*abs(TFLM)` (maximum difference 4.7683716e-6); segmentation is bit-exact with identical threshold/QOS masks. Its depthwise layers use `arm_depthwise_conv_s8_opt` at dilation 2/4/8.
 
-The three dilated segmentation depthwise layers now call `arm_depthwise_conv_s8_opt` at dilation 2/4/8. Kernel selection alone is not the performance claim: the table records the full matched model measurements. Source revisions and exact model/input/image hashes are in the dataset. Original model SHA prefixes are denoise `e94a5788` and segmentation `93c4493a`.
+**Arrhythmia uses a batch-one specialization for AOT.** The original shipped flatbuffer `a1855af0` remains the TFLM baseline. AOT uses `8b91d202`: only 48 existing batch signature fields change from −1 to 1; every other byte, including weights, concrete shapes, operators, axes and quantization, is unchanged. Original and specialized models produce bit-identical full outputs on all eight saved host cases. The original strict conversion failure at MEAN is preserved; specializing signatures lets strict AOT 0.23 conversion succeed. All eight device pairs pass the unchanged maximum absolute error 0.008 and identical argmax/classification gate; maximum difference is 0.0078125. Full separate model/input/image hashes are in the dataset. This is not an unchanged-flatbuffer claim or a compiler shape-inference fix.
 
-RAM includes the platform/stack, eight-case validation output buffers and the TFLM 256 KiB arena reservation. It is allocated image footprint, not minimum/peak tensor use or integrated-demo RAM. The reduction aggregates only the two qualifying standalone images. Headlines derive only from those rows.
-
-Arrhythmia (`a1855af0`, FP32 IO/INT8 internals) is **pending**: exact-model AOT 0.23 conversion fails strict shape propagation at MEAN op 8 and 41 downstream tensors. Its previous latency/memory bars are removed from the current comparison; no substitute model or claimed new speedup. The preserved stock-TFLM baseline does not qualify a pair on its own.
-
-**New energy measurements are pending.** No energy bars or energy-gain headline are derived from these latency measurements. The old energy evidence below remains historical, not a power measurement for the new images. Live firmware efficiency tiles still combine measured stage duration with September 15 SRAM/MRAM power references; this is estimated energy, not a live power-meter reading. Refreshing those references requires a separately verified supply rail, sole-feed/back-power arrangement and instrument wiring. Battery remains an MCU projection, with sensor power excluded.
-
-[Measurement checkpoint and limitations](https://github.com/AmbiqAI/helia-benchmark/issues/1#issuecomment-5848885586).
+RAM includes platform/stack, eight-case validation buffers and the TFLM 256 KiB arena reservation. It is allocated image footprint, not minimum/peak tensor use or integrated-demo RAM. Summed RAM reduction describes three standalone images.
 
 ## Configured-rate workload projection
 
-The workload calculation is `sum(frequency_i * latency_i)`, using the same call frequencies for both engines. It is not the mean of speedups or the mean/sum of `1 / latency` capacities.
-
-At demo source `4d16e9c`, ECG is decimated from 200 to 100 samples/s. Denoise and segmentation consume 206 samples per invocation (256-window minus two 25-sample pads). Arrhythmia runs once per metrics cycle: the 1000-sample metrics window advances 200 samples, even though the classifier consumes 500 samples. With AI enabled, steady input, filled windows and no drops/backlog:
+The aggregate is **sum(calls/s × model latency)** for each engine, not an average of speedups or reciprocal execution capacities. At pinned demo source `4d16e9c`, ECG is decimated from 200 to 100 samples/s. Denoise/segmentation each advance 256−2×25=206 samples. Arrhythmia runs once per 1000-sample metrics window advancing 200 samples, despite its 500-sample model input. With AI enabled, steady input, filled windows and no drops/backlog:
 
 | Model | Configured calls/s | TFLM model ms/s | AOT model ms/s | Saved model ms/s |
 | --- | ---: | ---: | ---: | ---: |
-| Denoise | 100/206 = 0.485437 | 31.734726 | 5.936410 | 25.798316 |
-| Segmentation | 100/206 = 0.485437 | 37.097968 | 7.831907 | 29.266061 |
-| Arrhythmia | 100/200 = 0.5 | Pending qualifying pair | Pending | Pending |
-| **Qualified two-model subtotal** | | **68.832694** | **13.768316** | **55.064377** |
+| denoise | 0.485436893 | 31.734726 | 5.936410 | 25.798316 |
+| segmentation | 0.485436893 | 37.097968 | 7.831907 | 29.266061 |
+| arrhythmia | 0.500000000 | 10.865936 | 3.938293 | 6.927643 |
+| **All three models** | | **79.698630** | **17.706610** | **61.992020** |
 
-The qualified subtotal is **4.999354×** lower model compute demand, a **79.9974%** reduction. Projected model-only duty changes from **6.883269% to 1.376832%**, saving **5.506438 percentage points**. The dashboard calls this a **two-model configured workload projection**, not an overall three-model or measured application gain. Arrhythmia is excluded from both sums; treating its missing candidate latency as zero would be invalid.
-
-No live invocation counters were captured in these standalone runs. Real sensor throughput, warm-up/window filling, model modes, sample loss, backlog and scheduler behavior can change actual calls/s. These projections exclude preprocessing, DSP, transport, scheduler overhead, other work and idle time. Model latencies use the saved case-0 timing workload, not an observed distribution of live sensor windows.
+The configured model workload improves **4.501067×**, or **77.7830%** less model time. Projected model-only duty changes from **7.969863% to 1.770661%**, saving **6.199202 percentage points**. These are configured-rate projections, not measured total CPU or application speedup. No live successful-call counters were captured; timings use saved case 0, not a live input distribution. Preprocessing/DSP, scheduler, transport, other work, idle and power are excluded.
 
 ### Existing live aggregation
 
@@ -45,6 +36,9 @@ The firmware battery-duty path already uses `stage_duty_frac(delta_runs, ips, el
 A future workload-energy estimate is `sum(frequency_i * measured_energy_per_inference_i)` only for a matched measured dataset. No new energy aggregate is available. Historical power × stage-time estimates, non-model/idle power and sensor supply remain separate.
 
 Firmware module swap and actual sensor validation are tracked in [heartkit-vitals-demo #99](https://github.com/AmbiqAI/heartkit-vitals-demo/issues/99). The local owner should record successful model-call counter deltas over elapsed windows, modes/errors/sample drops, model-only and complete-stage durations, then compare observed rates with these configured projections. No firmware/sensor changes are part of this dashboard patch.
+
+
+**New energy measurements are pending.** No energy gain is inferred from latency. Historical live efficiency references remain September 15 estimates, not new meter readings. Rail, sole-feed/back-power and instrument wiring must be verified separately; sensor power is excluded.
 
 ---
 
