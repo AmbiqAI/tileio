@@ -1,0 +1,111 @@
+{
+  "id": "vitals-sram-mram-20260926",
+  "date": "2026-09-26",
+  "board": "Apollo510",
+  "cpuMHz": 96,
+  "scratch": "shared SRAM",
+  "constants": "MRAM",
+  "toolchain": "Arm Toolchain for Embedded 22.1.0",
+  "tflmSource": "7c1b162c0fd2336876b69daaa20c87a1e7e2f508",
+  "tflmBackend": "stock CMSIS-NN",
+  "armCmsisNnSource": "6d21a6f821fb72541173a6c4d05d83329fa74f7c",
+  "aotVersion": "0.23.0",
+  "aotSource": "d75c96eb84df05d7b7da554d28db0fe972368df0",
+  "coreVersion": "7.36.0",
+  "coreSource": "8d34472eaf494589515d1463b8a427564ee83947",
+  "demoSource": "4d16e9c3f4dacf97551403f5e3c1a9de6136f018",
+  "timing": "Median of3batches, each5warmups then100case0input-restore+invoke calls; output validation outside timing; sequential windows",
+  "memory": "Linked allocated RAM includes8case validation output buffers, platform/stack and reserved256KiB TFLM arena; not peak/minimum or integrated demo footprint",
+  "energyStatus": "pending matched rail-verified captures; no new energy claim",
+  "rows": [
+    {
+      "model": "denoise",
+      "modelSha256": "e94a5788163e436d63750cb9dd462932cc281863d5d42d0c4851fd85a1b89d0a",
+      "inputSha256": "33280a571312a2e74646d9b7a8897ff958f5f69a10f7948daddf8a9519495c7d",
+      "cases": 8,
+      "gate": "PASS",
+      "maxPairError": 4.76837158203125e-06,
+      "tflm": {
+        "medianMs": 65.37353515625,
+        "rangeMs": [
+          65.37078857421875,
+          65.3753662109375
+        ],
+        "recordsMs": [
+          65.3753662109375,
+          65.37353515625,
+          65.37078857421875
+        ],
+        "loadBytes": 217764,
+        "allocatedRamBytes": 290880,
+        "elfSha256": "cc363bb9fb83f02e6f3f1e1b907013125c23eb47881d17f9f650254a545780ee",
+        "recoveredRounds": []
+      },
+      "aot": {
+        "medianMs": 12.22900390625,
+        "rangeMs": [
+          12.2283935546875,
+          12.230224609375
+        ],
+        "recordsMs": [
+          12.22900390625,
+          12.230224609375,
+          12.2283935546875
+        ],
+        "loadBytes": 109292,
+        "allocatedRamBytes": 93000,
+        "elfSha256": "3837b00e2767c4ef6a5b4a9dc6d4441d7474bb8d12f3d5e5d7445d30363b1d8a",
+        "recoveredRounds": []
+      },
+      "speedup": 5.345777600319425
+    },
+    {
+      "model": "segmentation",
+      "modelSha256": "93c4493a1d09e1818abaffd74973d807b9e6830e5a03217b2c777abe1032e6fe",
+      "inputSha256": "6c021aacb966a907d55d897d7c33082fef4b1aeafca2cf2ed25187ed461a533b",
+      "cases": 8,
+      "gate": "PASS",
+      "maxPairError": 0,
+      "tflm": {
+        "medianMs": 76.42181396484375,
+        "rangeMs": [
+          76.41815185546875,
+          76.4227294921875
+        ],
+        "recordsMs": [
+          76.4227294921875,
+          76.42181396484375,
+          76.41815185546875
+        ],
+        "loadBytes": 231092,
+        "allocatedRamBytes": 290880,
+        "elfSha256": "7f510507906f05fc11f878e891fe4af19539a906800ddf2f5cb605844faa6666",
+        "recoveredRounds": []
+      },
+      "aot": {
+        "medianMs": 16.13372802734375,
+        "rangeMs": [
+          16.1334228515625,
+          16.134033203125
+        ],
+        "recordsMs": [
+          16.13372802734375,
+          16.1334228515625,
+          16.134033203125
+        ],
+        "loadBytes": 94332,
+        "allocatedRamBytes": 50088,
+        "elfSha256": "aeb6610738dafab803c6f1a30d7dbf3ce65e981c3442abd24c81675c9b790f3b",
+        "recoveredRounds": []
+      },
+      "speedup": 4.736773412525772
+    }
+  ],
+  "excluded": [
+    {
+      "model": "arrhythmia",
+      "modelSha256": "a1855af0e0b2a346d773e0d36ff8c8b986c51db4aed99a6066c9da9f23f12eab",
+      "reason": "AOT0.23 strict shape propagation cannot resolve MEAN8 and41dependents; no qualified pair"
+    }
+  ]
+}
