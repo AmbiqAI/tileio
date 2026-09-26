@@ -101,7 +101,7 @@ describe('Vital Sign Monitoring template', () => {
     expect(dashboard.tiles[22].config.slides).toEqual([
       { name: '', type: 'number', values: [{ value: 0, label: 'heliaAOT', name: '', color: '#00dfea', location: 'inside' }] },
       { name: 'Three-model workload projection', type: 'number', values: [{ value: gain, label: '4.50× projected', name: 'heliaAOT vs TFLM', color: '#00dfea', location: 'inside' }] },
-      { name: 'Three-model RAM reduction', type: 'number', values: [{
+      { name: 'Standalone image RAM reduction', type: 'number', values: [{
         value: 100 * (1 - (93000 + 50088 + 34536) / (290880 + 290880 + 282816)), label: '79.5%', name: 'heliaAOT vs TFLM', color: '#00dfea', location: 'inside',
       }] },
     ]);
