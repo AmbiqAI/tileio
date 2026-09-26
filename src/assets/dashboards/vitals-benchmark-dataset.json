@@ -15,8 +15,8 @@
   "coreSource": "8d34472eaf494589515d1463b8a427564ee83947",
   "demoSource": "4d16e9c3f4dacf97551403f5e3c1a9de6136f018",
   "timing": "Median of three batch means: five warmups followed by 100 case-0 input-restore-plus-invoke calls per batch. Full eight-case output validation is outside timing; engines use separate sequential windows.",
-  "memory": "Linked allocated RAM includes8case validation output buffers, platform/stack and reserved256KiB TFLM arena; not peak/minimum or integrated demo footprint",
-  "energyStatus": "pending matched rail-verified captures; no new energy claim",
+  "memory": "Linked allocated RAM includes eight-case validation output buffers, platform and stack, and the reserved 256 KiB TFLM arena. This is not peak or minimum tensor use, or the integrated demo footprint.",
+  "energyStatus": "Pending matched captures with a verified supply rail; no new energy claim.",
   "rows": [
     {
       "model": "denoise",
@@ -104,7 +104,7 @@
       "model": "arrhythmia",
       "modelSha256": "a1855af0e0b2a346d773e0d36ff8c8b986c51db4aed99a6066c9da9f23f12eab",
       "aotModelSha256": "8b91d202ac5b94201277daf1ad3dc8b381bdceb99a1ca7261f8eaafb0f7cc7a0",
-      "specialization": "AOT batch-one signature specialization; original TFLM asset retained; all eight host full outputs bit-exact; weights/operators/constants unchanged",
+      "specialization": "AOT uses batch-one signature specialization; TFLM retains the original asset. All eight complete host outputs are bit-exact; weights, operators and constants are unchanged.",
       "specializationEvidenceSha256": "9e3d5aa7458423b98cff3f17430c1c95b7bcf19074c811de5d9af6777c88820e",
       "inputSha256": "02171832285b0755cf09191079c3f6171465c0bc680be7c2d0d991983d38cd22",
       "cases": 8,
@@ -148,27 +148,27 @@
   "excluded": [],
   "workloadProjection": {
     "kind": "configured-rate model-only projection",
-    "conditions": "AI enabled,100Hz post-decimation ECG,steady state after window fill,no sample loss/backlog; no live run-counter evidence",
+    "conditions": "AI enabled, 100 Hz ECG after decimation, steady state after window fill, and no sample loss or backlog. Live successful-call counters have not been measured.",
     "formula": "sum(callsPerSecond * medianModelLatencyMs)",
     "rows": [
       {
         "model": "denoise",
         "callsPerSecond": 0.4854368932038835,
-        "rateBasis": "100 ECG samples/s divided by206 sample stride",
+        "rateBasis": "100 ECG samples/s divided by a 206-sample stride",
         "tflmMsPerSecond": 31.734725804004857,
         "aotMsPerSecond": 5.936409663228155
       },
       {
         "model": "segmentation",
         "callsPerSecond": 0.4854368932038835,
-        "rateBasis": "100 ECG samples/s divided by206 sample stride",
+        "rateBasis": "100 ECG samples/s divided by a 206-sample stride",
         "tflmMsPerSecond": 37.09796794409891,
         "aotMsPerSecond": 7.83190680939017
       },
       {
         "model": "arrhythmia",
         "callsPerSecond": 0.5,
-        "rateBasis": "100 ECG samples/s divided by200 sample metrics stride",
+        "rateBasis": "100 ECG samples/s divided by a 200-sample metrics stride",
         "tflmMsPerSecond": 10.865936279296875,
         "aotMsPerSecond": 3.93829345703125
       }
@@ -181,7 +181,7 @@
     "tflmDutyPercent": 7.969863002740064,
     "aotDutyPercent": 1.7706609929649573,
     "modelDutySavingsPercentagePoints": 6.199202009775107,
-    "notIncluded": "preprocessing/DSP,transport,scheduler,other work,idle/power; not measured total CPU or application speedup",
+    "notIncluded": "Preprocessing, DSP, transport, scheduler, other work, idle and power. This is not measured total CPU or application speedup.",
     "sourceHead": "4d16e9c3f4dacf97551403f5e3c1a9de6136f018",
     "sourceSha256": {
       "src/constants.h": "d25d283f05768d352c94b2dd0a92b366139ed68b671bda1aaa3fde165998568d",
